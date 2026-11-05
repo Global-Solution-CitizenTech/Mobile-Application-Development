@@ -13,86 +13,102 @@ const STORAGE_KEYS = {
   API_URL: '@citizentech:custom_api_url',
 };
 
+const memoryStore: Record<string, string> = {};
+
 export const storageService = {
   // --- Token JWT ---
   async saveToken(token: string): Promise<void> {
     try {
+      memoryStore[STORAGE_KEYS.TOKEN] = token;
       await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token);
     } catch (error) {
-      console.error('Erro ao salvar token no storage:', error);
+      console.warn('Armazenado em memória (fallback):', error);
     }
   },
 
   async getToken(): Promise<string | null> {
     try {
-      return await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
+      return token || memoryStore[STORAGE_KEYS.TOKEN] || null;
     } catch (error) {
-      console.error('Erro ao recuperar token do storage:', error);
-      return null;
+      return memoryStore[STORAGE_KEYS.TOKEN] || null;
     }
   },
 
   async removeToken(): Promise<void> {
     try {
+      delete memoryStore[STORAGE_KEYS.TOKEN];
       await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
     } catch (error) {
-      console.error('Erro ao remover token do storage:', error);
+      delete memoryStore[STORAGE_KEYS.TOKEN];
     }
   },
 
   // --- Usuário ---
   async saveUser(user: Usuario): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      const data = JSON.stringify(user);
+      memoryStore[STORAGE_KEYS.USER] = data;
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, data);
     } catch (error) {
-      console.error('Erro ao salvar usuário no storage:', error);
+      console.warn('Usuário em memória (fallback):', error);
     }
   },
 
   async getUser(): Promise<Usuario | null> {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.USER);
-      return data ? JSON.parse(data) : null;
+      if (data) return JSON.parse(data);
+      const inMemory = memoryStore[STORAGE_KEYS.USER];
+      return inMemory ? JSON.parse(inMemory) : null;
     } catch (error) {
-      console.error('Erro ao recuperar usuário do storage:', error);
-      return null;
+      const inMemory = memoryStore[STORAGE_KEYS.USER];
+      return inMemory ? JSON.parse(inMemory) : null;
     }
   },
 
   async removeUser(): Promise<void> {
     try {
+      delete memoryStore[STORAGE_KEYS.USER];
       await AsyncStorage.removeItem(STORAGE_KEYS.USER);
     } catch (error) {
-      console.error('Erro ao remover usuário do storage:', error);
+      delete memoryStore[STORAGE_KEYS.USER];
     }
   },
 
   // --- Chamados Offline / Cache ---
   async saveChamados(chamados: Chamado[]): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.CHAMADOS, JSON.stringify(chamados));
+      const data = JSON.stringify(chamados);
+      memoryStore[STORAGE_KEYS.CHAMADOS] = data;
+      await AsyncStorage.setItem(STORAGE_KEYS.CHAMADOS, data);
     } catch (error) {
-      console.error('Erro ao salvar chamados em cache:', error);
+      console.warn('Chamados em memória (fallback):', error);
     }
   },
 
   async getChamados(): Promise<Chamado[] | null> {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.CHAMADOS);
-      return data ? JSON.parse(data) : null;
+      if (data) return JSON.parse(data);
+      const inMemory = memoryStore[STORAGE_KEYS.CHAMADOS];
+      return inMemory ? JSON.parse(inMemory) : null;
     } catch (error) {
-      console.error('Erro ao recuperar chamados do cache:', error);
-      return null;
+      const inMemory = memoryStore[STORAGE_KEYS.CHAMADOS];
+      return inMemory ? JSON.parse(inMemory) : null;
     }
   },
 
   // --- Limpeza de Sessão (Logout) ---
   async clearSession(): Promise<void> {
     try {
+      delete memoryStore[STORAGE_KEYS.TOKEN];
+      delete memoryStore[STORAGE_KEYS.USER];
       await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
       await AsyncStorage.removeItem(STORAGE_KEYS.USER);
     } catch (error) {
-      console.error('Erro ao limpar sessão no storage:', error);
+      delete memoryStore[STORAGE_KEYS.TOKEN];
+      delete memoryStore[STORAGE_KEYS.USER];
     }
   },
 };

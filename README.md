@@ -178,7 +178,7 @@ Alinhado com o tema **CitizenTech**, a interface adota tons ecológicos e tecnol
 
 1. **Clonar ou acessar o repositório:**
    ```bash
-   git clone https://github.com/EduardoGRibeiro/Mobile-Application-Development.git
+   git clone https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development.git
    cd Mobile-Application-Development
    ```
 
