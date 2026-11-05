@@ -8,6 +8,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { INTEGRANTES_GRUPO } from '../services/mockData';
 import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../theme';
@@ -27,7 +28,8 @@ export const SobreAppScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Header com Identidade Visual do Projeto */}
       <View style={styles.header}>
         <View style={styles.logoBadge}>
@@ -177,13 +179,18 @@ export const SobreAppScreen: React.FC = () => {
       </View>
 
       <Text style={styles.copyrightText}>
-        FIAP Global Solution 2026/2 • Engenharia de Software
+        FIAP Global Solution 2026/2 • Análise e Desenvolvimento de Sistemas
       </Text>
     </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

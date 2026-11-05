@@ -10,6 +10,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -124,7 +125,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
   const isOwner = usuario?.id === chamado.autorId;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Top Header Bar */}
       <View style={styles.headerBar}>
         <TouchableOpacity
@@ -376,7 +377,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
         confirmText="OK"
         onConfirm={() => setFeedbackSuccess(null)}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

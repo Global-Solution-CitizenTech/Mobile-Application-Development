@@ -104,6 +104,31 @@ export const authService = {
   },
 
   /**
+   * Atualiza os dados cadastrais do cidadão (nome, email, telefone, bairro, senha)
+   */
+  async updateProfile(
+    dados: Partial<Usuario> & { novaSenha?: string }
+  ): Promise<Usuario> {
+    try {
+      const response = await api.put<Usuario>('/auth/me', dados);
+      await storageService.saveUser(response.data);
+      return response.data;
+    } catch (error: any) {
+      console.warn('API offline: Atualizando perfil localmente...');
+      const current = (await storageService.getUser()) || DEMO_USER;
+      const updated: Usuario = {
+        ...current,
+        nome: dados.nome || current.nome,
+        email: dados.email || current.email,
+        telefone: dados.telefone || current.telefone,
+        bairro: dados.bairro || current.bairro,
+      };
+      await storageService.saveUser(updated);
+      return updated;
+    }
+  },
+
+  /**
    * Realiza logout limpando os dados de sessão
    */
   async logout(): Promise<void> {

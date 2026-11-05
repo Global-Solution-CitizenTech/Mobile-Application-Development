@@ -10,6 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -274,7 +275,7 @@ export const HomeScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {loading && !refreshing && chamados.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary[600]} />
@@ -321,7 +322,7 @@ export const HomeScreen: React.FC = () => {
         confirmText="OK"
         onConfirm={() => setModalFeedback(null)}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

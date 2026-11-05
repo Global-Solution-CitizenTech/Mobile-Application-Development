@@ -20,6 +20,7 @@ export interface AuthContextData {
   logout: () => Promise<void>;
   clearError: () => void;
   updateUser: (user: Usuario) => Promise<void>;
+  updateProfile: (dados: Partial<Usuario> & { novaSenha?: string }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -114,6 +115,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await storageService.saveUser(updated);
   };
 
+  const updateProfile = async (dados: Partial<Usuario> & { novaSenha?: string }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const updated = await authService.updateProfile(dados);
+      setUsuario(updated);
+    } catch (err: any) {
+      const msg = err.message || 'Falha ao atualizar dados do perfil.';
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const clearError = () => setError(null);
 
   return (
@@ -129,6 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout,
         clearError,
         updateUser,
+        updateProfile,
       }}
     >
       {children}
