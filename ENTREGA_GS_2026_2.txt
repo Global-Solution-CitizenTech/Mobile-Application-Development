@@ -1,0 +1,33 @@
+================================================================================
+FIAP GLOBAL SOLUTION 2026/2 - CITIZENTECH
+DISCIPLINA: MOBILE APPLICATION DEVELOPMENT
+TURMA: 2TDSPG
+================================================================================
+
+1. NOME DO PROJETO / GRUPO:
+CitizenTech - Zeladoria Urbana Colaborativa
+
+2. INTEGRANTES DO GRUPO:
+- Enzo Okuizumi              | RM: 561432 | 2TDSPG | GitHub: EnzoOkuizumiFiap
+- Gustavo Okada              | RM: 563428 | 2TDSPG | GitHub: Gdev3356
+- Lucas Barros Gouveia       | RM: 566422 | 2TDSPG | GitHub: LuzBGouveia
+- Luna de Carvalho Guimarães | RM: 562290 | 2TDSPG | GitHub: lunaguima
+- Milton Marcelino           | RM: 564836 | 2TDSPG | GitHub: MiltonMarcelino
+
+3. ENDEREÇO DO REPOSITÓRIO GITHUB:
+https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
+(Lembrar de adicionar o e-mail do professor como colaborador/leitor no GitHub!)
+
+4. COMMIT HASH DE REFERÊNCIA (AUDITORIA):
+6b7d415b3c3756eb910ad5946fa823d6a6c4ae23
+(ID Curto: 6b7d415)
+
+5. LINK DO VÍDEO NO YOUTUBE (MÁXIMO 5 MINUTOS - PÚBLICO OU NÃO LISTADO):
+[INSERIR O LINK DO VÍDEO DO YOUTUBE AQUI APÓS GRAVAÇÃO]
+
+6. PUBLICAÇÃO NO FIREBASE APP DISTRIBUTION:
+- App: CitizenTech Mobile (Android APK)
+- Status: Publicado via Firebase App Distribution
+- Tester: [E-mail do professor adicionado no console do Firebase]
+
+================================================================================
