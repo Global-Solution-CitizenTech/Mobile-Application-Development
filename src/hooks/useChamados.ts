@@ -1,6 +1,6 @@
 /**
  * Hook Customizado de Gerenciamento de Chamados de Zeladoria
- * Centraliza o estado da lista, filtros, estatísticas e chamadas ao serviço
+ * Centraliza o estado da lista, filtros, estatísticas, apoios e chamadas ao serviço
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -91,6 +91,13 @@ export const useChamados = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Operação APOIAR / PRIORIZAR
+  const apoiarChamado = async (id: string): Promise<Chamado> => {
+    const atualizado = await chamadoService.apoiar(id);
+    await carregarChamados();
+    return atualizado;
   };
 
   // Operação UPDATE STATUS
@@ -188,6 +195,7 @@ export const useChamados = () => {
     carregarChamados,
     criarChamado,
     atualizarChamado,
+    apoiarChamado,
     atualizarStatus,
     excluirChamado,
     obterChamadoPorId,
@@ -199,4 +207,3 @@ export const useChamados = () => {
     resetarDados,
   };
 };
-

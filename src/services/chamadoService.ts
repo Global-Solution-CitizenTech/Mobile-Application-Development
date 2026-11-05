@@ -12,9 +12,109 @@ import {
   UpdateChamadoDTO,
   FiltroChamados,
   StatusChamado,
+  PrioridadeChamado,
+  CategoriaChamado,
   Usuario,
   EstatisticasChamados,
 } from '../types';
+
+/**
+ * Simula a Triagem Inteligente (Visão Computacional + Spring AI / GenAI)
+ * quando o backend ainda está em modo mock local.
+ */
+export function gerarTriagemIaAutomatica(
+  categoria: CategoriaChamado,
+  titulo: string,
+  descricao: string
+): {
+  prioridade: PrioridadeChamado;
+  parecerIa: string;
+  orgaoResponsavel: string;
+} {
+  const texto = `${titulo} ${descricao}`.toLowerCase();
+  const temTermoCritico =
+    texto.includes('risco') ||
+    texto.includes('perigo') ||
+    texto.includes('acidente') ||
+    texto.includes('fiação') ||
+    texto.includes('alagamento') ||
+    texto.includes('profundo') ||
+    texto.includes('cadeirante') ||
+    texto.includes('idoso');
+
+  switch (categoria) {
+    case 'Buraco na Rua':
+      return {
+        prioridade: temTermoCritico ? 'Crítica' : 'Alta',
+        orgaoResponsavel: 'Subprefeitura — Equipe de Pavimentação e Tapa-Buraco',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Deformação asfáltica detectada na via. Risco de acidentes para motociclistas e danos mecânicos. Recomendado reparo prioritário com massa asfáltica.',
+      };
+    case 'Bueiro Entupido':
+      return {
+        prioridade: temTermoCritico ? 'Crítica' : 'Alta',
+        orgaoResponsavel: 'Subprefeitura — Drenagem Urbana e Hidrojateamento',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Obstrução de boca de lobo identificada. Risco elevado de bolsão d’água e alagamento em dias de chuva. Recomendada desobstrução preventiva.',
+      };
+    case 'Iluminação Pública':
+      return {
+        prioridade: 'Alta',
+        orgaoResponsavel: 'Central Ilumina SP — Manutenção de Rede LED',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Ponto escuro identificado em via pública, comprometendo a segurança noturna de pedestres e moradores. Encaminhado para substituição de luminária.',
+      };
+    case 'Poda de Árvore':
+      return {
+        prioridade: temTermoCritico ? 'Crítica' : 'Média',
+        orgaoResponsavel: 'Defesa Civil & Equipe de Manejo Arbóreo',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Interferência arbórea identificada no espaço urbano. Caso haja contato com rede elétrica, requer ação conjunta com a concessionária de energia.',
+      };
+    case 'Vazamento de Água':
+      return {
+        prioridade: 'Alta',
+        orgaoResponsavel: 'Concessionária de Saneamento (Sabesp) & Fiscalização Municipal',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Vazamento ativo em via pública com desperdício hídrico e risco de solapamento do asfalto.',
+      };
+    case 'Sinalização e Trânsito':
+      return {
+        prioridade: temTermoCritico ? 'Crítica' : 'Alta',
+        orgaoResponsavel: 'CET — Engenharia de Tráfego e Sinalização',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Falha de sinalização viária com impacto direto na segurança do cruzamento e travessia de pedestres.',
+      };
+    case 'Entulho e Descarte Irregular':
+      return {
+        prioridade: 'Média',
+        orgaoResponsavel: 'Subprefeitura — Limpeza Pública e Fiscalização Ambiental',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Acúmulo irregular de resíduos sólidos na calçada/via, prejudicando a mobilidade peatonal e higiene do bairro.',
+      };
+    default:
+      return {
+        prioridade: temTermoCritico ? 'Alta' : 'Baixa',
+        orgaoResponsavel: 'Central de Zeladoria Municipal 156',
+        parecerIa:
+          'Triagem IA (Visão + LLM): Solicitação de manutenção urbana catalogada e encaminhada para vistoria técnica da regional.',
+      };
+  }
+}
+
+function normalizarChamado(item: Chamado): Chamado {
+  if (item.prioridade && typeof item.apoiosCount === 'number' && item.parecerIa) {
+    return item;
+  }
+  const triagem = gerarTriagemIaAutomatica(item.categoria, item.titulo, item.descricao);
+  return {
+    ...item,
+    prioridade: item.prioridade || triagem.prioridade,
+    apoiosCount: typeof item.apoiosCount === 'number' ? item.apoiosCount : 12,
+    parecerIa: item.parecerIa || triagem.parecerIa,
+    orgaoResponsavel: item.orgaoResponsavel || triagem.orgaoResponsavel,
+  };
+}
 
 export const chamadoService = {
   /**
@@ -23,7 +123,8 @@ export const chamadoService = {
   async ensureInitialData(): Promise<Chamado[]> {
     const cached = await storageService.getChamados();
     if (cached && cached.length > 0) {
-      return cached;
+      const normalizados = cached.map(normalizarChamado);
+      return normalizados;
     }
     await storageService.saveChamados(INITIAL_MOCK_CHAMADOS);
     return INITIAL_MOCK_CHAMADOS;
@@ -44,15 +145,14 @@ export const chamadoService = {
       });
 
       if (response.data && Array.isArray(response.data)) {
-        await storageService.saveChamados(response.data);
-        return response.data;
+        const normalizados = response.data.map(normalizarChamado);
+        await storageService.saveChamados(normalizados);
+        return normalizados;
       }
     } catch (error: any) {
-      // Se a API externa estiver offline, lê do armazenamento local com os filtros aplicados
       console.warn('API offline: Carregando chamados do repositório local persistente.');
     }
 
-    // Leitura do cache local
     let chamados = await this.ensureInitialData();
 
     if (filtros) {
@@ -90,7 +190,7 @@ export const chamadoService = {
   async obterPorId(id: string): Promise<Chamado> {
     try {
       const response = await api.get<Chamado>(`/chamados/${id}`);
-      return response.data;
+      return normalizarChamado(response.data);
     } catch (error: any) {
       console.warn(`API offline: Buscando chamado ${id} no cache local.`);
     }
@@ -109,21 +209,24 @@ export const chamadoService = {
    * CREATE: Cadastra uma nova ocorrência de zeladoria
    */
   async criar(dto: CreateChamadoDTO, autor: Usuario): Promise<Chamado> {
+    const triagem = gerarTriagemIaAutomatica(dto.categoria, dto.titulo, dto.descricao);
+
     try {
       const response = await api.post<Chamado>('/chamados', dto);
       if (response.data) {
-        // Atualiza cache
+        const normalizado = normalizarChamado(response.data);
         const chamados = await this.ensureInitialData();
-        await storageService.saveChamados([response.data, ...chamados]);
-        return response.data;
+        await storageService.saveChamados([normalizado, ...chamados]);
+        return normalizado;
       }
     } catch (error: any) {
       console.warn('API offline: Criando ocorrência no repositório local.');
     }
 
-    // Criação em modo resiliente local
     const now = new Date().toISOString();
     const randomProtocolNum = Math.floor(1000 + Math.random() * 9000);
+    const prioridadeFinal = dto.prioridade || triagem.prioridade;
+
     const novoChamado: Chamado = {
       id: `chm_${Date.now()}`,
       protocolo: `ZEL-2026-${randomProtocolNum}`,
@@ -131,6 +234,11 @@ export const chamadoService = {
       descricao: dto.descricao,
       categoria: dto.categoria,
       status: 'Aberto',
+      prioridade: prioridadeFinal,
+      apoiosCount: 1,
+      apoiadoPeloUsuario: true,
+      parecerIa: dto.parecerIa || triagem.parecerIa,
+      orgaoResponsavel: dto.orgaoResponsavel || triagem.orgaoResponsavel,
       localizacao: dto.localizacao,
       fotoUrl:
         dto.fotoUrl ||
@@ -144,7 +252,7 @@ export const chamadoService = {
           id: `hist_${Date.now()}`,
           data: now,
           novoStatus: 'Aberto',
-          observacao: 'Ocorrência registrada no sistema pelo cidadão.',
+          observacao: `Ocorrência registrada pelo cidadão. Triagem IA definiu prioridade ${prioridadeFinal}.`,
           autorNome: autor.nome,
         },
       ],
@@ -164,13 +272,14 @@ export const chamadoService = {
     try {
       const response = await api.put<Chamado>(`/chamados/${id}`, dto);
       if (response.data) {
+        const normalizado = normalizarChamado(response.data);
         const chamados = await this.ensureInitialData();
         const index = chamados.findIndex((c) => c.id === id);
         if (index !== -1) {
-          chamados[index] = response.data;
+          chamados[index] = normalizado;
           await storageService.saveChamados(chamados);
         }
-        return response.data;
+        return normalizado;
       }
     } catch (error: any) {
       console.warn(`API offline: Atualizando chamado ${id} localmente.`);
@@ -191,6 +300,7 @@ export const chamadoService = {
       titulo: dto.titulo ?? existente.titulo,
       descricao: dto.descricao ?? existente.descricao,
       categoria: dto.categoria ?? existente.categoria,
+      prioridade: dto.prioridade ?? existente.prioridade,
       localizacao: dto.localizacao ?? existente.localizacao,
       fotoUrl: dto.fotoUrl ?? existente.fotoUrl,
       feedbackResolucao: dto.feedbackResolucao ?? existente.feedbackResolucao,
@@ -201,6 +311,56 @@ export const chamadoService = {
     chamados[index] = atualizado;
     await storageService.saveChamados(chamados);
 
+    return atualizado;
+  },
+
+  /**
+   * APOIAR / PRIORIZAR: Permite que moradores confirmem/apoiem um problema do bairro
+   */
+  async apoiar(id: string): Promise<Chamado> {
+    try {
+      const response = await api.post<Chamado>(`/chamados/${id}/apoiar`);
+      if (response.data) {
+        const normalizado = normalizarChamado(response.data);
+        const chamados = await this.ensureInitialData();
+        const index = chamados.findIndex((c) => c.id === id);
+        if (index !== -1) {
+          chamados[index] = normalizado;
+          await storageService.saveChamados(chamados);
+        }
+        return normalizado;
+      }
+    } catch (error: any) {
+      console.warn(`API offline: Registrando apoio comunitário no chamado ${id} localmente.`);
+    }
+
+    const chamados = await this.ensureInitialData();
+    const index = chamados.findIndex((c) => c.id === id);
+    if (index === -1) {
+      throw new Error('Chamado não localizado.');
+    }
+
+    const atual = chamados[index];
+    const jaApoiado = !!atual.apoiadoPeloUsuario;
+    const novoCount = jaApoiado ? Math.max(1, (atual.apoiosCount || 1) - 1) : (atual.apoiosCount || 0) + 1;
+
+    // Se atingir alto engajamento comunitário (ex: >= 25 apoios), sobe prioridade automaticamente
+    let novaPrioridade = atual.prioridade;
+    if (!jaApoiado && novoCount >= 25 && atual.prioridade !== 'Crítica') {
+      novaPrioridade = 'Crítica';
+    } else if (!jaApoiado && novoCount >= 15 && atual.prioridade === 'Média') {
+      novaPrioridade = 'Alta';
+    }
+
+    const atualizado: Chamado = {
+      ...atual,
+      apoiosCount: novoCount,
+      apoiadoPeloUsuario: !jaApoiado,
+      prioridade: novaPrioridade,
+    };
+
+    chamados[index] = atualizado;
+    await storageService.saveChamados(chamados);
     return atualizado;
   },
 
@@ -219,13 +379,14 @@ export const chamadoService = {
         feedbackResolucao: feedback,
       });
       if (response.data) {
+        const normalizado = normalizarChamado(response.data);
         const chamados = await this.ensureInitialData();
         const index = chamados.findIndex((c) => c.id === id);
         if (index !== -1) {
-          chamados[index] = response.data;
+          chamados[index] = normalizado;
           await storageService.saveChamados(chamados);
         }
-        return response.data;
+        return normalizado;
       }
     } catch (error: any) {
       console.warn(`API offline: Atualizando status do chamado ${id} localmente.`);
@@ -321,4 +482,3 @@ export const chamadoService = {
 function atoChamado(chamado: any): chamado is Chamado {
   return chamado && typeof chamado.id === 'string';
 }
-

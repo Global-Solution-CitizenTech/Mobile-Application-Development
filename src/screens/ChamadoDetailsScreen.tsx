@@ -15,9 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useChamados } from '../hooks/useChamados';
-import { useAuth } from '../hooks/useAuth';
 import { StatusBadge } from '../components/StatusBadge';
 import { CategoryBadge } from '../components/CategoryBadge';
+import { getPriorityConfig } from '../components/ChamadoCard';
 import { Button } from '../components/Button';
 import { FeedbackModal } from '../components/FeedbackModal';
 import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../theme';
@@ -32,8 +32,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
   const navigation = useNavigation<ChamadoDetailsNavProp>();
   const { id } = route.params;
 
-  const { usuario } = useAuth();
-  const { obterChamadoPorId, atualizarStatus, excluirChamado } = useChamados();
+  const { obterChamadoPorId, atualizarStatus, excluirChamado, apoiarChamado } = useChamados();
 
   const [chamado, setChamado] = useState<Chamado | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +62,12 @@ export const ChamadoDetailsScreen: React.FC = () => {
   useEffect(() => {
     carregarDetalhes();
   }, [carregarDetalhes]);
+
+  const handleToggleSupport = async () => {
+    if (!chamado) return;
+    const atualizado = await apoiarChamado(chamado.id);
+    setChamado(atualizado);
+  };
 
   const handleConfirmStatusChange = async () => {
     if (!chamado) return;
@@ -122,7 +127,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
     );
   }
 
-  const isOwner = usuario?.id === chamado.autorId;
+  const prio = getPriorityConfig(chamado.prioridade);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -158,7 +163,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
           </View>
         )}
 
-        {/* Card Principal: Título, Status e Categoria */}
+        {/* Card Principal: Título, Status, Categoria e Apoio Colaborativo */}
         <View style={[styles.mainCard, shadows.sm]}>
           <View style={styles.badgeRow}>
             <StatusBadge status={chamado.status} />
@@ -168,21 +173,49 @@ export const ChamadoDetailsScreen: React.FC = () => {
           <Text style={styles.title}>{chamado.titulo}</Text>
 
           <View style={styles.authorRow}>
-            <Ionicons name="person-circle" size={20} color={colors.secondary[400]} />
+            <Ionicons name="person-circle" size={18} color={colors.secondary[400]} />
             <Text style={styles.authorName}>
-              Registrado por: <Text style={styles.boldText}>{chamado.autorNome}</Text>
+              Por <Text style={styles.boldText}>{chamado.autorNome}</Text> • {formatDate(chamado.dataAbertura)}
             </Text>
-          </View>
-
-          <View style={styles.dateRow}>
-            <Ionicons name="time-outline" size={16} color={colors.secondary[400]} />
-            <Text style={styles.dateText}>Aberto em: {formatDate(chamado.dataAbertura)}</Text>
           </View>
 
           <View style={styles.divider} />
 
-          <Text style={styles.sectionHeading}>Descrição Detalhada</Text>
+          <Text style={styles.sectionHeading}>Descrição do Problema</Text>
           <Text style={styles.descriptionText}>{chamado.descricao}</Text>
+
+          {/* Barra de Apoio e Priorização Comunitária */}
+          <View style={styles.communityBar}>
+            <View style={styles.communityInfo}>
+              <Ionicons name="people" size={18} color={colors.primary[700]} />
+              <Text style={styles.communityText}>
+                <Text style={styles.boldText}>{chamado.apoiosCount || 1} moradores</Text> confirmaram este problema
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.supportActionBtn,
+                chamado.apoiadoPeloUsuario && styles.supportActionBtnActive,
+              ]}
+              onPress={handleToggleSupport}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={chamado.apoiadoPeloUsuario ? 'checkmark-circle' : 'thumbs-up-outline'}
+                size={16}
+                color={chamado.apoiadoPeloUsuario ? colors.surface : colors.primary[700]}
+              />
+              <Text
+                style={[
+                  styles.supportActionText,
+                  chamado.apoiadoPeloUsuario && styles.supportActionTextActive,
+                ]}
+              >
+                {chamado.apoiadoPeloUsuario ? 'Apoiado' : 'Apoiar'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {chamado.feedbackResolucao && (
             <View style={styles.feedbackResolucaoBox}>
@@ -193,6 +226,39 @@ export const ChamadoDetailsScreen: React.FC = () => {
               <Text style={styles.feedbackDescription}>{chamado.feedbackResolucao}</Text>
             </View>
           )}
+        </View>
+
+        {/* Card de Triagem Inteligente IA & Prioridade */}
+        <View style={[styles.mainCard, shadows.sm]}>
+          <View style={styles.aiHeaderRow}>
+            <View style={styles.cardHeaderWithIcon}>
+              <Ionicons name="sparkles" size={18} color={colors.primary[600]} />
+              <Text style={styles.sectionHeading}>Triagem IA & Prioridade</Text>
+            </View>
+
+            <View
+              style={[
+                styles.priorityBadge,
+                { backgroundColor: prio.bg, borderColor: prio.border },
+              ]}
+            >
+              <Ionicons name={prio.icon} size={12} color={prio.text} />
+              <Text style={[styles.priorityBadgeText, { color: prio.text }]}>
+                Urgência {chamado.prioridade || 'Média'}
+              </Text>
+            </View>
+          </View>
+
+          {chamado.orgaoResponsavel && (
+            <Text style={styles.orgaoLabel}>
+              Órgão Sugerido: <Text style={styles.boldText}>{chamado.orgaoResponsavel}</Text>
+            </Text>
+          )}
+
+          <Text style={styles.aiParecerBody}>
+            {chamado.parecerIa ||
+              'Triagem automática realizada com base na categoria e descrição do relato urbano.'}
+          </Text>
         </View>
 
         {/* Card de Localização */}
@@ -216,9 +282,8 @@ export const ChamadoDetailsScreen: React.FC = () => {
             </View>
           ) : null}
 
-          {/* Simulação Visual de Mapa com Coordenadas */}
           <View style={styles.mapSimulationBox}>
-            <Ionicons name="map" size={28} color={colors.primary[600]} />
+            <Ionicons name="map" size={26} color={colors.primary[600]} />
             <View style={styles.mapInfo}>
               <Text style={styles.mapTitle}>Geolocalização Registrada</Text>
               <Text style={styles.mapCoords}>
@@ -232,7 +297,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
         <View style={[styles.mainCard, shadows.sm]}>
           <View style={styles.cardHeaderWithIcon}>
             <Ionicons name="git-network-outline" size={20} color={colors.secondary[700]} />
-            <Text style={styles.sectionHeading}>Histórico de Acompanhamento</Text>
+            <Text style={styles.sectionHeading}>Linha do Tempo de Acompanhamento</Text>
           </View>
 
           {chamado.historico && chamado.historico.length > 0 ? (
@@ -244,7 +309,7 @@ export const ChamadoDetailsScreen: React.FC = () => {
                 </View>
                 <View style={styles.timelineBody}>
                   <View style={styles.timelineStatusRow}>
-                    <Text style={styles.timelineStatusTitle}>Novo Status: {item.novoStatus}</Text>
+                    <Text style={styles.timelineStatusTitle}>Status: {item.novoStatus}</Text>
                     <Text style={styles.timelineDate}>{formatDate(item.data)}</Text>
                   </View>
                   <Text style={styles.timelineObs}>{item.observacao}</Text>
@@ -259,9 +324,9 @@ export const ChamadoDetailsScreen: React.FC = () => {
 
         {/* Painel de Ações de Negócio do CRUD */}
         <View style={[styles.mainCard, shadows.sm]}>
-          <Text style={styles.sectionHeading}>Ações de Negócio</Text>
+          <Text style={styles.sectionHeading}>Gerenciar Ocorrência</Text>
           <Text style={styles.actionsDescription}>
-            Gerencie o ciclo de vida deste chamado de zeladoria urbana:
+            Atualize o status de resolução, edite os dados ou remova o protocolo:
           </Text>
 
           <View style={styles.actionsGrid}>
@@ -431,7 +496,7 @@ const styles = StyleSheet.create({
   },
   mainImage: {
     width: '100%',
-    height: 220,
+    height: 210,
   },
   mainCard: {
     backgroundColor: colors.surface,
@@ -451,32 +516,22 @@ const styles = StyleSheet.create({
     fontSize: fontSize.title,
     fontWeight: fontWeight.bold,
     color: colors.secondary[900],
-    lineHeight: 26,
-    marginBottom: spacing.sm,
+    lineHeight: 25,
+    marginBottom: spacing.xs + 2,
   },
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   authorName: {
     fontSize: fontSize.caption,
-    color: colors.secondary[600],
+    color: colors.secondary[500],
   },
   boldText: {
     fontWeight: fontWeight.bold,
     color: colors.secondary[900],
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: spacing.sm,
-  },
-  dateText: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
   },
   divider: {
     height: 1,
@@ -487,12 +542,58 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodyLarge,
     fontWeight: fontWeight.bold,
     color: colors.secondary[900],
-    marginBottom: spacing.xs,
   },
   descriptionText: {
     fontSize: fontSize.body,
     color: colors.secondary[700],
     lineHeight: 22,
+    marginTop: spacing.xs,
+  },
+  communityBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.primary[50],
+    padding: spacing.sm + 2,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary[200],
+    marginTop: spacing.md,
+  },
+  communityInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  communityText: {
+    fontSize: fontSize.caption,
+    color: colors.secondary[700],
+    flex: 1,
+  },
+  supportActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary[600],
+  },
+  supportActionBtnActive: {
+    backgroundColor: colors.primary[600],
+    borderColor: colors.primary[600],
+  },
+  supportActionText: {
+    fontSize: fontSize.caption,
+    fontWeight: fontWeight.bold,
+    color: colors.primary[700],
+  },
+  supportActionTextActive: {
+    color: colors.surface,
   },
   feedbackResolucaoBox: {
     marginTop: spacing.md,
@@ -518,16 +619,49 @@ const styles = StyleSheet.create({
     color: colors.secondary[800],
     lineHeight: 18,
   },
+  aiHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs + 2,
+  },
+  priorityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  priorityBadgeText: {
+    fontSize: fontSize.tiny,
+    fontWeight: fontWeight.bold,
+  },
+  orgaoLabel: {
+    fontSize: fontSize.caption,
+    color: colors.secondary[600],
+    marginBottom: 6,
+  },
+  aiParecerBody: {
+    fontSize: fontSize.bodySmall,
+    color: colors.secondary[700],
+    lineHeight: 20,
+    backgroundColor: colors.secondary[50],
+    padding: spacing.sm,
+    borderRadius: borderRadius.sm,
+  },
   cardHeaderWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   addressStreet: {
     fontSize: fontSize.bodyLarge,
     fontWeight: fontWeight.bold,
     color: colors.secondary[900],
+    marginTop: 2,
   },
   addressSub: {
     fontSize: fontSize.caption,
@@ -577,6 +711,7 @@ const styles = StyleSheet.create({
   timelineItem: {
     flexDirection: 'row',
     marginBottom: spacing.md,
+    marginTop: spacing.xs,
   },
   timelineIndicator: {
     alignItems: 'center',
@@ -632,6 +767,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.caption,
     color: colors.secondary[500],
     marginBottom: spacing.md,
+    marginTop: 2,
   },
   actionsGrid: {
     flexDirection: 'row',
@@ -712,4 +848,3 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
 });
-

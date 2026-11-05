@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { INTEGRANTES_GRUPO } from '../services/mockData';
 import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../theme';
 
@@ -20,6 +21,7 @@ export const COMMIT_HASH_CURTO = COMMIT_HASH_REFERENCIA.slice(0, 7);
 export const APP_VERSAO = '1.0.0';
 
 export const SobreAppScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [copied, setCopied] = useState(false);
 
   const handleCopyHash = () => {
@@ -29,159 +31,172 @@ export const SobreAppScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      {/* Barra de Navegação Superior com Botão Voltar */}
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.secondary[900]} />
+        </TouchableOpacity>
+        <Text style={styles.topBarTitle}>Sobre o Aplicativo</Text>
+        <View style={{ width: 32 }} />
+      </View>
+
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Header com Identidade Visual do Projeto */}
-      <View style={styles.header}>
-        <View style={styles.logoBadge}>
-          <Ionicons name="leaf" size={36} color={colors.surface} />
-        </View>
-        <Text style={styles.brandTitle}>CitizenTech</Text>
-        <Text style={styles.tagline}>Zeladoria Urbana Colaborativa & Cidades Inteligentes</Text>
-        <View style={styles.versionBadge}>
-          <Text style={styles.versionText}>Versão {APP_VERSAO} • Produção</Text>
-        </View>
-      </View>
-
-      {/* EXIGÊNCIA OBRIGATÓRIA DO EDITAL: COMMIT HASH DE REFERÊNCIA */}
-      <View style={[styles.commitCard, shadows.md]}>
-        <View style={styles.commitHeaderRow}>
-          <View style={styles.commitIconContainer}>
-            <Ionicons name="git-commit-outline" size={22} color={colors.primary[600]} />
+        {/* Header com Identidade Visual do Projeto */}
+        <View style={styles.header}>
+          <View style={styles.logoBadge}>
+            <Ionicons name="leaf" size={36} color={colors.surface} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.commitTitle}>Commit Hash de Referência</Text>
-            <Text style={styles.commitSubtitle}>
-              Identificador auditável exigido pelo Edital FIAP GS 2026/2
+          <Text style={styles.brandTitle}>CitizenTech</Text>
+          <Text style={styles.tagline}>Zeladoria Urbana Colaborativa & Cidades Inteligentes</Text>
+          <View style={styles.versionBadge}>
+            <Text style={styles.versionText}>Versão {APP_VERSAO} • Produção</Text>
+          </View>
+        </View>
+
+        {/* EXIGÊNCIA OBRIGATÓRIA DO EDITAL: COMMIT HASH DE REFERÊNCIA */}
+        <View style={[styles.commitCard, shadows.md]}>
+          <View style={styles.commitHeaderRow}>
+            <View style={styles.commitIconContainer}>
+              <Ionicons name="git-commit-outline" size={22} color={colors.primary[600]} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.commitTitle}>Commit Hash de Referência</Text>
+              <Text style={styles.commitSubtitle}>
+                Identificador auditável exigido pelo Edital FIAP GS 2026/2
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.hashBox}>
+            <View style={styles.hashRow}>
+              <Text style={styles.hashLabel}>HASH COMPLETO:</Text>
+              <TouchableOpacity onPress={handleCopyHash} style={styles.copyBtn}>
+                <Ionicons
+                  name={copied ? 'checkmark-circle' : 'copy-outline'}
+                  size={16}
+                  color={copied ? colors.feedback.success : colors.primary[700]}
+                />
+                <Text style={styles.copyBtnText}>{copied ? 'Copiado!' : 'Copiar'}</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.hashValue} selectable>
+              {COMMIT_HASH_REFERENCIA}
             </Text>
-          </View>
-        </View>
 
-        <View style={styles.hashBox}>
-          <View style={styles.hashRow}>
-            <Text style={styles.hashLabel}>HASH COMPLETO:</Text>
-            <TouchableOpacity onPress={handleCopyHash} style={styles.copyBtn}>
-              <Ionicons
-                name={copied ? 'checkmark-circle' : 'copy-outline'}
-                size={16}
-                color={copied ? colors.feedback.success : colors.primary[700]}
-              />
-              <Text style={styles.copyBtnText}>{copied ? 'Copiado!' : 'Copiar'}</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.hashValue} selectable>
-            {COMMIT_HASH_REFERENCIA}
-          </Text>
-
-          <View style={styles.shortHashRow}>
-            <Text style={styles.shortHashLabel}>ID Curto de Tag:</Text>
-            <View style={styles.shortHashBadge}>
-              <Text style={styles.shortHashValue}>{COMMIT_HASH_CURTO}</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* INTEGRANTES DO GRUPO */}
-      <View style={[styles.card, shadows.sm]}>
-        <View style={styles.sectionHeaderRow}>
-          <Ionicons name="people-outline" size={20} color={colors.secondary[800]} />
-          <Text style={styles.sectionTitle}>Integrantes do Grupo (FIAP)</Text>
-        </View>
-        <Text style={styles.sectionDescription}>
-          Equipe de Engenharia e Desenvolvimento Mobile:
-        </Text>
-
-        {INTEGRANTES_GRUPO.map((integrante, index) => (
-          <View key={integrante.rm || index} style={styles.memberItem}>
-            <View style={styles.memberAvatar}>
-              <Text style={styles.memberInitials}>
-                {integrante.nome
-                  .split(' ')
-                  .map((n) => n[0])
-                  .slice(0, 2)
-                  .join('')}
-              </Text>
-            </View>
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberName}>{integrante.nome}</Text>
-              <Text style={styles.memberRM}>
-                RM: {integrante.rm} • Turma: {integrante.turma || '2TDSPG'}
-              </Text>
-              <Text style={styles.memberRole}>{integrante.funcao}</Text>
-
-              {/* Links Sociais (GitHub e LinkedIn) */}
-              <View style={styles.socialRow}>
-                {integrante.github && (
-                  <TouchableOpacity
-                    style={styles.socialButton}
-                    onPress={() => Linking.openURL(integrante.github!)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="logo-github" size={14} color={colors.secondary[800]} />
-                    <Text style={styles.socialButtonText}>GitHub</Text>
-                  </TouchableOpacity>
-                )}
-                {integrante.linkedin && (
-                  <TouchableOpacity
-                    style={styles.socialButton}
-                    onPress={() => Linking.openURL(integrante.linkedin!)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="logo-linkedin" size={14} color="#0A66C2" />
-                    <Text style={styles.socialButtonText}>LinkedIn</Text>
-                  </TouchableOpacity>
-                )}
+            <View style={styles.shortHashRow}>
+              <Text style={styles.shortHashLabel}>ID Curto de Tag:</Text>
+              <View style={styles.shortHashBadge}>
+                <Text style={styles.shortHashValue}>{COMMIT_HASH_CURTO}</Text>
               </View>
             </View>
           </View>
-        ))}
-      </View>
-
-      {/* OBJETIVO DE DESENVOLVIMENTO SUSTENTÁVEL (ODS 11) */}
-      <View style={[styles.card, shadows.sm]}>
-        <View style={styles.sectionHeaderRow}>
-          <Ionicons name="globe-outline" size={20} color={colors.primary[600]} />
-          <Text style={styles.sectionTitle}>Alinhamento com a ODS 11 - ONU</Text>
-        </View>
-        <Text style={styles.odsTitle}>Cidades e Comunidades Sustentáveis</Text>
-        <Text style={styles.odsText}>
-          O CitizenTech democratiza a zeladoria urbana permitindo que qualquer cidadão registre
-          ocorrências de buracos, bueiros entupidos, iluminação precária e lixo irregular em tempo real,
-          acelerando o tempo de resposta do poder público e reduzindo riscos de alagamentos e acidentes.
-        </Text>
-      </View>
-
-      {/* ARQUITETURA TÉCNICA E TECNOLOGIAS */}
-      <View style={[styles.card, shadows.sm]}>
-        <View style={styles.sectionHeaderRow}>
-          <Ionicons name="layers-outline" size={20} color={colors.secondary[800]} />
-          <Text style={styles.sectionTitle}>Stack Tecnológico & Arquitetura</Text>
         </View>
 
-        <View style={styles.techPillGrid}>
-          {[
-            'React Native',
-            'Expo SDK 58',
-            'TypeScript',
-            'React Navigation v7',
-            'Axios + Interceptors',
-            'JWT Bearer Token',
-            'AsyncStorage Cache',
-            'Clean Architecture',
-            'Hooks Customizados',
-          ].map((tech) => (
-            <View key={tech} style={styles.techPill}>
-              <Ionicons name="checkmark" size={12} color={colors.primary[700]} />
-              <Text style={styles.techPillText}>{tech}</Text>
+        {/* INTEGRANTES DO GRUPO */}
+        <View style={[styles.card, shadows.sm]}>
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="people-outline" size={20} color={colors.secondary[800]} />
+            <Text style={styles.sectionTitle}>Integrantes do Grupo (FIAP)</Text>
+          </View>
+          <Text style={styles.sectionDescription}>
+            Equipe de Engenharia e Desenvolvimento CitizenTech:
+          </Text>
+
+          {INTEGRANTES_GRUPO.map((integrante, index) => (
+            <View key={integrante.rm || index} style={styles.memberItem}>
+              <View style={styles.memberAvatar}>
+                <Text style={styles.memberInitials}>
+                  {integrante.nome
+                    .split(' ')
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join('')}
+                </Text>
+              </View>
+              <View style={styles.memberInfo}>
+                <Text style={styles.memberName}>{integrante.nome}</Text>
+                <Text style={styles.memberRM}>
+                  RM: {integrante.rm} • Turma: {integrante.turma || '2TDSPG'}
+                </Text>
+                <Text style={styles.memberRole}>{integrante.funcao}</Text>
+
+                {/* Links Sociais (GitHub e LinkedIn) */}
+                <View style={styles.socialRow}>
+                  {integrante.github && (
+                    <TouchableOpacity
+                      style={styles.socialButton}
+                      onPress={() => Linking.openURL(integrante.github!)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="logo-github" size={14} color={colors.secondary[800]} />
+                      <Text style={styles.socialButtonText}>GitHub</Text>
+                    </TouchableOpacity>
+                  )}
+                  {integrante.linkedin && (
+                    <TouchableOpacity
+                      style={styles.socialButton}
+                      onPress={() => Linking.openURL(integrante.linkedin!)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="logo-linkedin" size={14} color="#0A66C2" />
+                      <Text style={styles.socialButtonText}>LinkedIn</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
             </View>
           ))}
         </View>
-      </View>
 
-      <Text style={styles.copyrightText}>
-        FIAP Global Solution 2026/2 • Análise e Desenvolvimento de Sistemas
-      </Text>
-    </ScrollView>
+        {/* OBJETIVO DE DESENVOLVIMENTO SUSTENTÁVEL (ODS 11) */}
+        <View style={[styles.card, shadows.sm]}>
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="globe-outline" size={20} color={colors.primary[600]} />
+            <Text style={styles.sectionTitle}>Alinhamento com a ODS 11 - ONU</Text>
+          </View>
+          <Text style={styles.odsTitle}>Cidades e Comunidades Sustentáveis</Text>
+          <Text style={styles.odsText}>
+            O CitizenTech democratiza a zeladoria urbana permitindo que qualquer cidadão identifique,
+            priorize colaborativamente e acompanhe problemas em espaços públicos (buracos, bueiros
+            entupidos, iluminação precária e descarte irregular), acelerando a resposta do poder público.
+          </Text>
+        </View>
+
+        {/* ARQUITETURA TÉCNICA E TECNOLOGIAS */}
+        <View style={[styles.card, shadows.sm]}>
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="layers-outline" size={20} color={colors.secondary[800]} />
+            <Text style={styles.sectionTitle}>Stack Tecnológico & Arquitetura</Text>
+          </View>
+
+          <View style={styles.techPillGrid}>
+            {[
+              'React Native',
+              'Expo SDK',
+              'TypeScript',
+              'React Navigation v7',
+              'Axios + Interceptors',
+              'JWT Bearer Token',
+              'Triagem IA + Priorização',
+              'Clean Architecture',
+              'Hooks Customizados',
+            ].map((tech) => (
+              <View key={tech} style={styles.techPill}>
+                <Ionicons name="checkmark" size={12} color={colors.primary[700]} />
+                <Text style={styles.techPillText}>{tech}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <Text style={styles.copyrightText}>
+          FIAP Global Solution 2026/2 • Análise e Desenvolvimento de Sistemas
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -190,6 +205,24 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backButton: {
+    padding: 4,
+  },
+  topBarTitle: {
+    fontSize: fontSize.bodyLarge,
+    fontWeight: fontWeight.bold,
+    color: colors.secondary[900],
   },
   container: {
     flex: 1,
@@ -202,6 +235,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: spacing.lg,
+    marginTop: spacing.xs,
   },
   logoBadge: {
     width: 64,

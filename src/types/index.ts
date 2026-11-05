@@ -5,6 +5,8 @@
 
 export type StatusChamado = 'Aberto' | 'Em Andamento' | 'Resolvido';
 
+export type PrioridadeChamado = 'Baixa' | 'Média' | 'Alta' | 'Crítica';
+
 export type CategoriaChamado =
   | 'Buraco na Rua'
   | 'Bueiro Entupido'
@@ -42,6 +44,11 @@ export interface Chamado {
   descricao: string;
   categoria: CategoriaChamado;
   status: StatusChamado;
+  prioridade: PrioridadeChamado;
+  apoiosCount: number;
+  apoiadoPeloUsuario?: boolean;
+  parecerIa?: string;
+  orgaoResponsavel?: string;
   localizacao: Localizacao;
   fotoUrl?: string;
   dataAbertura: string;
@@ -56,6 +63,9 @@ export interface CreateChamadoDTO {
   titulo: string;
   descricao: string;
   categoria: CategoriaChamado;
+  prioridade?: PrioridadeChamado;
+  parecerIa?: string;
+  orgaoResponsavel?: string;
   localizacao: Localizacao;
   fotoUrl?: string;
 }
@@ -64,6 +74,7 @@ export interface UpdateChamadoDTO {
   titulo?: string;
   descricao?: string;
   categoria?: CategoriaChamado;
+  prioridade?: PrioridadeChamado;
   localizacao?: Localizacao;
   status?: StatusChamado;
   feedbackResolucao?: string;
@@ -123,4 +134,3 @@ export interface IntegranteGrupo {
   github?: string;
   linkedin?: string;
 }
-

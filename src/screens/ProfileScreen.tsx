@@ -16,11 +16,10 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../hooks/useAuth';
 import { useChamados } from '../hooks/useChamados';
-import { ChamadoCard } from '../components/ChamadoCard';
-import { StatCard } from '../components/StatCard';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { FeedbackModal } from '../components/FeedbackModal';
+import { COMMIT_HASH_CURTO, APP_VERSAO } from './SobreAppScreen';
 import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../theme';
 import { RootStackParamList } from '../navigation/types';
 
@@ -52,11 +51,7 @@ export const ProfileScreen: React.FC = () => {
   const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('');
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
-  // Filtrar os chamados do cidadão logado
-  const meusChamados = chamados.filter((c) => c.autorId === usuario?.id);
-  const meusAbertos = meusChamados.filter((c) => c.status === 'Aberto').length;
-  const meusEmAndamento = meusChamados.filter((c) => c.status === 'Em Andamento').length;
-  const meusResolvidos = meusChamados.filter((c) => c.status === 'Resolvido').length;
+  const meusCount = chamados.filter((c) => c.autorId === usuario?.id).length;
 
   const handleOpenEditModal = () => {
     setNome(usuario?.nome || '');
@@ -151,11 +146,11 @@ export const ProfileScreen: React.FC = () => {
         {/* Header do Perfil */}
         <View style={styles.topHeader}>
           <Text style={styles.pageTitle}>Meu Perfil</Text>
-          <Text style={styles.pageSubtitle}>Dados do Cidadão e Histórico de Ocorrências</Text>
+          <Text style={styles.pageSubtitle}>Dados cadastrais, configurações e informações</Text>
         </View>
 
         {/* Card do Usuário */}
-        <View style={[styles.userCard, shadows.md]}>
+        <View style={[styles.userCard, shadows.sm]}>
           <View style={styles.avatarRow}>
             <Image
               source={{
@@ -190,7 +185,7 @@ export const ProfileScreen: React.FC = () => {
             </View>
 
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Bairro Registrado</Text>
+              <Text style={styles.infoLabel}>Bairro Principal</Text>
               <Text style={styles.infoValue}>{usuario?.bairro || 'Bela Vista'}</Text>
             </View>
 
@@ -211,82 +206,65 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Estatísticas Pessoais */}
-        <Text style={styles.sectionHeading}>Minhas Contribuições de Zeladoria</Text>
-        <View style={styles.statsRow}>
-          <StatCard
-            label="Total Criado"
-            value={meusChamados.length}
-            icon="folder-open-outline"
-            color={colors.secondary[700]}
-            bgColor={colors.secondary[100]}
-          />
-          <StatCard
-            label="Abertos"
-            value={meusAbertos}
-            icon="alert-circle-outline"
-            color={colors.status.aberto.icon}
-            bgColor={colors.status.aberto.bg}
-          />
-          <StatCard
-            label="Em Ação"
-            value={meusEmAndamento}
-            icon="time-outline"
-            color={colors.status.emAndamento.icon}
-            bgColor={colors.status.emAndamento.bg}
-          />
-          <StatCard
-            label="Resolvidos"
-            value={meusResolvidos}
-            icon="checkmark-done-outline"
-            color={colors.status.resolvido.icon}
-            bgColor={colors.status.resolvido.bg}
-          />
-        </View>
-
-        {/* Lista de Chamados do Próprio Usuário */}
-        <View style={styles.myReportsHeaderRow}>
-          <Text style={styles.sectionHeading}>Minhas Ocorrências Recentes ({meusChamados.length})</Text>
-        </View>
-
-        {meusChamados.length === 0 ? (
-          <View style={styles.emptyMyReports}>
-            <Ionicons name="document-text-outline" size={32} color={colors.secondary[400]} />
-            <Text style={styles.emptyText}>Você ainda não registrou chamados com esta conta.</Text>
-            <Button
-              title="Registrar Agora"
-              variant="outline"
-              size="sm"
-              onPress={() => navigation.navigate('NovoChamado')}
-              style={{ marginTop: spacing.sm }}
-            />
-          </View>
-        ) : (
-          meusChamados.map((item) => (
-            <ChamadoCard
-              key={item.id}
-              chamado={item}
-              onPress={() => navigation.navigate('ChamadoDetails', { id: item.id })}
-            />
-          ))
-        )}
-
-        {/* Utilitário para Avaliadores FIAP */}
-        <View style={[styles.utilityCard, shadows.sm]}>
-          <View style={styles.utilityHeader}>
-            <Ionicons name="construct-outline" size={20} color={colors.secondary[700]} />
-            <Text style={styles.utilityTitle}>Ambiente de Avaliação FIAP</Text>
-          </View>
-          <Text style={styles.utilityText}>
-            Precisa restaurar a base original de ocorrências de teste com fotos e endereços reais de São Paulo?
-          </Text>
+        {/* Menu de Navegação e Informações do App */}
+        <Text style={styles.sectionHeading}>Mais Opções & Informações</Text>
+        <View style={[styles.menuCard, shadows.sm]}>
+          {/* Item 1: Atalho para Meus Relatos */}
           <TouchableOpacity
-            style={styles.resetButton}
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('Main', { screen: 'MeusChamadosTab' })}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconBox, { backgroundColor: colors.primary[50] }]}>
+              <Ionicons name="document-text-outline" size={20} color={colors.primary[700]} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={styles.menuItemTitle}>Minhas Ocorrências Registradas</Text>
+              <Text style={styles.menuItemSub}>
+                Você possui {meusCount} {meusCount === 1 ? 'relato aberto' : 'relatos abertos'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.secondary[400]} />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Item 2: Sobre o App (Hash de Commit, Equipe FIAP e ODS 11) */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => navigation.navigate('SobreApp')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconBox, { backgroundColor: '#EFF6FF' }]}>
+              <Ionicons name="information-circle-outline" size={22} color="#2563EB" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={styles.menuItemTitle}>Sobre o Aplicativo & Equipe FIAP</Text>
+              <Text style={styles.menuItemSub}>
+                Versão {APP_VERSAO} • Commit #{COMMIT_HASH_CURTO} • ODS 11
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.secondary[400]} />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Item 3: Utilitário para Avaliadores FIAP */}
+          <TouchableOpacity
+            style={styles.menuRow}
             onPress={() => setResetModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Ionicons name="refresh" size={16} color={colors.primary[700]} />
-            <Text style={styles.resetButtonText}>Restaurar Chamados Originais de Demonstração</Text>
+            <View style={[styles.menuIconBox, { backgroundColor: '#FFFBEB' }]}>
+              <Ionicons name="refresh-outline" size={20} color="#D97706" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={styles.menuItemTitle}>Restaurar Base de Demonstração</Text>
+              <Text style={styles.menuItemSub}>
+                Restaura os 5 chamados iniciais de teste para avaliação
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.secondary[400]} />
           </TouchableOpacity>
         </View>
 
@@ -472,7 +450,7 @@ export const ProfileScreen: React.FC = () => {
           visible={resetModalVisible}
           type="info"
           title="Restaurar Banco de Teste"
-          message="Isto restaurará o conjunto inicial de 5 ocorrências com todos os dados simulados da FIAP."
+          message="Isto restaurará o conjunto inicial de 5 ocorrências com triagem de IA e dados simulados da FIAP."
           confirmText="Restaurar"
           cancelText="Cancelar"
           confirmLoading={isResetting}
@@ -612,72 +590,44 @@ const styles = StyleSheet.create({
     color: colors.secondary[900],
     marginBottom: spacing.sm,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.xs + 2,
+  menuCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     marginBottom: spacing.lg,
+    overflow: 'hidden',
   },
-  myReportsHeaderRow: {
+  menuRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: spacing.md,
+    gap: spacing.md,
   },
-  emptyMyReports: {
+  menuIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
-    padding: spacing.xl,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.lg,
   },
-  emptyText: {
-    fontSize: fontSize.bodySmall,
-    color: colors.secondary[500],
-    marginTop: spacing.xs,
-    textAlign: 'center',
+  menuTextContainer: {
+    flex: 1,
   },
-  utilityCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.lg,
-  },
-  utilityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  utilityTitle: {
+  menuItemTitle: {
     fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
-    color: colors.secondary[800],
+    color: colors.secondary[900],
   },
-  utilityText: {
-    fontSize: fontSize.caption,
+  menuItemSub: {
+    fontSize: fontSize.tiny,
     color: colors.secondary[500],
-    lineHeight: 18,
-    marginBottom: spacing.sm,
+    marginTop: 2,
   },
-  resetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: colors.primary[50],
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.primary[200],
-  },
-  resetButtonText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-    color: colors.primary[700],
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginHorizontal: spacing.md,
   },
   logoutButton: {
     marginTop: spacing.xs,

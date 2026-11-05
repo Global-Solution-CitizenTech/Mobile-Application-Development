@@ -12,9 +12,9 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   HomeTab: undefined;
-  NovoChamadoTab: undefined;
+  RadarTab: undefined;
+  MeusChamadosTab: undefined;
   ProfileTab: undefined;
-  SobreAppTab: undefined;
 };
 
 export type RootStackParamList = {
@@ -31,4 +31,3 @@ declare global {
     interface RootParamList extends RootStackParamList {}
   }
 }
-

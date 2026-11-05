@@ -4,9 +4,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
 import { HomeScreen } from '../screens/HomeScreen';
-import { NovoChamadoScreen } from '../screens/NovoChamadoScreen';
+import { RadarBairroScreen } from '../screens/RadarBairroScreen';
+import { MeusChamadosScreen } from '../screens/MeusChamadosScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
-import { SobreAppScreen } from '../screens/SobreAppScreen';
 import { colors, fontSize, fontWeight } from '../theme';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -28,15 +28,14 @@ export const TabNavigator: React.FC = () => {
             case 'HomeTab':
               iconName = focused ? 'home' : 'home-outline';
               break;
-            case 'NovoChamadoTab':
-              iconName = focused ? 'add-circle' : 'add-circle-outline';
-              size = 28;
+            case 'RadarTab':
+              iconName = focused ? 'flame' : 'flame-outline';
+              break;
+            case 'MeusChamadosTab':
+              iconName = focused ? 'document-text' : 'document-text-outline';
               break;
             case 'ProfileTab':
               iconName = focused ? 'person' : 'person-outline';
-              break;
-            case 'SobreAppTab':
-              iconName = focused ? 'information-circle' : 'information-circle-outline';
               break;
             default:
               iconName = 'cube-outline';
@@ -54,10 +53,17 @@ export const TabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="NovoChamadoTab"
-        component={NovoChamadoScreen}
+        name="RadarTab"
+        component={RadarBairroScreen}
         options={{
-          tabBarLabel: 'Relatar',
+          tabBarLabel: 'Prioridades',
+        }}
+      />
+      <Tab.Screen
+        name="MeusChamadosTab"
+        component={MeusChamadosScreen}
+        options={{
+          tabBarLabel: 'Meus Relatos',
         }}
       />
       <Tab.Screen
@@ -65,13 +71,6 @@ export const TabNavigator: React.FC = () => {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Perfil',
-        }}
-      />
-      <Tab.Screen
-        name="SobreAppTab"
-        component={SobreAppScreen}
-        options={{
-          tabBarLabel: 'Sobre',
         }}
       />
     </Tab.Navigator>
@@ -93,4 +92,3 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
 });
-

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../hooks/useAuth';
 import { useChamados } from '../hooks/useChamados';
 import { ChamadoCard } from '../components/ChamadoCard';
-import { StatCard } from '../components/StatCard';
 import { EmptyState } from '../components/EmptyState';
-import { FeedbackModal } from '../components/FeedbackModal';
 import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../theme';
-import { CategoriaChamado, StatusChamado } from '../types';
+import { CategoriaChamado } from '../types';
 import { RootStackParamList } from '../navigation/types';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -38,13 +36,6 @@ const CATEGORIAS_LIST: (CategoriaChamado | 'Todas')[] = [
   'Outros',
 ];
 
-const STATUS_LIST: (StatusChamado | 'Todos')[] = [
-  'Todos',
-  'Aberto',
-  'Em Andamento',
-  'Resolvido',
-];
-
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { usuario } = useAuth();
@@ -52,22 +43,24 @@ export const HomeScreen: React.FC = () => {
     chamados,
     loading,
     refreshing,
-    error,
     filtros,
-    estatisticas,
     carregarChamados,
     setCategoriaFiltro,
-    setStatusFiltro,
     setBuscaFiltro,
-    setApenasMeusFiltro,
     limparFiltros,
   } = useChamados();
 
   const [buscaLocal, setBuscaLocal] = useState('');
-  const [modalFeedback, setModalFeedback] = useState<string | null>(null);
 
-  const handleSearchSubmit = () => {
-    setBuscaFiltro(buscaLocal);
+  useFocusEffect(
+    useCallback(() => {
+      carregarChamados(undefined, true);
+    }, [carregarChamados])
+  );
+
+  const handleSearchChange = (text: string) => {
+    setBuscaLocal(text);
+    setBuscaFiltro(text);
   };
 
   const handleClearSearch = () => {
@@ -77,14 +70,16 @@ export const HomeScreen: React.FC = () => {
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      {/* Barra de Boas-Vindas */}
+      {/* Barra Superior Limpa: Saudação + Bairro + Botão Rápido */}
       <View style={styles.citizenBar}>
         <View style={styles.citizenInfo}>
-          <Text style={styles.greetingText}>Olá, {usuario?.nome?.split(' ')[0] || 'Cidadão'}</Text>
+          <Text style={styles.greetingText}>
+            Olá, {usuario?.nome?.split(' ')[0] || 'Cidadão'}
+          </Text>
           <View style={styles.neighborhoodBadge}>
-            <Ionicons name="location" size={12} color={colors.primary[700]} />
+            <Ionicons name="location" size={13} color={colors.primary[700]} />
             <Text style={styles.neighborhoodText}>
-              Bairro: {usuario?.bairro || 'São Paulo / Região Central'}
+              {usuario?.bairro || 'Bela Vista / Paulista'}
             </Text>
           </View>
         </View>
@@ -92,181 +87,74 @@ export const HomeScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.newReportButton}
           onPress={() => navigation.navigate('NovoChamado')}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
         >
-          <Ionicons name="add" size={20} color={colors.surface} />
+          <Ionicons name="camera-outline" size={18} color={colors.surface} />
           <Text style={styles.newReportButtonText}>Relatar</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Cartões com Métricas e Resumo da Zeladoria */}
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Total"
-          value={estatisticas.total}
-          icon="stats-chart-outline"
-          color={colors.secondary[700]}
-          bgColor={colors.secondary[100]}
-        />
-        <StatCard
-          label="Abertos"
-          value={estatisticas.abertos}
-          icon="alert-circle-outline"
-          color={colors.status.aberto.icon}
-          bgColor={colors.status.aberto.bg}
-        />
-        <StatCard
-          label="Em Ação"
-          value={estatisticas.emAndamento}
-          icon="time-outline"
-          color={colors.status.emAndamento.icon}
-          bgColor={colors.status.emAndamento.bg}
-        />
-        <StatCard
-          label="Resolvidos"
-          value={estatisticas.resolvidos}
-          icon="checkmark-done-outline"
-          color={colors.status.resolvido.icon}
-          bgColor={colors.status.resolvido.bg}
-        />
-      </View>
-
-      {/* Barra de Busca de Ocorrências */}
+      {/* Barra de Busca Enxuta */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color={colors.secondary[400]} />
+        <Ionicons name="search-outline" size={19} color={colors.secondary[400]} />
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar por rua, problema ou protocolo..."
           placeholderTextColor={colors.text.tertiary}
           value={buscaLocal}
-          onChangeText={setBuscaLocal}
-          onSubmitEditing={handleSearchSubmit}
+          onChangeText={handleSearchChange}
           returnKeyType="search"
         />
         {buscaLocal.length > 0 && (
-          <TouchableOpacity onPress={handleClearSearch} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            onPress={handleClearSearch}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Ionicons name="close-circle" size={18} color={colors.secondary[400]} />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Alternador de Visualização: Todos vs Meus Chamados */}
-      <View style={styles.scopeSwitchContainer}>
-        <TouchableOpacity
-          style={[
-            styles.scopeTab,
-            !filtros.apenasMeus && styles.scopeTabActive,
-          ]}
-          onPress={() => setApenasMeusFiltro(false)}
-        >
-          <Ionicons
-            name="globe-outline"
-            size={16}
-            color={!filtros.apenasMeus ? colors.primary[700] : colors.secondary[500]}
-          />
-          <Text
-            style={[
-              styles.scopeTabText,
-              !filtros.apenasMeus && styles.scopeTabTextActive,
-            ]}
-          >
-            Todos do Bairro
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.scopeTab,
-            filtros.apenasMeus && styles.scopeTabActive,
-          ]}
-          onPress={() => setApenasMeusFiltro(true)}
-        >
-          <Ionicons
-            name="person-outline"
-            size={16}
-            color={filtros.apenasMeus ? colors.primary[700] : colors.secondary[500]}
-          />
-          <Text
-            style={[
-              styles.scopeTabText,
-              filtros.apenasMeus && styles.scopeTabTextActive,
-            ]}
-          >
-            Meus Chamados
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Filtro por Categorias (Scroll Horizontal) */}
-      <View style={styles.filtersSection}>
-        <Text style={styles.filterTitle}>Filtrar por Categoria</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterChipsRow}
-        >
-          {CATEGORIAS_LIST.map((cat) => {
-            const isSelected = filtros.categoria === cat;
-            return (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.filterChip,
-                  isSelected && styles.filterChipActive,
-                ]}
-                onPress={() => setCategoriaFiltro(cat)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    isSelected && styles.filterChipTextActive,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Filtro por Status */}
-      <View style={styles.statusPillsRow}>
-        {STATUS_LIST.map((st) => {
-          const isSelected = filtros.status === st;
+      {/* Filtro Rápido por Categorias */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterChipsRow}
+      >
+        {CATEGORIAS_LIST.map((cat) => {
+          const isSelected = filtros.categoria === cat;
           return (
             <TouchableOpacity
-              key={st}
-              style={[
-                styles.statusPill,
-                isSelected && styles.statusPillActive,
-              ]}
-              onPress={() => setStatusFiltro(st)}
+              key={cat}
+              style={[styles.filterChip, isSelected && styles.filterChipActive]}
+              onPress={() => setCategoriaFiltro(cat)}
+              activeOpacity={0.7}
             >
               <Text
                 style={[
-                  styles.statusPillText,
-                  isSelected && styles.statusPillTextActive,
+                  styles.filterChipText,
+                  isSelected && styles.filterChipTextActive,
                 ]}
               >
-                {st}
+                {cat}
               </Text>
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
-      {/* Título da Seção do Feed */}
+      {/* Título da Lista */}
       <View style={styles.feedHeaderRow}>
         <Text style={styles.feedSectionTitle}>
-          Ocorrências Encontradas ({chamados.length})
+          Feed da Comunidade ({chamados.length})
         </Text>
-        {(filtros.categoria !== 'Todas' ||
-          filtros.status !== 'Todos' ||
-          filtros.busca ||
-          filtros.apenasMeus) && (
-          <TouchableOpacity onPress={limparFiltros} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        {(filtros.categoria !== 'Todas' || filtros.busca) && (
+          <TouchableOpacity
+            onPress={() => {
+              setBuscaLocal('');
+              limparFiltros();
+            }}
+          >
             <Text style={styles.clearFiltersText}>Limpar filtros</Text>
           </TouchableOpacity>
         )}
@@ -279,7 +167,7 @@ export const HomeScreen: React.FC = () => {
       {loading && !refreshing && chamados.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary[600]} />
-          <Text style={styles.loadingText}>Carregando dados de zeladoria...</Text>
+          <Text style={styles.loadingText}>Carregando feed do bairro...</Text>
         </View>
       ) : (
         <FlatList
@@ -305,23 +193,22 @@ export const HomeScreen: React.FC = () => {
             <EmptyState
               icon="search-outline"
               title="Nenhuma ocorrência encontrada"
-              description="Não encontramos chamados para os filtros selecionados ou para o termo pesquisado."
-              actionTitle="Registrar Novo Chamado"
+              description="Não encontramos relatos para a categoria ou endereço pesquisado."
+              actionTitle="Abrir Novo Relato"
               onAction={() => navigation.navigate('NovoChamado')}
             />
           }
         />
       )}
 
-      {/* Modal de Feedback se necessário */}
-      <FeedbackModal
-        visible={!!modalFeedback}
-        type="info"
-        title="Aviso"
-        message={modalFeedback || ''}
-        confirmText="OK"
-        onConfirm={() => setModalFeedback(null)}
-      />
+      {/* Botão Flutuante (FAB) para Abrir Relato */}
+      <TouchableOpacity
+        style={styles.fabButton}
+        onPress={() => navigation.navigate('NovoChamado')}
+        activeOpacity={0.9}
+      >
+        <Ionicons name="add" size={26} color={colors.surface} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -343,11 +230,11 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 96,
   },
   headerContainer: {
     paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   citizenBar: {
     flexDirection: 'row',
@@ -372,13 +259,13 @@ const styles = StyleSheet.create({
   },
   neighborhoodText: {
     fontSize: fontSize.caption,
-    fontWeight: fontWeight.medium,
+    fontWeight: fontWeight.semibold,
     color: colors.primary[700],
   },
   newReportButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     backgroundColor: colors.primary[600],
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -390,11 +277,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.bodySmall,
     fontWeight: fontWeight.bold,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.xs + 2,
-    marginBottom: spacing.md,
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -403,63 +285,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
-    height: 48,
-    marginBottom: spacing.md,
-    ...shadows.sm,
+    height: 46,
+    marginBottom: spacing.sm + 2,
   },
   searchInput: {
     flex: 1,
-    fontSize: fontSize.body,
+    fontSize: fontSize.bodySmall,
     color: colors.text.primary,
     marginLeft: spacing.sm,
   },
-  scopeSwitchContainer: {
-    flexDirection: 'row',
-    backgroundColor: colors.secondary[200],
-    borderRadius: borderRadius.md,
-    padding: 3,
-    marginBottom: spacing.md,
-  },
-  scopeTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.sm,
-  },
-  scopeTabActive: {
-    backgroundColor: colors.surface,
-    ...shadows.sm,
-  },
-  scopeTabText: {
-    fontSize: fontSize.bodySmall,
-    fontWeight: fontWeight.semibold,
-    color: colors.secondary[600],
-  },
-  scopeTabTextActive: {
-    color: colors.primary[700],
-    fontWeight: fontWeight.bold,
-  },
-  filtersSection: {
-    marginBottom: spacing.sm,
-  },
-  filterTitle: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-    color: colors.secondary[600],
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
   filterChipsRow: {
     gap: spacing.xs + 2,
-    paddingVertical: 2,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.xs,
   },
   filterChip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: 7,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -478,34 +320,6 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontWeight: fontWeight.bold,
   },
-  statusPillsRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-    marginTop: spacing.xs,
-  },
-  statusPill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statusPillActive: {
-    backgroundColor: colors.secondary[800],
-    borderColor: colors.secondary[800],
-  },
-  statusPillText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.medium,
-    color: colors.secondary[600],
-  },
-  statusPillTextActive: {
-    color: colors.surface,
-    fontWeight: fontWeight.bold,
-  },
   feedHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -514,14 +328,25 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   feedSectionTitle: {
-    fontSize: fontSize.bodyLarge,
+    fontSize: fontSize.body,
     fontWeight: fontWeight.bold,
-    color: colors.secondary[900],
+    color: colors.secondary[800],
   },
   clearFiltersText: {
     fontSize: fontSize.caption,
     fontWeight: fontWeight.semibold,
     color: colors.primary[600],
   },
+  fabButton: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary[600],
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.lg,
+  },
 });
-
