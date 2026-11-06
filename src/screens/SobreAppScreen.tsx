@@ -16,7 +16,7 @@ import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '..
 
 // Commit Hash de Referência conforme edital da FIAP Global Solution 2026/2
 export const COMMIT_HASH_REFERENCIA =
-  process.env.EXPO_PUBLIC_COMMIT_HASH || '729434d68e5235659de3031780d95b7c6cb7fdbf';
+  process.env.EXPO_PUBLIC_COMMIT_HASH || '516b8b92afbb31a075c1f5befbc59cc9ebc5fcc8';
 export const COMMIT_HASH_CURTO = COMMIT_HASH_REFERENCIA.slice(0, 7);
 export const APP_VERSAO = '1.0.0';
 

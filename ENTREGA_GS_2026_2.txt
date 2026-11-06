@@ -19,8 +19,8 @@ https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
 (Lembrar de adicionar o e-mail do professor como colaborador/leitor no GitHub!)
 
 4. COMMIT HASH DE REFERÊNCIA (AUDITORIA):
-6b7d415b3c3756eb910ad5946fa823d6a6c4ae23
-(ID Curto: 6b7d415)
+516b8b92afbb31a075c1f5befbc59cc9ebc5fcc8
+(ID Curto: 516b8b9)
 
 5. LINK DO VÍDEO NO YOUTUBE (MÁXIMO 5 MINUTOS - PÚBLICO OU NÃO LISTADO):
 [INSERIR O LINK DO VÍDEO DO YOUTUBE AQUI APÓS GRAVAÇÃO]
@@ -31,3 +31,4 @@ https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
 - Tester: [E-mail do professor adicionado no console do Firebase]
 
 ================================================================================
+

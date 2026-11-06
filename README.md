@@ -11,9 +11,9 @@
 * **Versão da Aplicação:** `1.0.0`
 * **Commit Hash de Referência (Obrigatório conforme Edital):**
   ```text
-  16e20b79da934cb48e22c9e782d47cb4e819b5bf
+  516b8b92afbb31a075c1f5befbc59cc9ebc5fcc8
   ```
-  *(Identificador curto de auditoria: `16e20b7`)*
+  *(Identificador curto de auditoria: `516b8b9`)*
 
 ---
 
@@ -41,18 +41,20 @@ O **CitizenTech** é uma plataforma móvel desenvolvida em **React Native com Ex
 
 ## 📱 4. Mapeamento das Telas do Aplicativo
 
-O projeto atende com rigor às exigências de tela do edital (mínimo de 6 telas funcionais + 1 tela extra obrigatória "Sobre o App" + tela auxiliar de apoio ao CRUD):
+O projeto atende com folga e rigor às exigências de tela do edital (mínimo de 6 telas funcionais distintas + tela obrigatória "Sobre o App" para auditoria de commit):
 
 | # | Tela | Arquivo | Descrição Funcional |
 | :---: | :--- | :--- | :--- |
 | **1** | **Login** | [`src/screens/LoginScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/LoginScreen.tsx) | Validação de campos (e-mail e senha), estados de loading com `ActivityIndicator`, tratamento de erros, e botão de preenchimento automático para avaliadores FIAP. |
 | **2** | **Cadastro / Signup** | [`src/screens/RegisterScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/RegisterScreen.tsx) | Formulário de adesão do cidadão com validação de Nome, E-mail, Senha, Confirmação, CPF, Telefone e Bairro residencial. |
-| **3** | **Home / Feed do Bairro** | [`src/screens/HomeScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/HomeScreen.tsx) | Header de boas-vindas, cards de métricas (Total, Abertos, Em Ação, Resolvidos), barra de busca instantânea, chips horizontais de categorias, filtros por status e pull-to-refresh (`RefreshControl`). |
-| **4** | **Novo Chamado** | [`src/screens/NovoChamadoScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/NovoChamadoScreen.tsx) | Registro de ocorrência com seletor de categorias com ícones, descrição detalhada, fotos simuladas da ocorrência e botão "Usar Minha Localização Atual (Região Paulista/FIAP)". |
-| **5** | **Detalhes do Chamado** | [`src/screens/ChamadoDetailsScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/ChamadoDetailsScreen.tsx) | Exibição de dados completos, autor, protocolo, fotos, mapa com coordenadas, histórico temporal de status e ações de negócio (alteração de status com parecer técnico e exclusão segura). |
-| **6** | **Perfil do Cidadão** | [`src/screens/ProfileScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/ProfileScreen.tsx) | Exibição dos dados do usuário logado, métricas pessoais de contribuição, listagem dos chamados abertos pelo próprio usuário, utilitário de reset do mock para testes e botão de Logout. |
-| **Extra** | **Sobre o App** | [`src/screens/SobreAppScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/SobreAppScreen.tsx) | **Obrigatória:** Exibição da versão (1.0.0), integrantes do grupo com RM, alinhamento ODS 11 e o **campo explícito com o Commit Hash de referência** auditável. |
-| **Apoio** | **Editar Chamado** | [`src/screens/EditarChamadoScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/EditarChamadoScreen.tsx) | Apoio à operação `UPDATE` do CRUD, permitindo editar título, descrição, categoria e endereço da ocorrência já existente. |
+| **3** | **Início (Dashboard)** | [`src/screens/HomeScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/HomeScreen.tsx) | Painel geral e executivo do cidadão: Taxa de Resolução do Bairro, 4 StatCards (Total, Abertos, Em Ação, Resolvidos), Hub de Ações Rápidas, Distribuição por Categorias e status operacional municipal, sem sobrecarregar com feed de posts. |
+| **4** | **Demandas & Prioridades** | [`src/screens/RadarBairroScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/RadarBairroScreen.tsx) | Central de demandas comunitárias: Seletor "Mais Urgentes (IA)" vs "Todas as Demandas", busca em tempo real, chips de categorias, pílulas de status, apoios coletivos (+1 Morador) e botão para relatar ocorrência. |
+| **5** | **Meus Relatos** | [`src/screens/MeusChamadosScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/MeusChamadosScreen.tsx) | Gestão direta dos protocolos abertos pelo próprio cidadão logado, com filtros rápidos por status (Aberto, Em Andamento, Resolvido) e contador de demandas ativas. |
+| **6** | **Novo Chamado** | [`src/screens/NovoChamadoScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/NovoChamadoScreen.tsx) | Registro de ocorrência com seletor de categorias com ícones, fotos da ocorrência, botão GPS simulado (Paulista/FIAP) e prévia em tempo real da Triagem IA (severidade e órgão responsável). |
+| **7** | **Detalhes do Chamado** | [`src/screens/ChamadoDetailsScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/ChamadoDetailsScreen.tsx) | Exibição de dados completos, protocolo, fotos, mapa com coordenadas, histórico temporal de status, apoio comunitário (+1), parecer técnico da IA e modais de alteração de status e exclusão. |
+| **8** | **Editar Chamado** | [`src/screens/EditarChamadoScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/EditarChamadoScreen.tsx) | Apoio à operação `UPDATE` do CRUD, permitindo editar título, descrição, categoria e endereço da ocorrência já existente com validação. |
+| **9** | **Perfil do Cidadão** | [`src/screens/ProfileScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/ProfileScreen.tsx) | Exibição dos dados do usuário, edição de dados cadastrais e senha, atalhos rápidos, utilitário de reset do mock para testes e botão de Logout. |
+| **Extra** | **Sobre o App** | [`src/screens/SobreAppScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/SobreAppScreen.tsx) | **Obrigatória:** Exibição da versão (1.0.0), integrantes do grupo com RM, alinhamento ODS 11 e o **campo explícito com o Commit Hash de referência** auditável exigido pelo Edital FIAP GS. |
 
 ---
 
@@ -85,14 +87,16 @@ A estrutura de pastas foi organizada segundo os princípios da Clean Architectur
 │   ├── navigation/          # Roteamento tipado com React Navigation
 │   │   ├── types.ts         # Tipagem estrita de parâmetros das rotas
 │   │   ├── AuthNavigator.tsx# Fluxo público (Login, Register)
-│   │   ├── TabNavigator.tsx # Barra de navegação inferior (Feed, Relatar, Perfil, Sobre)
-│   │   ├── AppNavigator.tsx # Stack interna protegida (Tabs, Detalhes, Editar)
+│   │   ├── TabNavigator.tsx # Barra de navegação inferior (Início, Demandas, Meus Relatos, Perfil)
+│   │   ├── AppNavigator.tsx # Stack interna protegida (Tabs, Detalhes, Editar, Novo Chamado, Sobre)
 │   │   └── index.tsx        # Gatekeeper de proteção de rotas (Token ? App : Auth)
 │   │
 │   ├── screens/             # Telas de negócio e extra da aplicação
 │   │   ├── LoginScreen.tsx
 │   │   ├── RegisterScreen.tsx
 │   │   ├── HomeScreen.tsx
+│   │   ├── RadarBairroScreen.tsx
+│   │   ├── MeusChamadosScreen.tsx
 │   │   ├── NovoChamadoScreen.tsx
 │   │   ├── ChamadoDetailsScreen.tsx
 │   │   ├── EditarChamadoScreen.tsx
