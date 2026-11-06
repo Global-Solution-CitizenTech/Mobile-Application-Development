@@ -49,14 +49,14 @@ export const TabNavigator: React.FC = () => {
         name="HomeTab"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Feed',
+          tabBarLabel: 'Início',
         }}
       />
       <Tab.Screen
         name="RadarTab"
         component={RadarBairroScreen}
         options={{
-          tabBarLabel: 'Prioridades',
+          tabBarLabel: 'Demandas',
         }}
       />
       <Tab.Screen
