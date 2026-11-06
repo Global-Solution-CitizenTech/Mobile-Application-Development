@@ -142,9 +142,9 @@ export const useChamados = () => {
   };
 
   // Obter único chamado
-  const obterChamadoPorId = async (id: string): Promise<Chamado> => {
+  const obterChamadoPorId = useCallback(async (id: string): Promise<Chamado> => {
     return await chamadoService.obterPorId(id);
-  };
+  }, []);
 
   // Atalhos de filtro
   const setCategoriaFiltro = (categoria: CategoriaChamado | 'Todas') => {

@@ -173,7 +173,7 @@ export const INITIAL_MOCK_CHAMADOS: Chamado[] = [
       longitude: -46.6592,
     },
     fotoUrl:
-      'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1780415493361-07c5a78dbaef?auto=format&fit=crop&w=800&q=80',
     dataAbertura: '2026-10-31T21:10:00.000Z',
     dataAtualizacao: '2026-11-02T09:15:00.000Z',
     autorId: 'usr_fiap_002',
@@ -261,7 +261,7 @@ export const INITIAL_MOCK_CHAMADOS: Chamado[] = [
       longitude: -46.6577,
     },
     fotoUrl:
-      'https://images.unsplash.com/photo-1584463699042-4541cb9154a4?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1581375922343-ac6b40caf5e3?auto=format&fit=crop&w=800&q=80',
     dataAbertura: '2026-10-25T11:00:00.000Z',
     dataAtualizacao: '2026-10-28T16:40:00.000Z',
     autorId: 'usr_fiap_001',

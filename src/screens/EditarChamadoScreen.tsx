@@ -59,25 +59,35 @@ export const EditarChamadoScreen: React.FC = () => {
   const [successModal, setSuccessModal] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     async function carregar() {
       try {
         setLoading(true);
         const data = await obterChamadoPorId(id);
-        setTitulo(data.titulo);
-        setCategoria(data.categoria);
-        setDescricao(data.descricao);
-        setLogradouro(data.localizacao.logradouro);
-        setNumero(data.localizacao.numero);
-        setBairro(data.localizacao.bairro);
-        setPontoReferencia(data.localizacao.pontoReferencia || '');
+        if (isMounted) {
+          setTitulo(data.titulo);
+          setCategoria(data.categoria);
+          setDescricao(data.descricao);
+          setLogradouro(data.localizacao.logradouro);
+          setNumero(data.localizacao.numero);
+          setBairro(data.localizacao.bairro);
+          setPontoReferencia(data.localizacao.pontoReferencia || '');
+        }
       } catch (err: any) {
-        alert(err.message || 'Erro ao carregar chamado para edição.');
-        navigation.goBack();
+        if (isMounted) {
+          alert(err.message || 'Erro ao carregar chamado para edição.');
+          navigation.goBack();
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
     carregar();
+    return () => {
+      isMounted = false;
+    };
   }, [id, obterChamadoPorId, navigation]);
 
   const validate = (): boolean => {
@@ -214,7 +224,7 @@ export const EditarChamadoScreen: React.FC = () => {
         <View style={[styles.sectionCard, shadows.sm]}>
           <Text style={styles.sectionTitle}>Localização</Text>
           <View style={styles.twoColumnRow}>
-            <View style={{ flex: 3, marginRight: spacing.xs }}>
+            <View style={{ flex: 1, marginRight: spacing.sm }}>
               <Input
                 label="Logradouro *"
                 value={logradouro}
@@ -225,7 +235,7 @@ export const EditarChamadoScreen: React.FC = () => {
                 error={errors.logradouro}
               />
             </View>
-            <View style={{ flex: 1, marginLeft: spacing.xs }}>
+            <View style={{ width: 115 }}>
               <Input
                 label="Número *"
                 value={numero}
@@ -234,6 +244,7 @@ export const EditarChamadoScreen: React.FC = () => {
                   if (errors.numero) setErrors((prev) => ({ ...prev, numero: '' }));
                 }}
                 error={errors.numero}
+                inputContainerStyle={{ paddingHorizontal: 10 }}
               />
             </View>
           </View>

@@ -60,8 +60,31 @@ export const ChamadoDetailsScreen: React.FC = () => {
   }, [id, obterChamadoPorId, navigation]);
 
   useEffect(() => {
-    carregarDetalhes();
-  }, [carregarDetalhes]);
+    let isMounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await obterChamadoPorId(id);
+        if (isMounted) {
+          setChamado(data);
+          setSelectedStatus(data.status);
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          alert(err.message || 'Chamado não encontrado.');
+          navigation.goBack();
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, obterChamadoPorId, navigation]);
 
   const handleToggleSupport = async () => {
     if (!chamado) return;

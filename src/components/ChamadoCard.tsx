@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Chamado, PrioridadeChamado } from '../types';
 import { StatusBadge } from './StatusBadge';
-import { CategoryBadge } from './CategoryBadge';
+import { CategoryBadge, getCategoryIconName } from './CategoryBadge';
 import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../theme';
 
 interface ChamadoCardProps {
@@ -53,6 +53,8 @@ export function getPriorityConfig(prioridade?: PrioridadeChamado) {
 }
 
 export const ChamadoCard: React.FC<ChamadoCardProps> = ({ chamado, onPress, style }) => {
+  const [imageError, setImageError] = useState(false);
+
   const formatDate = (isoString: string) => {
     try {
       const date = new Date(isoString);
@@ -112,13 +114,22 @@ export const ChamadoCard: React.FC<ChamadoCardProps> = ({ chamado, onPress, styl
           </View>
         </View>
 
-        {/* Thumbnail da foto simulada */}
-        {chamado.fotoUrl && (
+        {/* Thumbnail da foto com fallback para ícone da categoria se não houver foto ou erro de carregamento */}
+        {chamado.fotoUrl && !imageError ? (
           <Image
             source={{ uri: chamado.fotoUrl }}
             style={styles.thumbnail}
             resizeMode="cover"
+            onError={() => setImageError(true)}
           />
+        ) : (
+          <View style={styles.thumbnailFallback}>
+            <Ionicons
+              name={getCategoryIconName(chamado.categoria)}
+              size={24}
+              color={colors.primary[600]}
+            />
+          </View>
         )}
       </View>
 
@@ -195,10 +206,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: fontSize.bodyLarge,
+    fontSize: 15,
     fontWeight: fontWeight.bold,
     color: colors.text.primary,
-    lineHeight: 21,
+    lineHeight: 20,
     marginBottom: spacing.xs,
   },
   categoryRow: {
@@ -219,6 +230,16 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: borderRadius.sm,
     backgroundColor: colors.secondary[100],
+  },
+  thumbnailFallback: {
+    width: 68,
+    height: 68,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary[200],
   },
   footerRow: {
     flexDirection: 'row',

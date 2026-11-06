@@ -45,11 +45,11 @@ const FOTOS_SIMULADAS = [
   },
   {
     rotulo: 'Poste Apagado',
-    url: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=800&q=80',
+    url: 'https://images.unsplash.com/photo-1780415493361-07c5a78dbaef?auto=format&fit=crop&w=800&q=80',
   },
   {
     rotulo: 'Bueiro',
-    url: 'https://images.unsplash.com/photo-1584463699042-4541cb9154a4?auto=format&fit=crop&w=800&q=80',
+    url: 'https://images.unsplash.com/photo-1581375922343-ac6b40caf5e3?auto=format&fit=crop&w=800&q=80',
   },
   {
     rotulo: 'Entulho',
@@ -222,7 +222,7 @@ export const NovoChamadoScreen: React.FC = () => {
                       ]}
                       numberOfLines={2}
                     >
-                      {cat}
+                      {cat === 'Entulho e Descarte Irregular' ? 'Descarte Irregular' : cat}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -336,7 +336,7 @@ export const NovoChamadoScreen: React.FC = () => {
             </View>
 
             <View style={styles.twoColumnRow}>
-              <View style={{ flex: 3, marginRight: spacing.xs }}>
+              <View style={{ flex: 1, marginRight: spacing.sm }}>
                 <Input
                   label="Rua / Avenida *"
                   placeholder="Ex: Av. Paulista"
@@ -348,7 +348,7 @@ export const NovoChamadoScreen: React.FC = () => {
                   error={errors.logradouro}
                 />
               </View>
-              <View style={{ flex: 1, marginLeft: spacing.xs }}>
+              <View style={{ width: 115 }}>
                 <Input
                   label="Nº *"
                   placeholder="1106"
@@ -358,6 +358,7 @@ export const NovoChamadoScreen: React.FC = () => {
                     if (errors.numero) setErrors((prev) => ({ ...prev, numero: '' }));
                   }}
                   error={errors.numero}
+                  inputContainerStyle={{ paddingHorizontal: 10 }}
                 />
               </View>
             </View>
@@ -412,10 +413,10 @@ export const NovoChamadoScreen: React.FC = () => {
           type="success"
           title="Relato Publicado!"
           message={`Sua solicitação foi classificada como Prioridade ${triagemPreview.prioridade} pela Triagem IA.\n\nProtocolo: ${sucessoModal.protocolo}\n\nMoradores do bairro já podem apoiar seu chamado!`}
-          confirmText="Voltar ao Feed"
+          confirmText="Ver no Radar de Demandas"
           onConfirm={() => {
             setSucessoModal({ visivel: false, protocolo: '' });
-            navigation.navigate('Main', { screen: 'HomeTab' });
+            navigation.navigate('Main', { screen: 'RadarTab' });
           }}
         />
       </KeyboardAvoidingView>
@@ -476,28 +477,32 @@ const styles = StyleSheet.create({
   categoriesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.xs + 2,
+    justifyContent: 'space-between',
+    rowGap: spacing.xs + 2,
   },
   categoryOption: {
+    width: '48.5%',
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 4,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: borderRadius.md,
     backgroundColor: colors.primary[50],
     borderWidth: 1,
     borderColor: colors.primary[200],
-    marginBottom: spacing.xs,
   },
   categoryOptionSelected: {
     backgroundColor: colors.primary[600],
     borderColor: colors.primary[600],
   },
   categoryOptionText: {
-    fontSize: fontSize.caption,
+    flex: 1,
+    fontSize: 11.5,
     fontWeight: fontWeight.semibold,
     color: colors.primary[900],
+    lineHeight: 14.5,
   },
   categoryOptionTextSelected: {
     color: colors.surface,

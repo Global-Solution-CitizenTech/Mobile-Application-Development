@@ -103,12 +103,25 @@ export function gerarTriagemIaAutomatica(
 }
 
 function normalizarChamado(item: Chamado): Chamado {
-  if (item.prioridade && typeof item.apoiosCount === 'number' && item.parecerIa) {
-    return item;
+  let fotoUrl = item.fotoUrl;
+  // Migra URLs antigas/quebradas caso estejam em cache no storage do dispositivo
+  if (fotoUrl && fotoUrl.includes('photo-1584463699042-4541cb9154a4')) {
+    fotoUrl =
+      'https://images.unsplash.com/photo-1581375922343-ac6b40caf5e3?auto=format&fit=crop&w=800&q=80';
+  } else if (
+    fotoUrl &&
+    (fotoUrl.includes('photo-1509114397022-ed747cca3f65') ||
+      fotoUrl.includes('photo-1517483000871-1dbf64a6e1c6') ||
+      fotoUrl.includes('photo-1728318251159-16a855d478a6'))
+  ) {
+    fotoUrl =
+      'https://images.unsplash.com/photo-1780415493361-07c5a78dbaef?auto=format&fit=crop&w=800&q=80';
   }
+
   const triagem = gerarTriagemIaAutomatica(item.categoria, item.titulo, item.descricao);
   return {
     ...item,
+    fotoUrl,
     prioridade: item.prioridade || triagem.prioridade,
     apoiosCount: typeof item.apoiosCount === 'number' ? item.apoiosCount : 12,
     parecerIa: item.parecerIa || triagem.parecerIa,
@@ -188,21 +201,31 @@ export const chamadoService = {
    * READ: Busca detalhes de um chamado específico pelo seu ID
    */
   async obterPorId(id: string): Promise<Chamado> {
-    try {
-      const response = await api.get<Chamado>(`/chamados/${id}`);
-      return normalizarChamado(response.data);
-    } catch (error: any) {
-      console.warn(`API offline: Buscando chamado ${id} no cache local.`);
-    }
-
+    // 1. Tenta buscar primeiro no repositório local persistente para resposta instantânea
     const chamados = await this.ensureInitialData();
-    const chamado = chamados.find((c) => c.id === id);
+    const local = chamados.find((c) => c.id === id);
 
-    if (!atoChamado(chamado)) {
-      throw new Error('Chamado de zeladoria não encontrado.');
+    // 2. Se houver conexão com o backend e resposta rápida (2s timeout), tenta sincronizar
+    try {
+      const response = await api.get<Chamado>(`/chamados/${id}`, { timeout: 2000 });
+      if (response.data) {
+        const normalizado = normalizarChamado(response.data);
+        const index = chamados.findIndex((c) => c.id === id);
+        if (index !== -1) {
+          chamados[index] = normalizado;
+          await storageService.saveChamados(chamados);
+        }
+        return normalizado;
+      }
+    } catch (error: any) {
+      // Backend offline ou timeout -> fallback suave para os dados locais já existentes
     }
 
-    return chamado;
+    if (local && atoChamado(local)) {
+      return local;
+    }
+
+    throw new Error('Chamado de zeladoria não encontrado.');
   },
 
   /**

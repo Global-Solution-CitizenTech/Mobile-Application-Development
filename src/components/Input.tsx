@@ -19,6 +19,7 @@ export interface InputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
   isPassword?: boolean;
   containerStyle?: ViewStyle;
+  inputContainerStyle?: ViewStyle;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -29,6 +30,7 @@ export const Input: React.FC<InputProps> = ({
   rightIcon,
   isPassword = false,
   containerStyle,
+  inputContainerStyle,
   secureTextEntry,
   style,
   ...rest
@@ -47,6 +49,7 @@ export const Input: React.FC<InputProps> = ({
           styles.inputContainer,
           isFocused && styles.inputFocused,
           !!error && styles.inputError,
+          inputContainerStyle,
         ]}
       >
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
@@ -103,8 +106,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.2,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    minHeight: 50,
+    paddingHorizontal: 12,
+    minHeight: 48,
   },
   inputFocused: {
     borderColor: colors.primary[600],
@@ -115,16 +118,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F5',
   },
   leftIcon: {
-    marginRight: spacing.sm,
+    marginRight: spacing.xs + 2,
   },
   rightIcon: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.xs + 2,
   },
   textInput: {
     flex: 1,
-    fontSize: fontSize.bodyLarge,
+    fontSize: 15,
     color: colors.text.primary,
     paddingVertical: spacing.sm,
+    paddingHorizontal: 0,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   errorText: {
     fontSize: fontSize.caption,

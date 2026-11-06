@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
@@ -55,12 +56,22 @@ export const MeusChamadosScreen: React.FC = () => {
     [chamados, usuario?.id]
   );
 
+  const statusCounts = useMemo(() => {
+    const doUsuario = chamados.filter((c) => c.autorId === usuario?.id);
+    return {
+      Todos: doUsuario.length,
+      Aberto: doUsuario.filter((c) => c.status === 'Aberto').length,
+      'Em Andamento': doUsuario.filter((c) => c.status === 'Em Andamento').length,
+      Resolvido: doUsuario.filter((c) => c.status === 'Resolvido').length,
+    };
+  }, [chamados, usuario?.id]);
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.titleRow}>
-        <View>
+        <View style={{ flex: 1, paddingRight: spacing.sm }}>
           <Text style={styles.pageTitle}>Meus Relatos</Text>
-          <Text style={styles.pageSubtitle}>
+          <Text style={styles.pageSubtitle} numberOfLines={1}>
             Acompanhe o andamento dos seus {totalMeus} protocolos abertos
           </Text>
         </View>
@@ -70,13 +81,17 @@ export const MeusChamadosScreen: React.FC = () => {
           onPress={() => navigation.navigate('NovoChamado')}
           activeOpacity={0.8}
         >
-          <Ionicons name="add" size={20} color={colors.primary[700]} />
+          <Ionicons name="add" size={18} color={colors.primary[700]} />
           <Text style={styles.addBtnText}>Novo</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Filtro de Status em Pílulas Limpas */}
-      <View style={styles.statusPillsRow}>
+      {/* Filtro de Status em Chips Horizontais sem quebra feia de linha */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.statusPillsRow}
+      >
         {STATUS_TABS.map((st) => {
           const isSelected = statusFiltro === st;
           return (
@@ -91,13 +106,14 @@ export const MeusChamadosScreen: React.FC = () => {
                   styles.statusPillText,
                   isSelected && styles.statusPillTextActive,
                 ]}
+                numberOfLines={1}
               >
-                {st}
+                {st} ({statusCounts[st]})
               </Text>
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
     </View>
   );
 
@@ -188,14 +204,15 @@ const styles = StyleSheet.create({
   },
   statusPillsRow: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
+    gap: spacing.xs + 2,
+    paddingVertical: spacing.xs,
+    paddingRight: spacing.xl,
+    marginBottom: spacing.xs,
   },
   statusPill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.xs + 2,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
+    borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
