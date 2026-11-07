@@ -7,10 +7,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Usuario, Chamado } from '../types';
 
 const STORAGE_KEYS = {
-  TOKEN: '@citizentech:auth_token',
-  USER: '@citizentech:current_user',
-  CHAMADOS: '@citizentech:chamados_data',
-  API_URL: '@citizentech:custom_api_url',
+  TOKEN: '@zelafix:auth_token',
+  USER: '@zelafix:current_user',
+  CHAMADOS: '@zelafix:chamados_data',
+  API_URL: '@zelafix:custom_api_url',
 };
 
 const memoryStore: Record<string, string> = {};

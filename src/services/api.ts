@@ -1,25 +1,26 @@
 /**
- * Cliente HTTP Axios Centralizado
- * Configurado com baseURL, interceptors de Bearer Token e tratamento global de erros
+ * Cliente HTTP Axios Centralizado (Padrão Challenge_Clyvo_4)
+ * Configurado para integrar com o Backend Java (Spring Boot + Spring Security JWT + Spring AI)
+ * e .NET Minimal API, com normalização de erros e health-check warmup.
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { storageService } from './storageService';
+import { env } from '../config/env';
+import { ApiErrorResponse } from '../types/api';
+import { normalizeHttpError } from '../utils/apiError';
 
-// URL base da API REST - Configurável via variável de ambiente ou fallback para nuvem/localhost
-export const DEFAULT_API_URL =
-  process.env.EXPO_PUBLIC_API_URL || 'https://api-citizentech.fiap.com.br/api';
+export const DEFAULT_API_URL = env.apiUrl;
 
 export const api = axios.create({
-  baseURL: DEFAULT_API_URL,
-  timeout: 4000,
+  baseURL: env.apiUrl,
+  timeout: 4500,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
 });
 
-// Listener opcional para expiração de sessão (401)
 type UnauthorizedCallback = () => void;
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
 
@@ -27,9 +28,6 @@ export const registerUnauthorizedHandler = (callback: UnauthorizedCallback) => {
   onUnauthorizedCallback = callback;
 };
 
-/**
- * Request Interceptor: Injeta automaticamente o Bearer Token JWT do Storage em cada requisição
- */
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
@@ -37,56 +35,46 @@ api.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (error) {
-      console.warn('Falha ao injetar token de autenticação:', error);
+    } catch {
+      // Falha silenciosa ao recuperar token do storage
     }
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  (error: AxiosError) => Promise.reject(error)
 );
 
-/**
- * Response Interceptor: Trata respostas e formata mensagens amigáveis de erro
- */
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async (error: AxiosError<any>) => {
-    if (!error.response) {
-      // Erro de rede / servidor indisponível / timeout
-      const networkError = new Error(
-        'Não foi possível conectar ao servidor. Verifique sua conexão com a internet ou o endereço da API.'
-      );
-      (networkError as any).isNetworkError = true;
-      return Promise.reject(networkError);
-    }
+  (response) => response,
+  async (error: AxiosError<ApiErrorResponse>) => {
+    const status = error.response?.status ?? 0;
 
-    const status = error.response.status;
-    const responseData = error.response.data;
-
-    // Se o token expirou ou é inválido
     if (status === 401) {
-      if (onUnauthorizedCallback) {
-        onUnauthorizedCallback();
+      try {
+        await storageService.clearSession();
+      } catch {
+        // ignore
       }
-      const unauthorizedError = new Error(
-        responseData?.message || 'Sua sessão expirou. Faça login novamente para continuar.'
-      );
-      return Promise.reject(unauthorizedError);
+      onUnauthorizedCallback?.();
     }
 
-    // Erros 400, 403, 404, 500
-    const message =
-      responseData?.message ||
-      responseData?.error ||
-      `Erro no servidor (${status}). Tente novamente mais tarde.`;
-
-    const customError = new Error(message);
-    (customError as any).status = status;
-    return Promise.reject(customError);
+    return Promise.reject(normalizeHttpError(error));
   }
 );
 
+export const HttpService = {
+  /**
+   * Dispara ping assíncrono para o endpoint de saúde do Spring Boot (/actuator/health)
+   * ou .NET (/health) para aquecer a instância em nuvem quando disponível.
+   */
+  async warmup(): Promise<boolean> {
+    try {
+      await api.get('/actuator/health', {
+        timeout: 2500,
+        headers: { 'X-Warmup-Ping': 'true' },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};

@@ -1,11 +1,11 @@
 ================================================================================
-FIAP GLOBAL SOLUTION 2026/2 - CITIZENTECH
+FIAP GLOBAL SOLUTION 2026/2 - ZELAFIX
 DISCIPLINA: MOBILE APPLICATION DEVELOPMENT
 TURMA: 2TDSPG
 ================================================================================
 
 1. NOME DO PROJETO / GRUPO:
-CitizenTech - Zeladoria Urbana Colaborativa
+ZelaFix - Zeladoria Urbana Colaborativa & Alerta Cidadão
 
 2. INTEGRANTES DO GRUPO:
 - Enzo Okuizumi              | RM: 561432 | 2TDSPG | GitHub: EnzoOkuizumiFiap
@@ -15,7 +15,7 @@ CitizenTech - Zeladoria Urbana Colaborativa
 - Milton Marcelino           | RM: 564836 | 2TDSPG | GitHub: MiltonMarcelino
 
 3. ENDEREÇO DO REPOSITÓRIO GITHUB:
-https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
+https://github.com/Global-Solution-ZelaFix/Mobile-Application-Development
 (Lembrar de adicionar o e-mail do professor como colaborador/leitor no GitHub!)
 
 4. COMMIT HASH DE REFERÊNCIA (AUDITORIA):
@@ -26,9 +26,8 @@ https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
 [INSERIR O LINK DO VÍDEO DO YOUTUBE AQUI APÓS GRAVAÇÃO]
 
 6. PUBLICAÇÃO NO FIREBASE APP DISTRIBUTION:
-- App: CitizenTech Mobile (Android APK)
+- App: ZelaFix Mobile (Android APK)
 - Status: Publicado via Firebase App Distribution
 - Tester: [E-mail do professor adicionado no console do Firebase]
 
 ================================================================================
-

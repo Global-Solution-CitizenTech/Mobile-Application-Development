@@ -17,7 +17,7 @@ export const NavigationRouter: React.FC = () => {
         <View style={styles.logoBadge}>
           <Ionicons name="leaf" size={48} color={colors.surface} />
         </View>
-        <Text style={styles.splashTitle}>CitizenTech</Text>
+        <Text style={styles.splashTitle}>ZelaFix</Text>
         <Text style={styles.splashSubtitle}>Zeladoria Urbana Colaborativa</Text>
         <ActivityIndicator
           size="small"

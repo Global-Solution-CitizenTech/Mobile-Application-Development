@@ -1,43 +1,44 @@
 /**
- * Serviço de Autenticação
- * Gerencia login, registro, recuperação de perfil e persistência de sessão
+ * Serviço de Autenticação e Perfil (Java Spring Security JWT / .NET Minimal API)
+ * Endpoints REST preparados:
+ * - POST /auth/login
+ * - POST /auth/register
+ * - GET  /auth/me (ou /usuarios/me)
+ * - PUT  /auth/me (ou /usuarios/me)
  */
 
 import { api } from './api';
 import { storageService } from './storageService';
-import { DEMO_USER } from './mockData';
+import { env } from '../config/env';
+import { DEMO_USER } from '../mocks/chamadosMock';
 import { AuthResponse, LoginCredentials, RegisterData, Usuario } from '../types';
 
 export const authService = {
-  /**
-   * Realiza login na API REST com fallback inteligente para modo de avaliação offline
-   */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/auth/login', credentials);
       const { token, usuario } = response.data;
 
-      // Salva no storage local seguro
       await storageService.saveToken(token);
       await storageService.saveUser(usuario);
 
       return { token, usuario };
     } catch (error: any) {
-      // Se for erro de rede ou o backend da FIAP ainda não estiver no ar, utiliza o modo demonstração/offline
-      if (error.isNetworkError || error.message?.includes('conectar ao servidor')) {
-        console.warn('API offline: Ativando fallback de autenticação local para avaliação...');
-
-        // Validação de credenciais simulada (aceita a conta demo ou qualquer login com senha >= 6 caracteres)
+      if (env.enableMockFallback && (!error.status || error.status === 0 || error.status >= 500)) {
         const isDemo =
           credentials.email.toLowerCase() === DEMO_USER.email.toLowerCase() ||
           credentials.email.includes('@');
 
         if (isDemo && credentials.senha.length >= 4) {
-          const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.citizentech_${Date.now()}`;
-          const usuario: Usuario = {
-            ...DEMO_USER,
-            email: credentials.email,
-          };
+          const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.zelafix_${Date.now()}`;
+          const cachedUser = await storageService.getUser();
+          const usuario: Usuario =
+            cachedUser && cachedUser.email.toLowerCase() === credentials.email.toLowerCase()
+              ? cachedUser
+              : {
+                  ...DEMO_USER,
+                  email: credentials.email.trim().toLowerCase(),
+                };
 
           await storageService.saveToken(mockToken);
           await storageService.saveUser(usuario);
@@ -50,9 +51,6 @@ export const authService = {
     }
   },
 
-  /**
-   * Realiza cadastro de novo cidadão
-   */
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/auth/register', data);
@@ -63,10 +61,8 @@ export const authService = {
 
       return { token, usuario };
     } catch (error: any) {
-      if (error.isNetworkError || error.message?.includes('conectar ao servidor')) {
-        console.warn('API offline: Criando cidadão no modo de avaliação local...');
-
-        const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.citizentech_${Date.now()}`;
+      if (env.enableMockFallback && (!error.status || error.status === 0 || error.status >= 500)) {
+        const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.zelafix_${Date.now()}`;
         const novoUsuario: Usuario = {
           id: `usr_${Date.now().toString().slice(-6)}`,
           nome: data.nome,
@@ -75,7 +71,8 @@ export const authService = {
           telefone: data.telefone,
           bairro: data.bairro,
           createdAt: new Date().toISOString(),
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+          avatarUrl:
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
         };
 
         await storageService.saveToken(mockToken);
@@ -88,49 +85,40 @@ export const authService = {
     }
   },
 
-  /**
-   * Busca o perfil atual do usuário autenticado
-   */
   async getProfile(): Promise<Usuario> {
     try {
       const response = await api.get<Usuario>('/auth/me');
       await storageService.saveUser(response.data);
       return response.data;
-    } catch (error: any) {
+    } catch {
       const cached = await storageService.getUser();
       if (cached) return cached;
       return DEMO_USER;
     }
   },
 
-  /**
-   * Atualiza os dados cadastrais do cidadão (nome, email, telefone, bairro, senha)
-   */
-  async updateProfile(
-    dados: Partial<Usuario> & { novaSenha?: string }
-  ): Promise<Usuario> {
+  async updateProfile(dados: Partial<Usuario> & { novaSenha?: string }): Promise<Usuario> {
     try {
       const response = await api.put<Usuario>('/auth/me', dados);
       await storageService.saveUser(response.data);
       return response.data;
     } catch (error: any) {
-      console.warn('API offline: Atualizando perfil localmente...');
-      const current = (await storageService.getUser()) || DEMO_USER;
-      const updated: Usuario = {
-        ...current,
-        nome: dados.nome || current.nome,
-        email: dados.email || current.email,
-        telefone: dados.telefone || current.telefone,
-        bairro: dados.bairro || current.bairro,
-      };
-      await storageService.saveUser(updated);
-      return updated;
+      if (env.enableMockFallback) {
+        const current = (await storageService.getUser()) || DEMO_USER;
+        const updated: Usuario = {
+          ...current,
+          nome: dados.nome || current.nome,
+          email: dados.email || current.email,
+          telefone: dados.telefone || current.telefone,
+          bairro: dados.bairro || current.bairro,
+        };
+        await storageService.saveUser(updated);
+        return updated;
+      }
+      throw error;
     }
   },
 
-  /**
-   * Realiza logout limpando os dados de sessão
-   */
   async logout(): Promise<void> {
     try {
       await api.post('/auth/logout').catch(() => {});
@@ -139,4 +127,3 @@ export const authService = {
     }
   },
 };
-

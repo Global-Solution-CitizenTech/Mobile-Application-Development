@@ -2,10 +2,10 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
-import { ChamadoDetailsScreen } from '../screens/ChamadoDetailsScreen';
-import { EditarChamadoScreen } from '../screens/EditarChamadoScreen';
-import { NovoChamadoScreen } from '../screens/NovoChamadoScreen';
-import { SobreAppScreen } from '../screens/SobreAppScreen';
+import { ChamadoDetailsScreen } from '../screens/ChamadoDetails/ChamadoDetailsScreen';
+import { EditarChamadoScreen } from '../screens/EditarChamado/EditarChamadoScreen';
+import { NovoChamadoScreen } from '../screens/NovoChamado/NovoChamadoScreen';
+import { SobreAppScreen } from '../screens/SobreApp/SobreAppScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -30,4 +30,3 @@ export const AppNavigator: React.FC = () => {
     </Stack.Navigator>
   );
 };
-

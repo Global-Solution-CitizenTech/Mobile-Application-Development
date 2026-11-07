@@ -1,13 +1,15 @@
 /**
  * Contexto Central de Autenticação e Sessão
- * Provedor para controle de login, cadastro, logout e proteção de rotas
+ * Integrado com TanStack QueryClient e Warmup HTTP (Padrão Challenge_Clyvo_4)
  */
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Usuario, LoginCredentials, RegisterData } from '../types';
 import { authService } from '../services/authService';
 import { storageService } from '../services/storageService';
-import { registerUnauthorizedHandler } from '../services/api';
+import { registerUnauthorizedHandler, HttpService } from '../services/api';
+import { queryClient } from '../lib/queryClient';
+import { getAuthErrorMessage } from '../utils/apiError';
 
 export interface AuthContextData {
   usuario: Usuario | null;
@@ -31,7 +33,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Inicializa a sessão verificando o storage local ao abrir o aplicativo
   useEffect(() => {
     async function loadStoredSession() {
       try {
@@ -41,14 +42,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUsuario(storedUser);
-
-          // Tenta atualizar o perfil em segundo plano
-          try {
-            const freshUser = await authService.getProfile();
-            setUsuario(freshUser);
-          } catch {
-            // Se offline, mantém o usuário do cache
-          }
         }
       } catch (err) {
         console.error('Erro ao restaurar sessão:', err);
@@ -58,46 +51,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     loadStoredSession();
+    HttpService.warmup();
 
-    // Registra callback para expiração de token (401)
     registerUnauthorizedHandler(() => {
-      logout();
+      setToken(null);
+      setUsuario(null);
+      queryClient.clear();
     });
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
     try {
       setIsLoading(true);
       setError(null);
       const { token: authToken, usuario: authUser } = await authService.login(credentials);
       setToken(authToken);
       setUsuario(authUser);
-    } catch (err: any) {
-      const msg = err.message || 'Falha ao autenticar. Verifique suas credenciais.';
+      queryClient.invalidateQueries();
+    } catch (err: unknown) {
+      const msg = getAuthErrorMessage(err);
       setError(msg);
       throw new Error(msg);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const register = async (data: RegisterData) => {
+  const register = useCallback(async (data: RegisterData) => {
     try {
       setIsLoading(true);
       setError(null);
       const { token: authToken, usuario: authUser } = await authService.register(data);
       setToken(authToken);
       setUsuario(authUser);
-    } catch (err: any) {
-      const msg = err.message || 'Falha ao cadastrar cidadão.';
+      queryClient.invalidateQueries();
+    } catch (err: unknown) {
+      const msg = getAuthErrorMessage(err, 'Falha ao cadastrar cidadão.');
       setError(msg);
       throw new Error(msg);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       setIsLoading(true);
       await authService.logout();
@@ -106,50 +103,63 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setToken(null);
       setUsuario(null);
+      queryClient.clear();
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateUser = async (updated: Usuario) => {
+  const updateUser = useCallback(async (updated: Usuario) => {
     setUsuario(updated);
     await storageService.saveUser(updated);
-  };
+  }, []);
 
-  const updateProfile = async (dados: Partial<Usuario> & { novaSenha?: string }) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const updated = await authService.updateProfile(dados);
-      setUsuario(updated);
-    } catch (err: any) {
-      const msg = err.message || 'Falha ao atualizar dados do perfil.';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const clearError = () => setError(null);
-
-  return (
-    <AuthContext.Provider
-      value={{
-        usuario,
-        token,
-        isAuthenticated: !!token,
-        isLoading,
-        error,
-        login,
-        register,
-        logout,
-        clearError,
-        updateUser,
-        updateProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const updateProfile = useCallback(
+    async (dados: Partial<Usuario> & { novaSenha?: string }) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const updated = await authService.updateProfile(dados);
+        setUsuario(updated);
+      } catch (err: unknown) {
+        const msg = getAuthErrorMessage(err, 'Falha ao atualizar dados do perfil.');
+        setError(msg);
+        throw new Error(msg);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
   );
-};
 
+  const clearError = useCallback(() => setError(null), []);
+
+  const value = useMemo(
+    () => ({
+      usuario,
+      token,
+      isAuthenticated: !!token,
+      isLoading,
+      error,
+      login,
+      register,
+      logout,
+      clearError,
+      updateUser,
+      updateProfile,
+    }),
+    [
+      usuario,
+      token,
+      isLoading,
+      error,
+      login,
+      register,
+      logout,
+      clearError,
+      updateUser,
+      updateProfile,
+    ]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

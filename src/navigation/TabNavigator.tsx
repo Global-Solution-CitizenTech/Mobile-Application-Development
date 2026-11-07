@@ -3,10 +3,10 @@ import { StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
-import { HomeScreen } from '../screens/HomeScreen';
-import { RadarBairroScreen } from '../screens/RadarBairroScreen';
-import { MeusChamadosScreen } from '../screens/MeusChamadosScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
+import { HomeScreen } from '../screens/Home/HomeScreen';
+import { RadarBairroScreen } from '../screens/RadarBairro/RadarBairroScreen';
+import { MeusChamadosScreen } from '../screens/MeusChamados/MeusChamadosScreen';
+import { ProfileScreen } from '../screens/Profile/ProfileScreen';
 import { colors, fontSize, fontWeight } from '../theme';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();

@@ -1,6 +1,6 @@
 /**
  * Definições de Tipos e Entidades de Domínio
- * CitizenTech - FIAP Global Solution 2026/2
+ * ZelaFix - FIAP Global Solution 2026/2
  */
 
 export type StatusChamado = 'Aberto' | 'Em Andamento' | 'Resolvido';

@@ -1,219 +1,164 @@
-# CitizenTech - Zeladoria Urbana Colaborativa
-### FIAP Global Solution 2026/2 • Mobile Application Development
-> Aplicativo móvel para engajamento cidadão, registro de ocorrências urbanas, acompanhamento de reparos e transparência pública.
+# ZelaFix Mobile — Zeladoria Urbana Colaborativa & Alerta Cidadão
+
+> **FIAP Global Solution 2026/2 — Mobile Application Development (2TDSPG)**  
+> **Tema:** *ZelaFix — Tecnologia com o cidadão no centro da inovação*  
+> **Alinhamento ONU:** **ODS 11** — Cidades e Comunidades Sustentáveis
 
 ---
 
-## 📌 1. Identificação do Projeto e Edital
+## 1. Visão Geral da Solução
 
-* **Tema:** CitizenTech (Zeladoria Urbana Colaborativa & Cidades Inteligentes)
-* **Alinhamento ODS:** ODS 11 – Cidades e Comunidades Sustentáveis (ONU)
-* **Versão da Aplicação:** `1.0.0`
-* **Commit Hash de Referência (Obrigatório conforme Edital):**
-  ```text
-  516b8b92afbb31a075c1f5befbc59cc9ebc5fcc8
-  ```
-  *(Identificador curto de auditoria: `516b8b9`)*
+O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 54) + TypeScript** que coloca o cidadão no centro da gestão pública urbana. Por meio dele, moradores identificam problemas nos espaços públicos do bairro (buracos na via, bueiros entupidos, iluminação pública apagada, descarte irregular de lixo, queda de árvores e vazamentos), anexam evidência fotográfica e localização via GPS, contam com **Triagem Inteligente por IA** para classificação automática de severidade e órgão competente, priorizam colaborativamente as ocorrências mais urgentes da vizinhança e acompanham o histórico completo de resolução até o parecer final da prefeitura.
 
 ---
 
-## 👥 2. Integrantes do Grupo
+## 2. Integrantes do Grupo (2TDSPG)
 
-| Nome Completo | RM | Turma | GitHub | LinkedIn |
-| :--- | :---: | :---: | :--- | :--- |
-| **Enzo Okuizumi** | **561432** | 2TDSPG | [@EnzoOkuizumiFiap](https://github.com/EnzoOkuizumiFiap) | [LinkedIn](https://www.linkedin.com/in/enzo-okuizumi-b60292256/) |
-| **Gustavo Okada** | **563428** | 2TDSPG | [@Gdev3356](https://github.com/Gdev3356) | [LinkedIn](https://www.linkedin.com/in/gustavo-okada-53a3b8359/) |
-| **Lucas Barros Gouveia** | **566422** | 2TDSPG | [@LuzBGouveia](https://github.com/LuzBGouveia) | [LinkedIn](https://www.linkedin.com/in/lucas-barros-gouveia-09b147355/) |
-| **Luna de Carvalho Guimarães** | **562290** | 2TDSPG | [@lunaguima](https://github.com/lunaguima) | [LinkedIn](https://www.linkedin.com/in/luna-guimar%C3%A3es-b0ba82309/) |
-| **Milton Marcelino** | **564836** | 2TDSPG | [@MiltonMarcelino](https://github.com/MiltonMarcelino) | [LinkedIn](https://www.linkedin.com/in/milton-marcelino-250298142) |
-
----
-
-## 🚀 3. Visão Geral da Solução
-
-O **CitizenTech** é uma plataforma móvel desenvolvida em **React Native com Expo e TypeScript**, desenhada para aproximar a população da gestão pública municipal. Por meio do aplicativo, cidadãos podem:
-1. **Identificar e reportar problemas urbanos em tempo real:** Buracos na via, bueiros entupidos, iluminação pública apagada, entulho descartado irregularmente, podas emergenciais de árvores, entre outros.
-2. **Geolocalização Precisa:** Inserção assistida de coordenadas GPS e endereço de referência para direcionar com precisão as equipes de zeladoria.
-3. **Acompanhamento Transparente do Ciclo de Vida (CRUD):** Timeline auditável exibindo a evolução da solicitação (`Aberto` ➔ `Em Andamento` ➔ `Resolvido`).
-4. **Resiliência e Continuidade Operacional:** Integração total via **Axios** com interceptores para injeção de **Bearer Token JWT**, somada a uma camada de **cache offline persistente** que garante a avaliação contínua do aplicativo mesmo sob instabilidades de rede ou servidores em manutenção.
+| Nome Completo | RM | Função Principal | GitHub | LinkedIn |
+| :--- | :---: | :--- | :---: | :---: |
+| **Enzo Okuizumi** | `561432` | Mobile Developer & Arquiteto React Native | [@EnzoOkuizumiFiap](https://github.com/EnzoOkuizumiFiap) | [LinkedIn](https://www.linkedin.com/in/enzo-okuizumi-b60292256/) |
+| **Gustavo Okada** | `563428` | Backend Developer & API Integration | [@Gdev3356](https://github.com/Gdev3356) | [LinkedIn](https://www.linkedin.com/in/gustavo-okada-53a3b8359/) |
+| **Lucas Barros Gouveia** | `566422` | Fullstack Developer & Database Architect | [@LuzBGouveia](https://github.com/LuzBGouveia) | [LinkedIn](https://www.linkedin.com/in/lucas-barros-gouveia-09b147355/) |
+| **Luna de Carvalho Guimarães** | `562290` | UI/UX Designer & Mobile Frontend Specialist | [@lunaguima](https://github.com/lunaguima) | [LinkedIn](https://www.linkedin.com/in/luna-guimar%C3%A3es-b0ba82309/) |
+| **Milton Marcelino** | `564836` | DevOps & Quality Assurance (QA) | [@MiltonMarcelino](https://github.com/MiltonMarcelino) | [LinkedIn](https://www.linkedin.com/in/milton-marcelino-250298142) |
 
 ---
 
-## 📱 4. Mapeamento das Telas do Aplicativo
+## 3. Arquitetura de Engenharia Mobile (Padrão Sprint 4 + TanStack Query + Zod)
 
-O projeto atende com folga e rigor às exigências de tela do edital (mínimo de 6 telas funcionais distintas + tela obrigatória "Sobre o App" para auditoria de commit):
+O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile em React Native + TypeScript, estruturando componentes e telas em módulos desacoplados e preparando toda a camada de rede para integração imediata com o **Backend Java (Spring Boot)**:
 
-| # | Tela | Arquivo | Descrição Funcional |
-| :---: | :--- | :--- | :--- |
-| **1** | **Login** | [`src/screens/LoginScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/LoginScreen.tsx) | Validação de campos (e-mail e senha), estados de loading com `ActivityIndicator`, tratamento de erros, e botão de preenchimento automático para avaliadores FIAP. |
-| **2** | **Cadastro / Signup** | [`src/screens/RegisterScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/RegisterScreen.tsx) | Formulário de adesão do cidadão com validação de Nome, E-mail, Senha, Confirmação, CPF, Telefone e Bairro residencial. |
-| **3** | **Início (Dashboard)** | [`src/screens/HomeScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/HomeScreen.tsx) | Painel geral e executivo do cidadão: Taxa de Resolução do Bairro, 4 StatCards (Total, Abertos, Em Ação, Resolvidos), Hub de Ações Rápidas, Distribuição por Categorias e status operacional municipal, sem sobrecarregar com feed de posts. |
-| **4** | **Demandas & Prioridades** | [`src/screens/RadarBairroScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/RadarBairroScreen.tsx) | Central de demandas comunitárias: Seletor "Mais Urgentes (IA)" vs "Todas as Demandas", busca em tempo real, chips de categorias, pílulas de status, apoios coletivos (+1 Morador) e botão para relatar ocorrência. |
-| **5** | **Meus Relatos** | [`src/screens/MeusChamadosScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/MeusChamadosScreen.tsx) | Gestão direta dos protocolos abertos pelo próprio cidadão logado, com filtros rápidos por status (Aberto, Em Andamento, Resolvido) e contador de demandas ativas. |
-| **6** | **Novo Chamado** | [`src/screens/NovoChamadoScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/NovoChamadoScreen.tsx) | Registro de ocorrência com seletor de categorias com ícones, fotos da ocorrência, botão GPS simulado (Paulista/FIAP) e prévia em tempo real da Triagem IA (severidade e órgão responsável). |
-| **7** | **Detalhes do Chamado** | [`src/screens/ChamadoDetailsScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/ChamadoDetailsScreen.tsx) | Exibição de dados completos, protocolo, fotos, mapa com coordenadas, histórico temporal de status, apoio comunitário (+1), parecer técnico da IA e modais de alteração de status e exclusão. |
-| **8** | **Editar Chamado** | [`src/screens/EditarChamadoScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/EditarChamadoScreen.tsx) | Apoio à operação `UPDATE` do CRUD, permitindo editar título, descrição, categoria e endereço da ocorrência já existente com validação. |
-| **9** | **Perfil do Cidadão** | [`src/screens/ProfileScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/ProfileScreen.tsx) | Exibição dos dados do usuário, edição de dados cadastrais e senha, atalhos rápidos, utilitário de reset do mock para testes e botão de Logout. |
-| **Extra** | **Sobre o App** | [`src/screens/SobreAppScreen.tsx`](file:///c:/desenvolvimento/faculdade/GS/Mobile-Application-Development/src/screens/SobreAppScreen.tsx) | **Obrigatória:** Exibição da versão (1.0.0), integrantes do grupo com RM, alinhamento ODS 11 e o **campo explícito com o Commit Hash de referência** auditável exigido pelo Edital FIAP GS. |
-
----
-
-## 🏗️ 5. Arquitetura de Software (Clean Architecture)
-
-A estrutura de pastas foi organizada segundo os princípios da Clean Architecture, garantindo modularidade, desacoplamento e testabilidade:
+- **Gerenciamento de Estado Assíncrono (`@tanstack/react-query` v5):** Cache inteligente, invalidação automática de *queries* (`queryKeys.chamados`), *pull-to-refresh* e mutações otimistas (`useMutation`).
+- **Validação de Formulários com Schemas (`zod` v4):** Schemas declarativos (`LoginSchema`, `RegisterSchema`, `ProfileEditSchema`, `ChamadoFormSchema`, `StatusUpdateSchema`) com extração automática de erros por campo.
+- **Extração Dinâmica do Commit Hash (`app.config.js` + `expo-constants`):** O hash completo e curto do commit Git, branch e data são injetados automaticamente em tempo de build e exibidos na tela **Sobre o App**, atendendo integralmente à exigência de auditoria do edital FIAP.
+- **Camada HTTP Pronta para Java Spring Boot (`src/services/`):** Suporte nativo ao formato paginado `Page<T>` do **Spring Data JPA**, interceptors `Bearer JWT` do **Spring Security**, normalização de erros do `@RestControllerAdvice` / Bean Validation (`src/utils/apiError.ts`) e *warmup* em `/actuator/health`.
+- **Isolamento de Dados Mockados (`src/mocks/`):** Todos os dados de fallback para demonstração offline estão isolados em `src/mocks/chamadosMock.ts`, mantendo os serviços (`authService.ts` e `chamadoService.ts`) limpos e orientados aos contratos REST Java.
 
 ```text
-/
-├── assets/                  # Ícones adaptativos e splash screen
+Mobile-Application-Development/
+├── App.tsx                           # Providers: SafeArea, QueryClientProvider, ThemeProvider, AuthProvider
+├── app.config.js                     # Injeção dinâmica do Git Commit Hash via child_process
 ├── src/
-│   ├── components/          # Componentes de UI reaproveitáveis
-│   │   ├── Button.tsx       # Botão customizado (primary, secondary, outline, danger)
-│   │   ├── Input.tsx        # Campo de entrada com label, ícones e toggle de senha
-│   │   ├── ChamadoCard.tsx  # Card visual de ocorrência de zeladoria
-│   │   ├── StatusBadge.tsx  # Badge semântico de status (Aberto/Em Andamento/Resolvido)
-│   │   ├── CategoryBadge.tsx# Badge com ícone específico para cada categoria
-│   │   ├── Header.tsx       # Cabeçalho padrão do app
-│   │   ├── FeedbackModal.tsx# Modais de sucesso, erro e confirmação de ações
-│   │   ├── StatCard.tsx     # Cartão métrico para indicadores
-│   │   └── EmptyState.tsx   # Estado vazio elegante para listas e buscas
-│   │
-│   ├── contexts/            # Context API do React
-│   │   └── AuthContext.tsx  # Gerenciador global de sessão, login, registro e logout
-│   │
-│   ├── hooks/               # Custom Hooks encapsulando regras de negócio
-│   │   ├── useAuth.ts       # Hook de consumo seguro da autenticação
-│   │   └── useChamados.ts   # Hook centralizador de operações CRUD e filtros
-│   │
-│   ├── navigation/          # Roteamento tipado com React Navigation
-│   │   ├── types.ts         # Tipagem estrita de parâmetros das rotas
-│   │   ├── AuthNavigator.tsx# Fluxo público (Login, Register)
-│   │   ├── TabNavigator.tsx # Barra de navegação inferior (Início, Demandas, Meus Relatos, Perfil)
-│   │   ├── AppNavigator.tsx # Stack interna protegida (Tabs, Detalhes, Editar, Novo Chamado, Sobre)
-│   │   └── index.tsx        # Gatekeeper de proteção de rotas (Token ? App : Auth)
-│   │
-│   ├── screens/             # Telas de negócio e extra da aplicação
-│   │   ├── LoginScreen.tsx
-│   │   ├── RegisterScreen.tsx
-│   │   ├── HomeScreen.tsx
-│   │   ├── RadarBairroScreen.tsx
-│   │   ├── MeusChamadosScreen.tsx
-│   │   ├── NovoChamadoScreen.tsx
-│   │   ├── ChamadoDetailsScreen.tsx
-│   │   ├── EditarChamadoScreen.tsx
-│   │   ├── ProfileScreen.tsx
-│   │   └── SobreAppScreen.tsx
-│   │
-│   ├── services/            # Camada de comunicação com APIs e persistência
-│   │   ├── api.ts           # Cliente Axios com interceptors de Bearer Token e erros
-│   │   ├── authService.ts   # Autenticação e perfil com fallback resiliente
-│   │   ├── chamadoService.ts# Implementação das operações CRUD completas
-│   │   ├── storageService.ts# Abstração de armazenamento local seguro (AsyncStorage)
-│   │   └── mockData.ts      # Dados representativos reais de São Paulo e conta demo
-│   │
-│   ├── theme/               # Sistema de Design do CitizenTech
-│   │   ├── colors.ts        # Paleta Verde Esmeralda, Azul Ardósia e Cinzas Neutros
-│   │   ├── spacing.ts       # Escala de espaçamentos, bordas e sombras
-│   │   ├── typography.ts    # Escala tipográfica e pesos
-│   │   └── index.ts         # Exportação unificada do tema
-│   │
-│   └── types/               # Tipagens TypeScript e entidades de domínio
-│       └── index.ts         # Interfaces de Chamado, Usuário, Localização, Status, etc.
-│
-├── App.tsx                  # Ponto de entrada com SafeAreaProvider e AuthProvider
-├── app.json                 # Manifesto do Expo
-├── package.json             # Dependências e scripts
-└── tsconfig.json            # Configuração do TypeScript com path mapping
+│   ├── components/                   # Componentes modulares (Pasta + index.tsx)
+│   │   ├── Button/index.tsx
+│   │   ├── CategoryBadge/index.tsx
+│   │   ├── ChamadoCard/index.tsx
+│   │   ├── EmptyState/index.tsx
+│   │   ├── FeedbackModal/index.tsx
+│   │   ├── Header/index.tsx
+│   │   ├── Input/index.tsx
+│   │   ├── LoadingSpinner/index.tsx
+│   │   ├── StatCard/index.tsx
+│   │   └── StatusBadge/index.tsx
+│   ├── config/
+│   │   ├── env.ts                    # URLs da API Java Spring Boot e flags de ambiente
+│   │   └── version.ts                # Metadados de build, Commit Hash dinâmico e Equipe FIAP
+│   ├── contexts/
+│   │   ├── AuthContext.tsx           # Sessão JWT + invalidação do QueryClient + Warmup API
+│   │   └── ThemeContext.tsx          # Tema Claro/Escuro persistido via AsyncStorage
+│   ├── hooks/
+│   │   ├── useAuth.ts                # Acesso ao contexto de autenticação
+│   │   ├── useChamados.ts            # Queries e Mutations TanStack Query v5
+│   │   ├── useChamadoForm.ts         # Formulário de criação/edição com Zod + Triagem IA
+│   │   ├── useLoginForm.ts           # Formulário de login com Zod + useMutation
+│   │   └── useRegisterForm.ts        # Formulário de cadastro com Zod + useMutation
+│   ├── lib/
+│   │   ├── queryClient.ts            # Instância global do TanStack QueryClient
+│   │   └── queryKeys.ts              # Fábrica tipada de Query Keys
+│   ├── mocks/
+│   │   └── chamadosMock.ts           # Dados mockados isolados para demonstração offline
+│   ├── navigation/
+│   │   ├── AuthNavigator.tsx         # Stack Público (Welcome, Login, Register)
+│   │   ├── AppNavigator.tsx          # Stack Autenticado (Main Tabs, Details, Novo, Editar, Sobre)
+│   │   ├── TabNavigator.tsx          # Bottom Tabs (Início, Demandas, Meus Relatos, Perfil)
+│   │   ├── index.tsx                 # Roteador condicional + Splash de sessão
+│   │   └── types.ts                  # Tipagens estritas do React Navigation
+│   ├── screens/                      # Telas organizadas em pastas + subcomponentes locais
+│   │   ├── Welcome/WelcomeScreen.tsx
+│   │   ├── Login/LoginScreen.tsx (+ components/LoginForm.tsx)
+│   │   ├── Register/RegisterScreen.tsx (+ components/RegisterForm.tsx)
+│   │   ├── Home/HomeScreen.tsx (+ components/HomePanoramaCard.tsx, HomeCategoryList.tsx)
+│   │   ├── RadarBairro/RadarBairroScreen.tsx (+ components/RadarHeaderFilters.tsx)
+│   │   ├── MeusChamados/MeusChamadosScreen.tsx (+ components/MeusChamadosHeader.tsx)
+│   │   ├── NovoChamado/NovoChamadoScreen.tsx (+ components/PhotoEvidencePicker.tsx, CategoryGridSelector.tsx)
+│   │   ├── EditarChamado/EditarChamadoScreen.tsx
+│   │   ├── ChamadoDetails/ChamadoDetailsScreen.tsx (+ components/ChamadoTimelineCard.tsx, StatusChangeModal.tsx)
+│   │   ├── Profile/ProfileScreen.tsx (+ components/EditProfileModal.tsx)
+│   │   └── SobreApp/SobreAppScreen.tsx
+│   ├── services/
+│   │   ├── api.ts                    # Axios + Interceptor JWT + Health Warmup
+│   │   ├── authService.ts            # Contratos REST /auth/* (Java Spring Security)
+│   │   └── chamadoService.ts         # Contratos REST /chamados/* (Spring Data JPA Page<T>)
+│   ├── theme/index.ts                # Design System (Cores, Tipografia, Sombras, Espaçamentos)
+│   ├── types/
+│   │   ├── api.ts                    # Contratos SpringPageResponse<T>, ApiError, FieldValidationError
+│   │   └── index.ts                  # Entidades de domínio e DTOs
+│   └── utils/
+│       ├── apiError.ts               # Normalizador de erros HTTP / Spring Boot
+│       └── schemas.ts                # Schemas Zod v4
 ```
 
 ---
 
-## ⚡ 6. Integração CRUD e Consumo da API REST
+## 4. Mapeamento das 10 Telas (9 Telas Válidas + Sobre o App)
 
-A aplicação implementa integralmente os métodos HTTP do CRUD de chamados através da biblioteca **Axios**:
+Conforme regra do edital (*"Mínimo de 6 telas distintas — a tela sobre o app não contabiliza no total de telas"*), o aplicativo conta com **9 telas funcionais distintas** além da tela **Sobre o App**:
 
-```mermaid
-flowchart LR
-    A["Mobile App (React Native)"] -->|"Request Interceptor (Injeta Bearer JWT)"| B["Axios Client"]
-    B -->|"POST /chamados"| C["CREATE (Criar Chamado)"]
-    B -->|"GET /chamados & /chamados/:id"| D["READ (Listar / Detalhes)"]
-    B -->|"PUT /chamados/:id & PATCH /status"| E["UPDATE (Atualizar Dados/Status)"]
-    B -->|"DELETE /chamados/:id"| F["DELETE (Excluir Chamado)"]
-    B -.->|"Fallback Inteligente"| G["AsyncStorage Cache Local"]
+1. **`WelcomeScreen` (`src/screens/Welcome/WelcomeScreen.tsx`):** Apresentação institucional da plataforma ZelaFix, alinhamento à ODS 11 da ONU e portas de entrada para Login ou Cadastro.
+2. **`LoginScreen` (`src/screens/Login/LoginScreen.tsx`):** Autenticação JWT com validação Zod e botão de preenchimento rápido para avaliadores FIAP.
+3. **`RegisterScreen` (`src/screens/Register/RegisterScreen.tsx`):** Cadastro completo de cidadão (Nome, E-mail, CPF, Telefone, Bairro e Senha) validado com Zod.
+4. **`HomeScreen` (`src/screens/Home/HomeScreen.tsx`):** Painel executivo do bairro com Índice de Resolução, métricas inline, CTA de abertura rápida, Top 2 prioridades urgentes e distribuição por categoria.
+5. **`RadarBairroScreen` (`src/screens/RadarBairro/RadarBairroScreen.tsx`):** Feed colaborativo e ranking de urgência do bairro com busca textual, alternância *Mais Urgentes / Todas*, filtros por categoria/status e botão de apoio comunitário (`+1`).
+6. **`MeusChamadosScreen` (`src/screens/MeusChamados/MeusChamadosScreen.tsx`):** Gestão dos protocolos abertos pelo próprio cidadão filtrados por etapa de atendimento.
+7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura de relato com seletor de evidência fotográfica, grid de categorias, prévia em tempo real da **Triagem IA** e autopreenchimento GPS.
+8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, parecer da Triagem IA, coordenadas GPS, linha do tempo auditável e modais de atualização de status e exclusão.
+9. **`EditarChamadoScreen` (`src/screens/EditarChamado/EditarChamadoScreen.tsx`):** Edição cadastral completa de relatos existentes com validação Zod.
+10. **`ProfileScreen` (`src/screens/Profile/ProfileScreen.tsx`):** Dados do cidadão verificado, modal de edição de perfil/senha, alternância de tema Claro/Escuro e restauração da base de demonstração.
+11. **`SobreAppScreen` (`src/screens/SobreApp/SobreAppScreen.tsx`):** Exibe o **Hash de Commit de Referência** extraído dinamicamente do Git, integrantes da equipe FIAP com links diretos para GitHub/LinkedIn e stack tecnológica.
+
+---
+
+## 5. Contratos REST Prontos para o Backend Java (Spring Boot)
+
+A camada `src/services/` já está configurada para consumir os seguintes endpoints do backend Java em `EXPO_PUBLIC_API_URL` (padrão `http://localhost:8080/api/v1`):
+
+| Método | Endpoint Java Spring Boot | Descrição |
+| :---: | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | Autentica o cidadão e retorna `{ usuario, token }` (JWT Bearer) |
+| `POST` | `/api/v1/auth/register` | Registra novo cidadão com validação Bean Validation |
+| `PUT` | `/api/v1/usuarios/{id}` | Atualiza dados cadastrais e credenciais do cidadão |
+| `GET` | `/api/v1/chamados` | Lista chamados (suporta retorno `Page<ChamadoResponseDTO>` ou `List`) |
+| `GET` | `/api/v1/chamados/{id}` | Detalhes completos do protocolo e histórico |
+| `POST` | `/api/v1/chamados` | Cria novo chamado de zeladoria urbana |
+| `PUT` | `/api/v1/chamados/{id}` | Atualiza dados de um chamado existente |
+| `PATCH` | `/api/v1/chamados/{id}/status` | Atualiza etapa do protocolo (`Aberto`, `Em Andamento`, `Resolvido`) |
+| `POST` | `/api/v1/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) de morador |
+| `DELETE` | `/api/v1/chamados/{id}` | Remove chamado pelo ID |
+| `POST` | `/api/v1/triagem-ia/analisar` | Endpoint Spring AI para classificação automática de severidade e órgão |
+
+---
+
+## 6. Como Executar o Projeto
+
+```bash
+# 1. Acesse a pasta do projeto Mobile
+cd Mobile-Application-Development
+
+# 2. Instale as dependências
+npm install --legacy-peer-deps
+
+# 3. Verifique a tipagem estrita do TypeScript
+npm run type-check
+
+# 4. Inicie o servidor de desenvolvimento Expo
+npx expo start
 ```
 
-### Endpoints Mapeados:
-* `POST /auth/login` – Autenticação com credenciais do cidadão
-* `POST /auth/register` – Cadastro de novos cidadãos
-* `GET /auth/me` – Recuperação dos dados do perfil autenticado
-* `GET /chamados` – Leitura com suporte a filtros (`categoria`, `status`, `busca`, `apenasMeus`)
-* `GET /chamados/:id` – Leitura detalhada por identificador único
-* `POST /chamados` – Criação de nova ocorrência com localização e foto
-* `PUT /chamados/:id` – Atualização cadastral de dados do chamado
-* `PATCH /chamados/:id/status` – Atualização de status e inserção de parecer no histórico
-* `DELETE /chamados/:id` – Exclusão permanente de ocorrência
-
-### Interceptors Configurados no Axios:
-1. **Request Interceptor:** Lê assincronamente o token JWT armazenado e injeta no cabeçalho `Authorization: Bearer <token>`.
-2. **Response Interceptor:** Captura respostas 401 para acionar o logout automático por expiração de sessão e traduz erros 400/404/500 e falhas de rede em mensagens amigáveis aos usuários.
-
 ---
 
-## 🎨 7. Identidade Visual (Design System)
+## 7. Declaração de Uso de Inteligência Artificial Generativa (Item 1.11 do Edital)
 
-Alinhado com o tema **CitizenTech**, a interface adota tons ecológicos e tecnológicos:
-* 🟢 **Verde Esmeralda (`#059669`, `#10B981`):** Simboliza sustentabilidade, solução e avanço ecológico.
-* 🔵 **Azul Ardósia (`#1E293B`, `#334155`):** Expressa seriedade, governança pública e tecnologia.
-* ⚪ **Cinzas Neutros e Branco (`#F8FAFC`, `#FFFFFF`):** Proporcionam alto contraste e acessibilidade visual.
-* 🟡 **Status Amigáveis:**
-  * `Aberto`: Âmbar / Laranja
-  * `Em Andamento`: Azul Técnico
-  * `Resolvido`: Verde Esmeralda
+Em conformidade com as diretrizes de ética e transparência acadêmica da **FIAP Global Solution 2026/2 (Seção 1.11)**:
 
----
-
-## 💻 8. Como Executar o Projeto
-
-### Pré-requisitos:
-* **Node.js** (versão 20 ou superior recomendada)
-* **npm** ou **yarn**
-* Dispositivo móvel com o app **Expo Go** instalado (Android ou iOS) OU emulador configurado.
-
-### Passo a Passo:
-
-1. **Clonar ou acessar o repositório:**
-   ```bash
-   git clone https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development.git
-   cd Mobile-Application-Development
-   ```
-
-2. **Instalar as dependências do projeto:**
-   ```bash
-   npm install
-   ```
-
-3. **Iniciar o servidor de desenvolvimento do Expo:**
-   ```bash
-   npx expo start
-   ```
-
-4. **Executar no dispositivo:**
-   * **No celular:** Abra o app **Expo Go** e leia o QR Code gerado no terminal.
-   * **No Android Emulator:** Pressione a tecla `a` no terminal.
-   * **Na Web:** Pressione a tecla `w` no terminal.
-
----
-
-## 🔑 9. Credenciais para Teste Rápido do Avaliador FIAP
-
-Para facilitar a correção e avaliação da banca examinadora, a tela de login conta com um botão dedicado **"Preencher Acesso Demo (Avaliador FIAP)"**, que preenche os campos com 1 clique:
-
-* **E-mail:** `cidadao.fiap@citizentech.com.br`
-* **Senha:** `123456`
-
-*(Também é possível cadastrar qualquer novo usuário na tela de cadastro ou criar novos chamados à vontade! O botão "Restaurar Dados Padrão de Demonstração" no Perfil permite resetar as ocorrências ao estado original a qualquer momento).*
-
----
-
-### Licença e Direitos
-Desenvolvido exclusivamente para a **FIAP Global Solution 2026/2** sob a licença MIT.
-
+- **Ferramentas utilizadas:** Assistente de codificação baseado em LLM para apoio na refatoração arquitetural de componentes React Native, estruturação de schemas de validação com `zod` e padronização de contratos tipados TypeScript (`SpringPageResponse<T>`).
+- **Responsabilidade e Autoria Humana:** Todas as decisões de produto, definição do escopo funcional de zeladoria colaborativa, modelagem de domínio, regras de negócio, fluxos de navegação, identidade visual e revisão integral do código-fonte foram conduzidas, testadas e validadas pelos integrantes do grupo.

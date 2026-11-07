@@ -1,5 +1,5 @@
 /**
- * CitizenTech - Paleta de Cores do Sistema
+ * ZelaFix - Paleta de Cores do Sistema
  * Baseada nas diretrizes de Cidades Inteligentes & Sustentabilidade:
  * Verde Esmeralda (Ecologia, Resolução, Ação Positiva)
  * Azul Ardósia (Governança, Tecnologia, Confiabilidade)

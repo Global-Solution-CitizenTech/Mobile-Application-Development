@@ -1,110 +1,37 @@
 /**
  * Serviço de Negócio de Chamados de Zeladoria Urbana
- * Executa as operações CRUD completas integradas com o Axios e com cache local persistente
+ * Preparado para os endpoints REST do Backend Java (Spring Boot + Spring Data JPA Pageable + Spring AI)
+ * com fallback transparente para o repositório mockado local (`src/mocks/chamadosMock.ts`).
+ *
+ * Contratos REST esperados no Java:
+ * - GET    /chamados?page=0&size=50&categoria=...&status=...&busca=...
+ * - GET    /chamados/{id}
+ * - POST   /chamados
+ * - PUT    /chamados/{id}
+ * - POST   /chamados/{id}/apoiar
+ * - PATCH  /chamados/{id}/status
+ * - DELETE /chamados/{id}
  */
 
 import { api } from './api';
 import { storageService } from './storageService';
-import { INITIAL_MOCK_CHAMADOS } from './mockData';
+import { env } from '../config/env';
+import { INITIAL_MOCK_CHAMADOS, simularTriagemSpringAi } from '../mocks/chamadosMock';
+import { SpringPageResponse } from '../types/api';
 import {
   Chamado,
   CreateChamadoDTO,
   UpdateChamadoDTO,
   FiltroChamados,
   StatusChamado,
-  PrioridadeChamado,
-  CategoriaChamado,
   Usuario,
   EstatisticasChamados,
 } from '../types';
 
-/**
- * Simula a Triagem Inteligente (Visão Computacional + Spring AI / GenAI)
- * quando o backend ainda está em modo mock local.
- */
-export function gerarTriagemIaAutomatica(
-  categoria: CategoriaChamado,
-  titulo: string,
-  descricao: string
-): {
-  prioridade: PrioridadeChamado;
-  parecerIa: string;
-  orgaoResponsavel: string;
-} {
-  const texto = `${titulo} ${descricao}`.toLowerCase();
-  const temTermoCritico =
-    texto.includes('risco') ||
-    texto.includes('perigo') ||
-    texto.includes('acidente') ||
-    texto.includes('fiação') ||
-    texto.includes('alagamento') ||
-    texto.includes('profundo') ||
-    texto.includes('cadeirante') ||
-    texto.includes('idoso');
-
-  switch (categoria) {
-    case 'Buraco na Rua':
-      return {
-        prioridade: temTermoCritico ? 'Crítica' : 'Alta',
-        orgaoResponsavel: 'Subprefeitura — Equipe de Pavimentação e Tapa-Buraco',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Deformação asfáltica detectada na via. Risco de acidentes para motociclistas e danos mecânicos. Recomendado reparo prioritário com massa asfáltica.',
-      };
-    case 'Bueiro Entupido':
-      return {
-        prioridade: temTermoCritico ? 'Crítica' : 'Alta',
-        orgaoResponsavel: 'Subprefeitura — Drenagem Urbana e Hidrojateamento',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Obstrução de boca de lobo identificada. Risco elevado de bolsão d’água e alagamento em dias de chuva. Recomendada desobstrução preventiva.',
-      };
-    case 'Iluminação Pública':
-      return {
-        prioridade: 'Alta',
-        orgaoResponsavel: 'Central Ilumina SP — Manutenção de Rede LED',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Ponto escuro identificado em via pública, comprometendo a segurança noturna de pedestres e moradores. Encaminhado para substituição de luminária.',
-      };
-    case 'Poda de Árvore':
-      return {
-        prioridade: temTermoCritico ? 'Crítica' : 'Média',
-        orgaoResponsavel: 'Defesa Civil & Equipe de Manejo Arbóreo',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Interferência arbórea identificada no espaço urbano. Caso haja contato com rede elétrica, requer ação conjunta com a concessionária de energia.',
-      };
-    case 'Vazamento de Água':
-      return {
-        prioridade: 'Alta',
-        orgaoResponsavel: 'Concessionária de Saneamento (Sabesp) & Fiscalização Municipal',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Vazamento ativo em via pública com desperdício hídrico e risco de solapamento do asfalto.',
-      };
-    case 'Sinalização e Trânsito':
-      return {
-        prioridade: temTermoCritico ? 'Crítica' : 'Alta',
-        orgaoResponsavel: 'CET — Engenharia de Tráfego e Sinalização',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Falha de sinalização viária com impacto direto na segurança do cruzamento e travessia de pedestres.',
-      };
-    case 'Entulho e Descarte Irregular':
-      return {
-        prioridade: 'Média',
-        orgaoResponsavel: 'Subprefeitura — Limpeza Pública e Fiscalização Ambiental',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Acúmulo irregular de resíduos sólidos na calçada/via, prejudicando a mobilidade peatonal e higiene do bairro.',
-      };
-    default:
-      return {
-        prioridade: temTermoCritico ? 'Alta' : 'Baixa',
-        orgaoResponsavel: 'Central de Zeladoria Municipal 156',
-        parecerIa:
-          'Triagem IA (Visão + LLM): Solicitação de manutenção urbana catalogada e encaminhada para vistoria técnica da regional.',
-      };
-  }
-}
+export { simularTriagemSpringAi as gerarTriagemIaAutomatica };
 
 function normalizarChamado(item: Chamado): Chamado {
   let fotoUrl = item.fotoUrl;
-  // Migra URLs antigas/quebradas caso estejam em cache no storage do dispositivo
   if (fotoUrl && fotoUrl.includes('photo-1584463699042-4541cb9154a4')) {
     fotoUrl =
       'https://images.unsplash.com/photo-1581375922343-ac6b40caf5e3?auto=format&fit=crop&w=800&q=80';
@@ -118,9 +45,10 @@ function normalizarChamado(item: Chamado): Chamado {
       'https://images.unsplash.com/photo-1780415493361-07c5a78dbaef?auto=format&fit=crop&w=800&q=80';
   }
 
-  const triagem = gerarTriagemIaAutomatica(item.categoria, item.titulo, item.descricao);
+  const triagem = simularTriagemSpringAi(item.categoria, item.titulo, item.descricao);
   return {
     ...item,
+    id: String(item.id),
     fotoUrl,
     prioridade: item.prioridade || triagem.prioridade,
     apoiosCount: typeof item.apoiosCount === 'number' ? item.apoiosCount : 12,
@@ -129,41 +57,52 @@ function normalizarChamado(item: Chamado): Chamado {
   };
 }
 
+/**
+ * Extrai a lista de chamados tanto de um array direto (`Chamado[]`)
+ * quanto de um objeto paginado do Spring Data JPA (`Page<Chamado>` -> `.content`)
+ */
+function extrairListaDaResposta(
+  data: Chamado[] | SpringPageResponse<Chamado> | undefined
+): Chamado[] | null {
+  if (!data) return null;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray((data as SpringPageResponse<Chamado>).content)) {
+    return (data as SpringPageResponse<Chamado>).content;
+  }
+  return null;
+}
+
 export const chamadoService = {
-  /**
-   * Inicializa o repositório local de chamados caso o cache esteja vazio
-   */
   async ensureInitialData(): Promise<Chamado[]> {
     const cached = await storageService.getChamados();
     if (cached && cached.length > 0) {
-      const normalizados = cached.map(normalizarChamado);
-      return normalizados;
+      return cached.map(normalizarChamado);
     }
     await storageService.saveChamados(INITIAL_MOCK_CHAMADOS);
     return INITIAL_MOCK_CHAMADOS;
   },
 
-  /**
-   * READ: Lista chamados com aplicação de filtros
-   */
-  async listar(filtros?: FiltroChamados, usuarioId?: string): Promise<Chamado[]> {
+  async listar(filtros?: FiltroChamados, usuarioId?: string, page = 0, size = 50): Promise<Chamado[]> {
     try {
-      const response = await api.get<Chamado[]>('/chamados', {
+      const response = await api.get<Chamado[] | SpringPageResponse<Chamado>>('/chamados', {
         params: {
+          page,
+          size,
           categoria: filtros?.categoria !== 'Todas' ? filtros?.categoria : undefined,
           status: filtros?.status !== 'Todos' ? filtros?.status : undefined,
-          busca: filtros?.busca,
-          apenasMeus: filtros?.apenasMeus,
+          busca: filtros?.busca || undefined,
+          apenasMeus: filtros?.apenasMeus || undefined,
         },
       });
 
-      if (response.data && Array.isArray(response.data)) {
-        const normalizados = response.data.map(normalizarChamado);
+      const listaExtraida = extrairListaDaResposta(response.data);
+      if (listaExtraida) {
+        const normalizados = listaExtraida.map(normalizarChamado);
         await storageService.saveChamados(normalizados);
         return normalizados;
       }
-    } catch (error: any) {
-      console.warn('API offline: Carregando chamados do repositório local persistente.');
+    } catch (error) {
+      if (!env.enableMockFallback) throw error;
     }
 
     let chamados = await this.ensureInitialData();
@@ -197,15 +136,10 @@ export const chamadoService = {
     return chamados;
   },
 
-  /**
-   * READ: Busca detalhes de um chamado específico pelo seu ID
-   */
   async obterPorId(id: string): Promise<Chamado> {
-    // 1. Tenta buscar primeiro no repositório local persistente para resposta instantânea
     const chamados = await this.ensureInitialData();
     const local = chamados.find((c) => c.id === id);
 
-    // 2. Se houver conexão com o backend e resposta rápida (2s timeout), tenta sincronizar
     try {
       const response = await api.get<Chamado>(`/chamados/${id}`, { timeout: 2000 });
       if (response.data) {
@@ -217,22 +151,19 @@ export const chamadoService = {
         }
         return normalizado;
       }
-    } catch (error: any) {
-      // Backend offline ou timeout -> fallback suave para os dados locais já existentes
+    } catch (error) {
+      if (!env.enableMockFallback && !local) throw error;
     }
 
-    if (local && atoChamado(local)) {
+    if (local) {
       return local;
     }
 
     throw new Error('Chamado de zeladoria não encontrado.');
   },
 
-  /**
-   * CREATE: Cadastra uma nova ocorrência de zeladoria
-   */
   async criar(dto: CreateChamadoDTO, autor: Usuario): Promise<Chamado> {
-    const triagem = gerarTriagemIaAutomatica(dto.categoria, dto.titulo, dto.descricao);
+    const triagem = simularTriagemSpringAi(dto.categoria, dto.titulo, dto.descricao);
 
     try {
       const response = await api.post<Chamado>('/chamados', dto);
@@ -242,8 +173,8 @@ export const chamadoService = {
         await storageService.saveChamados([normalizado, ...chamados]);
         return normalizado;
       }
-    } catch (error: any) {
-      console.warn('API offline: Criando ocorrência no repositório local.');
+    } catch (error) {
+      if (!env.enableMockFallback) throw error;
     }
 
     const now = new Date().toISOString();
@@ -265,7 +196,7 @@ export const chamadoService = {
       localizacao: dto.localizacao,
       fotoUrl:
         dto.fotoUrl ||
-        'https://images.unsplash.com/photo-1584463699042-4541cb9154a4?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
       dataAbertura: now,
       dataAtualizacao: now,
       autorId: autor.id,
@@ -288,10 +219,7 @@ export const chamadoService = {
     return novoChamado;
   },
 
-  /**
-   * UPDATE: Atualiza os dados de uma ocorrência existente
-   */
-  async atualizar(id: string, dto: UpdateChamadoDTO, autorNome: string = 'Cidadão'): Promise<Chamado> {
+  async atualizar(id: string, dto: UpdateChamadoDTO): Promise<Chamado> {
     try {
       const response = await api.put<Chamado>(`/chamados/${id}`, dto);
       if (response.data) {
@@ -304,8 +232,8 @@ export const chamadoService = {
         }
         return normalizado;
       }
-    } catch (error: any) {
-      console.warn(`API offline: Atualizando chamado ${id} localmente.`);
+    } catch (error) {
+      if (!env.enableMockFallback) throw error;
     }
 
     const chamados = await this.ensureInitialData();
@@ -337,9 +265,6 @@ export const chamadoService = {
     return atualizado;
   },
 
-  /**
-   * APOIAR / PRIORIZAR: Permite que moradores confirmem/apoiem um problema do bairro
-   */
   async apoiar(id: string): Promise<Chamado> {
     try {
       const response = await api.post<Chamado>(`/chamados/${id}/apoiar`);
@@ -353,8 +278,8 @@ export const chamadoService = {
         }
         return normalizado;
       }
-    } catch (error: any) {
-      console.warn(`API offline: Registrando apoio comunitário no chamado ${id} localmente.`);
+    } catch (error) {
+      if (!env.enableMockFallback) throw error;
     }
 
     const chamados = await this.ensureInitialData();
@@ -365,9 +290,10 @@ export const chamadoService = {
 
     const atual = chamados[index];
     const jaApoiado = !!atual.apoiadoPeloUsuario;
-    const novoCount = jaApoiado ? Math.max(1, (atual.apoiosCount || 1) - 1) : (atual.apoiosCount || 0) + 1;
+    const novoCount = jaApoiado
+      ? Math.max(1, (atual.apoiosCount || 1) - 1)
+      : (atual.apoiosCount || 0) + 1;
 
-    // Se atingir alto engajamento comunitário (ex: >= 25 apoios), sobe prioridade automaticamente
     let novaPrioridade = atual.prioridade;
     if (!jaApoiado && novoCount >= 25 && atual.prioridade !== 'Crítica') {
       novaPrioridade = 'Crítica';
@@ -387,9 +313,6 @@ export const chamadoService = {
     return atualizado;
   },
 
-  /**
-   * UPDATE STATUS: Altera o status do chamado e adiciona evento ao histórico
-   */
   async atualizarStatus(
     id: string,
     novoStatus: StatusChamado,
@@ -411,8 +334,8 @@ export const chamadoService = {
         }
         return normalizado;
       }
-    } catch (error: any) {
-      console.warn(`API offline: Atualizando status do chamado ${id} localmente.`);
+    } catch (error) {
+      if (!env.enableMockFallback) throw error;
     }
 
     const chamados = await this.ensureInitialData();
@@ -457,14 +380,11 @@ export const chamadoService = {
     return atualizado;
   },
 
-  /**
-   * DELETE: Remove uma ocorrência do sistema
-   */
   async excluir(id: string): Promise<boolean> {
     try {
       await api.delete(`/chamados/${id}`);
-    } catch (error: any) {
-      console.warn(`API offline: Excluindo chamado ${id} localmente.`);
+    } catch (error) {
+      if (!env.enableMockFallback) throw error;
     }
 
     const chamados = await this.ensureInitialData();
@@ -474,9 +394,6 @@ export const chamadoService = {
     return true;
   },
 
-  /**
-   * Estatísticas consolidadas de zeladoria urbana
-   */
   obterEstatisticas(chamados: Chamado[]): EstatisticasChamados {
     const total = chamados.length;
     const abertos = chamados.filter((c) => c.status === 'Aberto').length;
@@ -493,15 +410,8 @@ export const chamadoService = {
     };
   },
 
-  /**
-   * Restaura o banco de demonstração original
-   */
   async resetarMock(): Promise<Chamado[]> {
     await storageService.saveChamados(INITIAL_MOCK_CHAMADOS);
     return INITIAL_MOCK_CHAMADOS;
   },
 };
-
-function atoChamado(chamado: any): chamado is Chamado {
-  return chamado && typeof chamado.id === 'string';
-}

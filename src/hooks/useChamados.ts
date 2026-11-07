@@ -1,10 +1,13 @@
 /**
- * Hook Customizado de Gerenciamento de Chamados de Zeladoria
- * Centraliza o estado da lista, filtros, estatísticas, apoios e chamadas ao serviço
+ * Hook Customizado de Gerenciamento de Chamados de Zeladoria (TanStack Query v5)
+ * Centraliza cache, queries, mutations, filtros e estatísticas, pronto para o Backend Java
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { chamadoService } from '../services/chamadoService';
+import { queryKeys } from '../lib/queryKeys';
+import { getApiErrorMessage } from '../utils/apiError';
 import { useAuth } from './useAuth';
 import {
   Chamado,
@@ -16,179 +19,207 @@ import {
   EstatisticasChamados,
 } from '../types';
 
-export const useChamados = () => {
+export const useChamadoDetail = (id: string) => {
+  return useQuery({
+    queryKey: queryKeys.chamados.detail(id),
+    queryFn: () => chamadoService.obterPorId(id),
+    enabled: Boolean(id),
+  });
+};
+
+export const useChamados = (initialFiltros?: Partial<FiltroChamados>) => {
   const { usuario } = useAuth();
-  const [chamados, setChamados] = useState<Chamado[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const [filtros, setFiltros] = useState<FiltroChamados>({
-    categoria: 'Todas',
-    status: 'Todos',
-    busca: '',
-    apenasMeus: false,
+    categoria: initialFiltros?.categoria || 'Todas',
+    status: initialFiltros?.status || 'Todos',
+    busca: initialFiltros?.busca || '',
+    apenasMeus: initialFiltros?.apenasMeus || false,
+  });
+
+  // Query principal da lista filtrada
+  const listQuery = useQuery({
+    queryKey: queryKeys.chamados.list(filtros, usuario?.id),
+    queryFn: () => chamadoService.listar(filtros, usuario?.id),
+  });
+
+  // Query global sem filtros para estatísticas gerais do painel
+  const allChamadosQuery = useQuery({
+    queryKey: queryKeys.chamados.list(
+      { categoria: 'Todas', status: 'Todos', busca: '', apenasMeus: false },
+      usuario?.id
+    ),
+    queryFn: () =>
+      chamadoService.listar(
+        { categoria: 'Todas', status: 'Todos', busca: '', apenasMeus: false },
+        usuario?.id
+      ),
+  });
+
+  const invalidateAllChamados = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.chamados.all });
+  }, [queryClient]);
+
+  // Mutation CREATE
+  const createMutation = useMutation({
+    mutationFn: async (dto: CreateChamadoDTO) => {
+      if (!usuario) {
+        throw new Error('Usuário deve estar autenticado para registrar um chamado.');
+      }
+      return chamadoService.criar(dto, usuario);
+    },
+    onSuccess: invalidateAllChamados,
+  });
+
+  // Mutation UPDATE
+  const updateMutation = useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: UpdateChamadoDTO }) =>
+      chamadoService.atualizar(id, dto),
+    onSuccess: invalidateAllChamados,
+  });
+
+  // Mutation APOIAR / PRIORIZAR
+  const apoiarMutation = useMutation({
+    mutationFn: (id: string) => chamadoService.apoiar(id),
+    onSuccess: invalidateAllChamados,
+  });
+
+  // Mutation UPDATE STATUS
+  const statusMutation = useMutation({
+    mutationFn: ({
+      id,
+      novoStatus,
+      feedback,
+    }: {
+      id: string;
+      novoStatus: StatusChamado;
+      feedback?: string;
+    }) =>
+      chamadoService.atualizarStatus(
+        id,
+        novoStatus,
+        feedback,
+        usuario?.nome || 'Cidadão'
+      ),
+    onSuccess: invalidateAllChamados,
+  });
+
+  // Mutation DELETE
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => chamadoService.excluir(id),
+    onSuccess: invalidateAllChamados,
+  });
+
+  // Mutation RESET MOCK
+  const resetMutation = useMutation({
+    mutationFn: () => chamadoService.resetarMock(),
+    onSuccess: invalidateAllChamados,
   });
 
   const carregarChamados = useCallback(
-    async (customFiltros?: FiltroChamados, isPullToRefresh: boolean = false) => {
-      try {
-        if (isPullToRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
-        setError(null);
-
-        const activeFilters = customFiltros || filtros;
-        const data = await chamadoService.listar(activeFilters, usuario?.id);
-        setChamados(data);
-      } catch (err: any) {
-        setError(err.message || 'Falha ao carregar ocorrências de zeladoria.');
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+    async (customFiltros?: FiltroChamados, _isPullToRefresh: boolean = false) => {
+      if (customFiltros) {
+        setFiltros(customFiltros);
       }
+      await invalidateAllChamados();
     },
-    [filtros, usuario?.id]
+    [invalidateAllChamados]
   );
 
-  // Recarrega sempre que filtros ou usuário mudarem
-  useEffect(() => {
-    carregarChamados();
-  }, [carregarChamados]);
-
-  // Operação CREATE
   const criarChamado = async (dto: CreateChamadoDTO): Promise<Chamado> => {
-    if (!usuario) {
-      throw new Error('Usuário deve estar autenticado para registrar um chamado.');
-    }
-    try {
-      setLoading(true);
-      const novo = await chamadoService.criar(dto, usuario);
-      await carregarChamados();
-      return novo;
-    } catch (err: any) {
-      const msg = err.message || 'Não foi possível cadastrar a ocorrência.';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
-    }
+    return createMutation.mutateAsync(dto);
   };
 
-  // Operação UPDATE
   const atualizarChamado = async (id: string, dto: UpdateChamadoDTO): Promise<Chamado> => {
-    try {
-      setLoading(true);
-      const atualizado = await chamadoService.atualizar(id, dto, usuario?.nome);
-      await carregarChamados();
-      return atualizado;
-    } catch (err: any) {
-      const msg = err.message || 'Falha ao atualizar chamado.';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
-    }
+    return updateMutation.mutateAsync({ id, dto });
   };
 
-  // Operação APOIAR / PRIORIZAR
   const apoiarChamado = async (id: string): Promise<Chamado> => {
-    const atualizado = await chamadoService.apoiar(id);
-    await carregarChamados();
-    return atualizado;
+    return apoiarMutation.mutateAsync(id);
   };
 
-  // Operação UPDATE STATUS
   const atualizarStatus = async (
     id: string,
     novoStatus: StatusChamado,
     feedback?: string
   ): Promise<Chamado> => {
-    try {
-      setLoading(true);
-      const atualizado = await chamadoService.atualizarStatus(
-        id,
-        novoStatus,
-        feedback,
-        usuario?.nome || 'Cidadão'
-      );
-      await carregarChamados();
-      return atualizado;
-    } catch (err: any) {
-      const msg = err.message || 'Falha ao alterar status da ocorrência.';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
-    }
+    return statusMutation.mutateAsync({ id, novoStatus, feedback });
   };
 
-  // Operação DELETE
   const excluirChamado = async (id: string): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const sucesso = await chamadoService.excluir(id);
-      await carregarChamados();
-      return sucesso;
-    } catch (err: any) {
-      const msg = err.message || 'Falha ao remover chamado.';
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setLoading(false);
-    }
+    return deleteMutation.mutateAsync(id);
   };
 
-  // Obter único chamado
-  const obterChamadoPorId = useCallback(async (id: string): Promise<Chamado> => {
-    return await chamadoService.obterPorId(id);
-  }, []);
+  const obterChamadoPorId = useCallback(
+    async (id: string): Promise<Chamado> => {
+      return queryClient.fetchQuery({
+        queryKey: queryKeys.chamados.detail(id),
+        queryFn: () => chamadoService.obterPorId(id),
+      });
+    },
+    [queryClient]
+  );
 
   // Atalhos de filtro
-  const setCategoriaFiltro = (categoria: CategoriaChamado | 'Todas') => {
+  const setCategoriaFiltro = useCallback((categoria: CategoriaChamado | 'Todas') => {
     setFiltros((prev) => ({ ...prev, categoria }));
-  };
+  }, []);
 
-  const setStatusFiltro = (status: StatusChamado | 'Todos') => {
+  const setStatusFiltro = useCallback((status: StatusChamado | 'Todos') => {
     setFiltros((prev) => ({ ...prev, status }));
-  };
+  }, []);
 
-  const setBuscaFiltro = (busca: string) => {
+  const setBuscaFiltro = useCallback((busca: string) => {
     setFiltros((prev) => ({ ...prev, busca }));
-  };
+  }, []);
 
-  const setApenasMeusFiltro = (apenasMeus: boolean) => {
+  const setApenasMeusFiltro = useCallback((apenasMeus: boolean) => {
     setFiltros((prev) => ({ ...prev, apenasMeus }));
-  };
+  }, []);
 
-  const limparFiltros = () => {
+  const limparFiltros = useCallback(() => {
     setFiltros({
       categoria: 'Todas',
       status: 'Todos',
       busca: '',
       apenasMeus: false,
     });
-  };
+  }, []);
 
-  // Estatísticas calculadas
-  const estatisticas: EstatisticasChamados = useMemo(() => {
-    return chamadoService.obterEstatisticas(chamados);
-  }, [chamados]);
-
-  // Resetar para dados iniciais da FIAP
   const resetarDados = async () => {
-    setLoading(true);
-    await chamadoService.resetarMock();
-    await carregarChamados();
-    setLoading(false);
+    await resetMutation.mutateAsync();
   };
+
+  const chamados = listQuery.data ?? [];
+  const todosChamados = allChamadosQuery.data ?? chamados;
+
+  // Estatísticas globais calculadas a partir da base
+  const estatisticas: EstatisticasChamados = useMemo(() => {
+    return chamadoService.obterEstatisticas(todosChamados);
+  }, [todosChamados]);
+
+  const isMutating =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    statusMutation.isPending ||
+    deleteMutation.isPending ||
+    resetMutation.isPending;
+
+  const errorObj =
+    listQuery.error ||
+    createMutation.error ||
+    updateMutation.error ||
+    statusMutation.error ||
+    deleteMutation.error;
+
+  const error = errorObj ? getApiErrorMessage(errorObj) : null;
 
   return {
     chamados,
-    loading,
-    refreshing,
+    todosChamados,
+    loading: listQuery.isLoading || isMutating,
+    refreshing: listQuery.isRefetching && !listQuery.isLoading,
     error,
     filtros,
     estatisticas,
