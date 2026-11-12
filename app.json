@@ -5,14 +5,19 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#059669"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.fiap.zelafix"
     },
     "android": {
+      "package": "br.com.fiap.zelafix",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#059669",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -23,6 +28,36 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O ZelaFix precisa acessar sua galeria para anexar fotos de ocorrências urbanas.",
+          "cameraPermission": "O ZelaFix precisa acessar sua câmera para fotografar ocorrências urbanas.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O ZelaFix utiliza sua localização para preencher automaticamente o CEP e o endereço da ocorrência.",
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "gitCommit": {
+        "commitHash": "b7778de1a580da848ad7f06a855f2add08886b0b",
+        "shortCommitHash": "b7778de",
+        "branch": "main",
+        "commitMessage": "Release Build ZelaFix GS 2026/2"
+      },
+      "eas": {
+        "projectId": "f330483f-855a-411e-a5eb-c544d5070ed5"
+      }
+    },
+    "owner": "enzookuizumis-team"
   }
 }

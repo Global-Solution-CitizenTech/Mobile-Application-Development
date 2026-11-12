@@ -1,8 +1,7 @@
 const { execSync } = require('child_process');
 
 function getGitMetadata(fallback) {
-  const envCommitHash =
-    process.env.EAS_BUILD_GIT_COMMIT_HASH || process.env.EXPO_PUBLIC_COMMIT_HASH || '';
+  const envCommitHash = process.env.EAS_BUILD_GIT_COMMIT_HASH || '';
   try {
     const commitHash = execSync('git rev-parse HEAD', {
       encoding: 'utf8',

@@ -1,5 +1,13 @@
 import Constants from 'expo-constants';
-import { IntegranteGrupo } from '../types';
+
+export interface IntegranteGrupo {
+  nome: string;
+  rm: string;
+  turma: string;
+  funcao: string;
+  github: string;
+  linkedin: string;
+}
 
 export interface GitCommitMetadata {
   commitHash: string;
@@ -9,21 +17,16 @@ export interface GitCommitMetadata {
   commitMessage: string;
 }
 
-const dynamicGitInfo = Constants.expoConfig?.extra?.gitCommit as
-  | Partial<GitCommitMetadata>
-  | undefined;
+const dynamicGitInfo = Constants.expoConfig?.extra?.gitCommit as Partial<GitCommitMetadata> | undefined;
 
-const FALLBACK_HASH =
-  process.env.EXPO_PUBLIC_COMMIT_HASH || '516b8b92afbb31a075c1f5befbc59cc9ebc5fcc8';
+const FALLBACK_HASH = 'b7778de1a580da848ad7f06a855f2add08886b0b';
 
 export const GIT_COMMIT_INFO: GitCommitMetadata = {
   commitHash: dynamicGitInfo?.commitHash || FALLBACK_HASH,
   shortCommitHash: dynamicGitInfo?.shortCommitHash || FALLBACK_HASH.slice(0, 7),
-  commitDate: dynamicGitInfo?.commitDate || '2026-11-06',
+  commitDate: dynamicGitInfo?.commitDate || new Date().toISOString().slice(0, 10),
   branch: dynamicGitInfo?.branch || 'main',
-  commitMessage:
-    dynamicGitInfo?.commitMessage ||
-    'feat(mobile): arquitetura TanStack Query + Zod + UI Clean',
+  commitMessage: dynamicGitInfo?.commitMessage || 'Release Build FIAP GS 2026/2',
 };
 
 export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
