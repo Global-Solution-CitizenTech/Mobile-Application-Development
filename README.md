@@ -24,6 +24,18 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 ---
 
+## 🔗 Links Oficiais do Projeto
+
+| Recurso | URL |
+| :--- | :--- |
+| 📥 **Download direto do APK (Android Standalone)** | [**Baixar zelafix.apk (Build Oficial versionCode 2)**](https://expo.dev/artifacts/eas/xa4ydhW3fCizPf0dzYW37XI_ZX6z-DFuB2iTNRLluKw.apk) |
+| 🏗️ **Painel de Compilação do EAS Build** | [Dashboard Expo EAS — Build `469c1a42` (versionCode 2)](https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/469c1a42-f085-4def-8bee-a5bfbf069410) |
+| 💻 **Repositório GitHub Mobile** | [Global-Solution-CitizenTech/Mobile-Application-Development](https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development) |
+| ☕ **Backend Java (Spring Boot)** | [Global-Solution-CitizenTech/Java-Advanced](https://github.com/Global-Solution-CitizenTech/Java-Advanced) |
+| 🤖 **Microsserviço IA (FastAPI)** | [Global-Solution-CitizenTech/Disruptive-Architectures-IoT-IoB-IA](https://github.com/Global-Solution-CitizenTech/Disruptive-Architectures-IoT-IoB-IA) |
+
+---
+
 ## 3. Arquitetura de Engenharia Mobile (Padrão Sprint 4 + TanStack Query + Zod)
 
 O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile em React Native + TypeScript, estruturando componentes e telas em módulos desacoplados e preparando toda a camada de rede para integração imediata com o **Backend Java (Spring Boot)**:
@@ -178,6 +190,19 @@ npm run lint
 # 4. Inicie o servidor de desenvolvimento Expo
 npx expo start
 ```
+
+### 📲 Instalação Direta via APK Standalone (Para Avaliação do Docente)
+
+Não é necessário clonar o repositório ou instalar ferramentas de desenvolvimento para avaliar o aplicativo. O binário Android já está compilado e distribuído na nuvem:
+
+1. **Download:** Baixe o arquivo diretamente em seu smartphone Android ou computador:
+   👉 [**Download direto do zelafix.apk (Build Oficial versionCode 2)**](https://expo.dev/artifacts/eas/xa4ydhW3fCizPf0dzYW37XI_ZX6z-DFuB2iTNRLluKw.apk)
+2. **Instalação no celular:** Abra o arquivo `.apk` baixado e toque em **Instalar** (permita a instalação de fontes desconhecidas caso seja solicitado pelo Android).
+3. **Instalação via ADB (emulador Android Studio):**
+   ```bash
+   adb install zelafix.apk
+   ```
+4. **APIs conectadas na nuvem:** O app já está pré-configurado com o backend Java no Azure App Service e o microsserviço ZelaBot IA no Render, sem necessidade de subir servidor local para avaliação.
 
 ---
 
