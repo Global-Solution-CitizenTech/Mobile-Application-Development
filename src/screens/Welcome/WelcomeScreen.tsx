@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -47,7 +47,11 @@ export const WelcomeScreen: React.FC = () => {
 
         <View style={styles.heroBlock}>
           <View style={styles.logoCircle}>
-            <Ionicons name="leaf" size={44} color={theme.inverseText} />
+            <Image
+              source={require('../../../assets/logo-mark.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.brandName}>ZelaFix</Text>
           <Text style={styles.headline}>
@@ -142,6 +146,10 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       marginBottom: spacing.md,
       ...shadows.md,
+    },
+    logoImage: {
+      width: 36,
+      height: 55,
     },
     brandName: {
       fontSize: fontSize.display,
