@@ -37,7 +37,7 @@ O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile e
 
 ```text
 Mobile-Application-Development/
-├── App.tsx                           # Providers: SafeArea, QueryClientProvider (AppState + NetInfo), ThemeProvider, AuthProvider
+├── App.tsx                           # Providers: SafeArea, QueryClientProvider (AppState + expo-network), ThemeProvider, AuthProvider
 ├── app.config.js                     # Injeção dinâmica do Git Commit Hash via child_process
 ├── eslint.config.js                  # ESLint v9 Flat Config com eslint-config-expo
 ├── src/
