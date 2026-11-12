@@ -1,143 +1,108 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, borderRadius, spacing, fontSize, fontWeight } from '../../../theme';
-import { StatusChamado } from '../../../types';
-
-const STATUS_TABS: (StatusChamado | 'Todos')[] = [
-  'Todos',
-  'Aberto',
-  'Em Andamento',
-  'Resolvido',
-];
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { MeusChamadosTab } from '@/hooks/useMeusChamadosData';
+import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 
 interface MeusChamadosHeaderProps {
-  totalMeus: number;
-  statusFiltro: StatusChamado | 'Todos';
-  statusCounts: Record<StatusChamado | 'Todos', number>;
-  onSelectStatus: (st: StatusChamado | 'Todos') => void;
-  onNovoRelato: () => void;
+  total: number;
+  abertos: number;
+  emAndamento: number;
+  concluidos: number;
+  activeTab: MeusChamadosTab;
+  onSelectTab: (tab: MeusChamadosTab) => void;
 }
 
-export const MeusChamadosHeader: React.FC<MeusChamadosHeaderProps> = ({
-  totalMeus,
-  statusFiltro,
-  statusCounts,
-  onSelectStatus,
-  onNovoRelato,
-}) => {
-  return (
-    <View style={styles.headerContainer}>
-      <View style={styles.titleRow}>
-        <View style={{ flex: 1, paddingRight: spacing.sm }}>
-          <Text style={styles.pageTitle}>Meus Relatos</Text>
-          <Text style={styles.pageSubtitle} numberOfLines={1}>
-            {totalMeus} {totalMeus === 1 ? 'protocolo registrado' : 'protocolos registrados'}
-          </Text>
-        </View>
+const TABS: { key: MeusChamadosTab; label: string }[] = [
+  { key: 'TODOS', label: 'Todos' },
+  { key: 'ATIVOS', label: 'Em Aberto / Análise' },
+  { key: 'CONCLUIDOS', label: 'Finalizados' },
+];
 
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={onNovoRelato}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="add" size={18} color={colors.surface} />
-          <Text style={styles.addBtnText}>Novo</Text>
-        </TouchableOpacity>
+export const MeusChamadosHeader: React.FC<MeusChamadosHeaderProps> = ({
+  total,
+  abertos,
+  emAndamento,
+  concluidos,
+  activeTab,
+  onSelectTab,
+}) => {
+  const styles = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
+      <Text style={styles.title}>Meus Chamados</Text>
+      <Text style={styles.subtitle}>
+        {total} {total === 1 ? 'ocorrência registrada' : 'ocorrências registradas'}
+      </Text>
+
+      <View style={styles.countersRow}>
+        <View style={styles.counterBox}>
+          <Text style={styles.counterNum}>{abertos}</Text>
+          <Text style={styles.counterLabel}>Abertos</Text>
+        </View>
+        <View style={styles.counterBox}>
+          <Text style={styles.counterNum}>{emAndamento}</Text>
+          <Text style={styles.counterLabel}>Andamento</Text>
+        </View>
+        <View style={styles.counterBox}>
+          <Text style={styles.counterNum}>{concluidos}</Text>
+          <Text style={styles.counterLabel}>Concluídos</Text>
+        </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.statusPillsRow}
-      >
-        {STATUS_TABS.map((st) => {
-          const isSelected = statusFiltro === st;
+      <View style={styles.tabsRow}>
+        {TABS.map((tab) => {
+          const active = activeTab === tab.key;
           return (
             <TouchableOpacity
-              key={st}
-              style={[styles.statusPill, isSelected && styles.statusPillActive]}
-              onPress={() => onSelectStatus(st)}
-              activeOpacity={0.75}
+              key={tab.key}
+              style={[styles.tabBtn, active && styles.tabBtnActive]}
+              onPress={() => onSelectTab(tab.key)}
+              activeOpacity={0.8}
             >
-              <Text
-                style={[
-                  styles.statusPillText,
-                  isSelected && styles.statusPillTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                {st} ({statusCounts[st]})
-              </Text>
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab.label}</Text>
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  headerContainer: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  pageTitle: {
-    fontSize: fontSize.heading,
-    fontWeight: fontWeight.extrabold,
-    color: colors.secondary[900],
-    letterSpacing: -0.3,
-  },
-  pageSubtitle: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
-    marginTop: 2,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.primary[600],
-    paddingHorizontal: spacing.md,
-    paddingVertical: 7,
-    borderRadius: borderRadius.full,
-  },
-  addBtnText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.bold,
-    color: colors.surface,
-  },
-  statusPillsRow: {
-    flexDirection: 'row',
-    gap: spacing.xs + 2,
-    paddingVertical: 4,
-    paddingRight: spacing.xl,
-  },
-  statusPill: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.secondary[200],
-  },
-  statusPillActive: {
-    backgroundColor: colors.secondary[900],
-    borderColor: colors.secondary[900],
-  },
-  statusPillText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.medium,
-    color: colors.secondary[600],
-  },
-  statusPillTextActive: {
-    color: colors.surface,
-    fontWeight: fontWeight.semibold,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm + 4,
+      backgroundColor: theme.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      gap: spacing.xs + 2,
+    },
+    title: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
+    subtitle: { fontSize: fontSize.bodySmall, color: theme.textSecondary },
+    countersRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+    counterBox: {
+      flex: 1,
+      backgroundColor: theme.cardSubtle,
+      borderRadius: borderRadius.md,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+    },
+    counterNum: { fontSize: fontSize.subtitle, fontWeight: fontWeight.extrabold, color: theme.primary },
+    counterLabel: { fontSize: fontSize.tiny + 1, color: theme.textSecondary, fontWeight: fontWeight.medium },
+    tabsRow: { flexDirection: 'row', gap: spacing.xs + 2, marginTop: spacing.xs },
+    tabBtn: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: theme.cardSubtle,
+      alignItems: 'center',
+    },
+    tabBtnActive: { backgroundColor: theme.primary },
+    tabText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
+    tabTextActive: { color: theme.inverseText },
+  });

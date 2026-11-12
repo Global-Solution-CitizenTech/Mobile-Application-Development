@@ -1,215 +1,145 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Input } from '../../../components/Input';
-import { Button } from '../../../components/Button';
-import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../../../theme';
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { useTheme } from '@/contexts/ThemeContext';
+import { spacing } from '@/theme';
+import type { RegisterFormData } from '@/utils/schemas';
 
 interface RegisterFormProps {
-  nome: string;
-  email: string;
-  cpf: string;
-  telefone: string;
-  bairro: string;
-  senha: string;
-  confirmSenha: string;
-  errors: Record<string, string>;
-  error: string | null;
-  isLoading: boolean;
-  onNomeChange: (v: string) => void;
-  onEmailChange: (v: string) => void;
-  onCpfChange: (v: string) => void;
-  onTelefoneChange: (v: string) => void;
-  onBairroChange: (v: string) => void;
-  onSenhaChange: (v: string) => void;
-  onConfirmSenhaChange: (v: string) => void;
+  values: RegisterFormData;
+  errors: Partial<Record<keyof RegisterFormData, string>>;
+  onChangeField: <K extends keyof RegisterFormData>(field: K, value: RegisterFormData[K]) => void;
+  onChangeTelefone: (text: string) => void;
+  onChangeCep: (text: string) => void;
   onSubmit: () => void;
-  onFillExample: () => void;
+  submitting: boolean;
 }
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({
-  nome,
-  email,
-  cpf,
-  telefone,
-  bairro,
-  senha,
-  confirmSenha,
+  values,
   errors,
-  error,
-  isLoading,
-  onNomeChange,
-  onEmailChange,
-  onCpfChange,
-  onTelefoneChange,
-  onBairroChange,
-  onSenhaChange,
-  onConfirmSenhaChange,
+  onChangeField,
+  onChangeTelefone,
+  onChangeCep,
   onSubmit,
-  onFillExample,
+  submitting,
 }) => {
+  const { theme } = useTheme();
+  const [showPass, setShowPass] = useState(false);
+
+  const eyeIcon = (
+    <TouchableOpacity onPress={() => setShowPass((prev) => !prev)} hitSlop={8}>
+      <Ionicons name={showPass ? 'eye-off-outline' : 'eye-outline'} size={20} color={theme.textMuted} />
+    </TouchableOpacity>
+  );
+
   return (
-    <View style={[styles.card, shadows.md]}>
-      <Text style={styles.formTitle}>Junte-se à Rede ZelaFix</Text>
-      <Text style={styles.formDescription}>
-        Tenha voz ativa na gestão urbana do seu bairro e ajude a zelar pelo patrimônio público.
-      </Text>
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Ionicons name="alert-circle" size={18} color={colors.feedback.danger} />
-          <Text style={styles.errorBannerText}>{error}</Text>
-        </View>
-      )}
-
+    <View style={styles.container}>
       <Input
         label="Nome Completo *"
-        placeholder="Ex: Ana Clara Souza"
-        value={nome}
-        onChangeText={onNomeChange}
+        placeholder="Seu nome completo"
+        value={values.nome}
+        onChangeText={(text) => onChangeField('nome', text)}
+        maxLength={100}
         error={errors.nome}
-        leftIcon={<Ionicons name="person-outline" size={20} color={colors.secondary[400]} />}
       />
 
       <Input
         label="E-mail *"
-        placeholder="seuemail@exemplo.com"
-        value={email}
-        onChangeText={onEmailChange}
+        placeholder="voce@email.com"
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
+        value={values.email}
+        onChangeText={(text) => onChangeField('email', text)}
+        maxLength={100}
         error={errors.email}
-        leftIcon={<Ionicons name="mail-outline" size={20} color={colors.secondary[400]} />}
       />
 
-      <View style={styles.rowTwoInputs}>
-        <View style={{ flex: 1, marginRight: spacing.xs }}>
+      <Input
+        label="Telefone / WhatsApp com DDD *"
+        placeholder="(11) 99999-9999"
+        keyboardType="phone-pad"
+        value={values.telefone}
+        onChangeText={onChangeTelefone}
+        maxLength={15}
+        error={errors.telefone}
+      />
+
+      <View style={styles.row}>
+        <View style={styles.cepCol}>
           <Input
-            label="CPF *"
-            placeholder="000.000.000-00"
-            value={cpf}
-            onChangeText={onCpfChange}
-            keyboardType="numeric"
-            error={errors.cpf}
+            label="CEP *"
+            placeholder="00000-000"
+            keyboardType="number-pad"
+            value={values.cep}
+            onChangeText={onChangeCep}
+            maxLength={9}
+            error={errors.cep}
           />
         </View>
-        <View style={{ flex: 1, marginLeft: spacing.xs }}>
+        <View style={styles.numCol}>
           <Input
-            label="Telefone *"
-            placeholder="(11) 99999-9999"
-            value={telefone}
-            onChangeText={onTelefoneChange}
-            keyboardType="phone-pad"
-            error={errors.telefone}
+            label="Número *"
+            placeholder="Ex: 1100 ou S/N"
+            value={values.numero}
+            onChangeText={(text) => onChangeField('numero', text)}
+            maxLength={100}
+            error={errors.numero}
           />
         </View>
       </View>
 
       <Input
-        label="Bairro de Residência *"
-        placeholder="Ex: Bela Vista, Pinheiros, Sé"
-        value={bairro}
-        onChangeText={onBairroChange}
-        error={errors.bairro}
-        leftIcon={<Ionicons name="business-outline" size={20} color={colors.secondary[400]} />}
+        label="Rua / Logradouro (Opcional — ViaCEP preenche)"
+        placeholder="Av. Paulista"
+        value={values.rua ?? ''}
+        onChangeText={(text) => onChangeField('rua', text)}
+        maxLength={100}
+        error={errors.rua}
       />
 
       <Input
-        label="Senha de Acesso *"
+        label="Ponto de Referência *"
+        placeholder="Ex: Próx. à estação ou bloco B"
+        value={values.referencia}
+        onChangeText={(text) => onChangeField('referencia', text)}
+        maxLength={50}
+        error={errors.referencia}
+      />
+
+      <Input
+        label="Senha *"
         placeholder="Mínimo 6 caracteres"
-        value={senha}
-        onChangeText={onSenhaChange}
-        isPassword
+        secureTextEntry={!showPass}
+        rightIcon={eyeIcon}
+        value={values.senha}
+        onChangeText={(text) => onChangeField('senha', text)}
+        maxLength={60}
         error={errors.senha}
-        leftIcon={<Ionicons name="lock-closed-outline" size={20} color={colors.secondary[400]} />}
       />
 
       <Input
-        label="Confirmação de Senha *"
-        placeholder="Repita sua senha"
-        value={confirmSenha}
-        onChangeText={onConfirmSenhaChange}
-        isPassword
-        error={errors.confirmSenha}
-        leftIcon={<Ionicons name="checkmark-done-outline" size={20} color={colors.secondary[400]} />}
+        label="Confirmar Senha *"
+        placeholder="Repita a senha"
+        secureTextEntry={!showPass}
+        value={values.confirmarSenha}
+        onChangeText={(text) => onChangeField('confirmarSenha', text)}
+        maxLength={60}
+        error={errors.confirmarSenha}
       />
 
-      <Button
-        title="Concluir Cadastro"
-        variant="primary"
-        size="lg"
-        onPress={onSubmit}
-        loading={isLoading}
-        style={styles.submitButton}
-      />
-
-      <TouchableOpacity
-        style={styles.fillExampleBtn}
-        onPress={onFillExample}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="sparkles-outline" size={16} color={colors.secondary[700]} />
-        <Text style={styles.fillExampleText}>Auto-preencher Dados de Teste</Text>
-      </TouchableOpacity>
+      <Button title="Criar Minha Conta" onPress={onSubmit} loading={submitting} size="lg" style={styles.submitBtn} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  formTitle: {
-    fontSize: fontSize.title,
-    fontWeight: fontWeight.bold,
-    color: colors.secondary[900],
-    marginBottom: spacing.xs,
-  },
-  formDescription: {
-    fontSize: fontSize.bodySmall,
-    color: colors.secondary[500],
-    lineHeight: 18,
-    marginBottom: spacing.lg,
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.feedback.dangerLight,
-    padding: spacing.sm + 2,
-    borderRadius: borderRadius.sm,
-    marginBottom: spacing.md,
-  },
-  errorBannerText: {
-    fontSize: fontSize.bodySmall,
-    color: colors.feedback.danger,
-    flex: 1,
-  },
-  rowTwoInputs: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  submitButton: {
-    marginTop: spacing.sm,
-  },
-  fillExampleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.secondary[100],
-    borderRadius: borderRadius.md,
-  },
-  fillExampleText: {
-    fontSize: fontSize.bodySmall,
-    fontWeight: fontWeight.semibold,
-    color: colors.secondary[700],
-  },
+  container: { gap: spacing.xs },
+  row: { flexDirection: 'row', gap: spacing.sm },
+  cepCol: { flex: 1.2 },
+  numCol: { flex: 1 },
+  submitBtn: { marginTop: spacing.sm },
 });

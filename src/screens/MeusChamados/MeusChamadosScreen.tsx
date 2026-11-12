@@ -1,112 +1,98 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth } from '../../hooks/useAuth';
-import { useChamados } from '../../hooks/useChamados';
-import { ChamadoCard } from '../../components/ChamadoCard';
-import { EmptyState } from '../../components/EmptyState';
-import { MeusChamadosHeader } from './components/MeusChamadosHeader';
-import { colors, spacing } from '../../theme';
-import { StatusChamado } from '../../types';
-import { RootStackParamList } from '../../navigation/types';
+import React from 'react';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { type CompositeNavigationProp, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ChamadoCard } from '@/components/ChamadoCard';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useMeusChamadosData } from '@/hooks/useMeusChamadosData';
+import type { AppStackParamList, AppTabParamList } from '@/navigation/types';
+import { MeusChamadosHeader } from '@/screens/MeusChamados/components/MeusChamadosHeader';
+import { spacing } from '@/theme';
 
-type MeusChamadosNavProp = NativeStackNavigationProp<RootStackParamList>;
+type NavProp = CompositeNavigationProp<
+  BottomTabNavigationProp<AppTabParamList, 'MeusChamadosTab'>,
+  NativeStackNavigationProp<AppStackParamList>
+>;
 
 export const MeusChamadosScreen: React.FC = () => {
-  const navigation = useNavigation<MeusChamadosNavProp>();
-  const { usuario } = useAuth();
-  const { chamados, refreshing, carregarChamados } = useChamados();
+  const navigation = useNavigation<NavProp>();
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
 
-  const [statusFiltro, setStatusFiltro] = useState<StatusChamado | 'Todos'>('Todos');
-
-  useFocusEffect(
-    useCallback(() => {
-      carregarChamados(
-        { categoria: 'Todas', status: 'Todos', busca: '', apenasMeus: false },
-        true
-      );
-    }, [carregarChamados])
-  );
-
-  const meusChamados = useMemo(() => {
-    const doUsuario = chamados.filter((c) => c.autorId === usuario?.id);
-    if (statusFiltro === 'Todos') return doUsuario;
-    return doUsuario.filter((c) => c.status === statusFiltro);
-  }, [chamados, usuario?.id, statusFiltro]);
-
-  const totalMeus = useMemo(
-    () => chamados.filter((c) => c.autorId === usuario?.id).length,
-    [chamados, usuario?.id]
-  );
-
-  const statusCounts = useMemo(() => {
-    const doUsuario = chamados.filter((c) => c.autorId === usuario?.id);
-    return {
-      Todos: doUsuario.length,
-      Aberto: doUsuario.filter((c) => c.status === 'Aberto').length,
-      'Em Andamento': doUsuario.filter((c) => c.status === 'Em Andamento').length,
-      Resolvido: doUsuario.filter((c) => c.status === 'Resolvido').length,
-    };
-  }, [chamados, usuario?.id]);
+  const {
+    chamados,
+    totalChamados,
+    contadores,
+    filterTab,
+    setFilterTab,
+    isLoading,
+    isRefreshing,
+    error,
+    refetch,
+    apoiarChamado,
+  } = useMeusChamadosData();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <FlatList
-        data={meusChamados}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={
-          <MeusChamadosHeader
-            totalMeus={totalMeus}
-            statusFiltro={statusFiltro}
-            statusCounts={statusCounts}
-            onSelectStatus={setStatusFiltro}
-            onNovoRelato={() => navigation.navigate('NovoChamado')}
-          />
-        }
-        renderItem={({ item }) => (
-          <ChamadoCard
-            chamado={item}
-            onPress={() => navigation.navigate('ChamadoDetails', { id: item.id })}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() =>
-              carregarChamados(
-                { categoria: 'Todas', status: 'Todos', busca: '', apenasMeus: false },
-                true
-              )
-            }
-            colors={[colors.primary[600]]}
-            tintColor={colors.primary[600]}
-          />
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="document-text-outline"
-            title="Nenhum relato neste status"
-            description="Você ainda não possui ocorrências registradas com este filtro."
-            actionTitle="Registrar Nova Ocorrência"
-            onAction={() => navigation.navigate('NovoChamado')}
-          />
-        }
+    <View style={styles.container}>
+      <MeusChamadosHeader
+        total={totalChamados}
+        abertos={contadores.abertos}
+        emAndamento={contadores.emAndamento}
+        concluidos={contadores.concluidos}
+        activeTab={filterTab}
+        onSelectTab={setFilterTab}
       />
-    </SafeAreaView>
+
+      {isLoading ? (
+        <LoadingSpinner message="Buscando suas ocorrências..." />
+      ) : error && chamados.length === 0 ? (
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Erro ao carregar"
+          description={error}
+          actionTitle="Recarregar"
+          onAction={() => { void refetch(); }}
+        />
+      ) : (
+        <FlatList
+          data={chamados}
+          keyExtractor={(item) => String(item.idChamado)}
+          renderItem={({ item }) => (
+            <ChamadoCard
+              chamado={item}
+              onPress={() => navigation.navigate('ChamadoDetails', { id: item.idChamado })}
+              onApoiar={() => apoiarChamado(item.idChamado)}
+            />
+          )}
+          contentContainerStyle={[styles.listContent, chamados.length === 0 && styles.emptyContainer]}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => { void refetch(); }} tintColor={theme.primary} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="document-text-outline"
+              title="Nenhuma ocorrência encontrada"
+              description={
+                totalChamados === 0
+                  ? 'Você ainda não registrou nenhuma ocorrência urbana.'
+                  : 'Nenhum chamado seu corresponde ao filtro selecionado.'
+              }
+              actionTitle={totalChamados === 0 ? 'Reportar Problema' : 'Ver Todos'}
+              onAction={() => (totalChamados === 0 ? navigation.navigate('NovoChamadoTab') : setFilterTab('TODOS'))}
+            />
+          }
+        />
+      )}
+    </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  listContent: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xxxl,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    listContent: { padding: spacing.md, paddingBottom: spacing.xxl },
+    emptyContainer: { flexGrow: 1, justifyContent: 'center' },
+    separator: { height: spacing.sm + 4 },
+  });

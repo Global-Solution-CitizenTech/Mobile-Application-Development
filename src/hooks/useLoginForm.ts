@@ -1,79 +1,45 @@
-import { useState, useCallback } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
-import { LoginSchema, extractZodFieldErrors } from '../utils/schemas';
-import { getAuthErrorMessage } from '../utils/apiError';
-import { DEMO_USER } from '../mocks/chamadosMock';
+import { useCallback, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useZodForm } from '@/hooks/useZodForm';
+import { getAuthErrorMessage } from '@/utils/apiError';
+import { LoginSchema, type LoginFormData } from '@/utils/schemas';
 
-export const useLoginForm = () => {
-  const { login, isLoading: authLoading, error: authError, clearError } = useAuth();
+const INITIAL_LOGIN: LoginFormData = {
+  email: '',
+  senha: '',
+};
 
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+export function useLoginForm() {
+  const { signIn, clearError } = useAuth();
+  const form = useZodForm(LoginSchema, INITIAL_LOGIN);
+  const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
-  const loginMutation = useMutation({
-    mutationFn: async () => {
-      await login({ email: email.trim(), senha });
-    },
-    onError: (err) => {
-      setModalError(getAuthErrorMessage(err));
-    },
-  });
+  const dismissError = useCallback(() => {
+    setModalError(null);
+    clearError();
+  }, [clearError]);
 
-  const handleEmailChange = useCallback(
-    (value: string) => {
-      setEmail(value);
-      if (fieldErrors.email) {
-        setFieldErrors((prev) => ({ ...prev, email: '' }));
-      }
-      if (authError) clearError();
-    },
-    [fieldErrors.email, authError, clearError]
-  );
+  const handleLogin = useCallback(async () => {
+    const parsed = form.validate();
+    if (!parsed) return;
 
-  const handleSenhaChange = useCallback(
-    (value: string) => {
-      setSenha(value);
-      if (fieldErrors.senha) {
-        setFieldErrors((prev) => ({ ...prev, senha: '' }));
-      }
-      if (authError) clearError();
-    },
-    [fieldErrors.senha, authError, clearError]
-  );
-
-  const fillDemoCredentials = useCallback(() => {
-    setEmail(DEMO_USER.email);
-    setSenha('123456');
-    setFieldErrors({});
-    if (authError) clearError();
-  }, [authError, clearError]);
-
-  const handleSubmit = useCallback(async () => {
-    const parsed = LoginSchema.safeParse({ email: email.trim(), senha });
-    if (!parsed.success) {
-      setFieldErrors(extractZodFieldErrors(parsed.error));
-      return;
+    setSubmitting(true);
+    dismissError();
+    try {
+      await signIn(parsed);
+    } catch (error) {
+      setModalError(getAuthErrorMessage(error));
+    } finally {
+      setSubmitting(false);
     }
-
-    setFieldErrors({});
-    await loginMutation.mutateAsync();
-  }, [email, senha, loginMutation]);
+  }, [dismissError, form, signIn]);
 
   return {
-    email,
-    senha,
-    emailError: fieldErrors.email || null,
-    senhaError: fieldErrors.senha || null,
-    error: authError,
+    ...form,
+    submitting,
     modalError,
-    setModalError,
-    isLoading: authLoading || loginMutation.isPending,
-    handleEmailChange,
-    handleSenhaChange,
-    fillDemoCredentials,
-    handleSubmit,
+    dismissError,
+    handleLogin,
   };
-};
+}

@@ -1,135 +1,59 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { StatCard } from '../../../components/StatCard';
-import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../../../theme';
-import { EstatisticasChamados } from '../../../types';
+import { StyleSheet, Text, View } from 'react-native';
+import { StatCard } from '@/components/StatCard';
+import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
+import type { EstatisticasChamados } from '@/types/chamado';
 
 interface HomePanoramaCardProps {
   estatisticas: EstatisticasChamados;
+  taxaResolucao: number;
 }
 
-export const HomePanoramaCard: React.FC<HomePanoramaCardProps> = ({ estatisticas }) => {
+export const HomePanoramaCard: React.FC<HomePanoramaCardProps> = ({ estatisticas, taxaResolucao }) => {
+  const styles = useThemedStyles(createStyles);
+
   return (
-    <View style={[styles.efficiencyCard, shadows.sm]}>
-      <View style={styles.efficiencyTopRow}>
-        <View style={{ flex: 1, paddingRight: spacing.sm }}>
-          <Text style={styles.efficiencyLabel}>Índice de Resolução do Bairro</Text>
-          <Text style={styles.efficiencySub}>
-            Zeladoria urbana transparente e colaborativa
-          </Text>
-        </View>
-        <View style={styles.percentageBadge}>
-          <Text style={styles.percentageText}>{estatisticas.taxaResolucao}%</Text>
-        </View>
+    <View style={styles.card}>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Panorama da Cidade</Text>
+        <Text style={styles.percentage}>{taxaResolucao}% resolvido</Text>
       </View>
 
       <View style={styles.progressTrack}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${Math.max(6, Math.min(100, estatisticas.taxaResolucao))}%` },
-          ]}
-        />
+        <View style={[styles.progressFill, { width: `${Math.max(4, Math.min(100, taxaResolucao))}%` }]} />
       </View>
 
-      <Text style={styles.efficiencyLegend}>
-        {estatisticas.resolvidos} de {estatisticas.total} ocorrências reportadas foram atendidas
-        pelas subprefeituras e órgãos públicos.
-      </Text>
+      <View style={styles.grid}>
+        <StatCard label="Total" value={estatisticas.total} icon="layers-outline" />
+        <StatCard label="Abertos" value={estatisticas.abertos} icon="alert-circle-outline" />
+        <StatCard label="Andamento" value={estatisticas.emAndamento} icon="construct-outline" />
+      </View>
 
-      {/* Grid com os 4 StatCards */}
-      <View style={styles.statsRow}>
-        <StatCard
-          label="Total"
-          value={estatisticas.total}
-          icon="stats-chart-outline"
-          color={colors.secondary[700]}
-          bgColor={colors.secondary[100]}
-        />
-        <StatCard
-          label="Abertos"
-          value={estatisticas.abertos}
-          icon="alert-circle-outline"
-          color={colors.status.aberto.icon}
-          bgColor={colors.status.aberto.bg}
-        />
-        <StatCard
-          label="Em Ação"
-          value={estatisticas.emAndamento}
-          icon="time-outline"
-          color={colors.status.emAndamento.icon}
-          bgColor={colors.status.emAndamento.bg}
-        />
-        <StatCard
-          label="Resolvidos"
-          value={estatisticas.resolvidos}
-          icon="checkmark-done-outline"
-          color={colors.status.resolvido.icon}
-          bgColor={colors.status.resolvido.bg}
-        />
+      <View style={styles.grid}>
+        <StatCard label="Resolvidos" value={estatisticas.resolvidos} icon="checkmark-circle-outline" />
+        <StatCard label="Rejeitados" value={estatisticas.rejeitados} icon="close-circle-outline" />
+        <StatCard label="Apoios" value={estatisticas.totalApoios} icon="thumbs-up-outline" />
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  efficiencyCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.secondary[100],
-    marginBottom: spacing.md,
-  },
-  efficiencyTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs + 2,
-  },
-  efficiencyLabel: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.bold,
-    color: colors.secondary[900],
-  },
-  efficiencySub: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
-    marginTop: 2,
-  },
-  percentageBadge: {
-    backgroundColor: colors.primary[50],
-    borderWidth: 1,
-    borderColor: colors.primary[200],
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 4,
-    borderRadius: borderRadius.md,
-  },
-  percentageText: {
-    fontSize: fontSize.bodyLarge,
-    fontWeight: fontWeight.extrabold,
-    color: colors.primary[700],
-  },
-  progressTrack: {
-    height: 8,
-    backgroundColor: colors.secondary[100],
-    borderRadius: borderRadius.full,
-    overflow: 'hidden',
-    marginVertical: spacing.sm,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.primary[600],
-    borderRadius: borderRadius.full,
-  },
-  efficiencyLegend: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
-    marginBottom: spacing.md,
-    lineHeight: 18,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.xs + 2,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: theme.surface,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: spacing.sm + 2,
+      ...shadows.sm,
+    },
+    headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    title: { fontSize: fontSize.subtitle, fontWeight: fontWeight.bold, color: theme.text },
+    percentage: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.primary },
+    progressTrack: { height: 8, backgroundColor: theme.cardSubtle, borderRadius: borderRadius.full, overflow: 'hidden' },
+    progressFill: { height: '100%', backgroundColor: theme.primary, borderRadius: borderRadius.full },
+    grid: { flexDirection: 'row', gap: spacing.sm },
+  });

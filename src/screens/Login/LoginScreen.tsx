@@ -1,155 +1,90 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useLoginForm } from '../../hooks/useLoginForm';
-import { FeedbackModal } from '../../components/FeedbackModal';
-import { LoginForm } from './components/LoginForm';
-import { colors, spacing, fontSize, fontWeight, shadows } from '../../theme';
-import { AuthStackParamList } from '../../navigation/types';
+import { type NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FeedbackModal } from '@/components/FeedbackModal';
+import { Header } from '@/components/Header';
+import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useLoginForm } from '@/hooks/useLoginForm';
+import type { AuthStackParamList } from '@/navigation/types';
+import { LoginForm } from '@/screens/Login/components/LoginForm';
+import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 
-type LoginNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-export const LoginScreen: React.FC = () => {
-  const navigation = useNavigation<LoginNavigationProp>();
-  const {
-    email,
-    senha,
-    emailError,
-    senhaError,
-    error,
-    modalError,
-    setModalError,
-    isLoading,
-    handleEmailChange,
-    handleSenhaChange,
-    fillDemoCredentials,
-    handleSubmit,
-  } = useLoginForm();
+export const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
+  const { values, errors, setFieldValue, submitting, modalError, dismissError, handleLogin } = useLoginForm();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Header title="Entrar no ZelaFix" showBack onBack={() => navigation.goBack()} />
+
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, spacing.xl) }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Header do App / Marca */}
-          <View style={styles.header}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="leaf" size={40} color={colors.surface} />
-            </View>
-            <Text style={styles.brandTitle}>ZelaFix</Text>
-            <Text style={styles.brandSubtitle}>
-              Zeladoria Urbana Colaborativa • FIAP GS 2026/2
-            </Text>
+        <View style={styles.brandRow}>
+          <View style={styles.logoBox}>
+            <Ionicons name="leaf" size={26} color={theme.primary} />
           </View>
-
-          <LoginForm
-            email={email}
-            senha={senha}
-            emailError={emailError}
-            senhaError={senhaError}
-            error={error}
-            isLoading={isLoading}
-            onEmailChange={handleEmailChange}
-            onSenhaChange={handleSenhaChange}
-            onSubmit={handleSubmit}
-            onFillDemo={fillDemoCredentials}
-          />
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Ainda não possui cadastro?</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Register')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.signupLink}>Criar nova conta</Text>
-            </TouchableOpacity>
+          <View>
+            <Text style={styles.brandName}>ZelaFix</Text>
+            <Text style={styles.brandTag}>Zeladoria Urbana Inteligente</Text>
           </View>
-        </ScrollView>
+        </View>
 
-        <FeedbackModal
-          visible={!!modalError}
-          type="error"
-          title="Atenção"
-          message={modalError || ''}
-          confirmText="Entendido"
-          onConfirm={() => setModalError(null)}
+        <LoginForm
+          email={values.email}
+          senha={values.senha}
+          emailError={errors.email ?? null}
+          senhaError={errors.senha ?? null}
+          error={null}
+          isLoading={submitting}
+          onEmailChange={(text) => setFieldValue('email', text)}
+          onSenhaChange={(text) => setFieldValue('senha', text)}
+          onSubmit={handleLogin}
         />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+        <View style={styles.footerRow}>
+          <Text style={styles.footerText}>Ainda não tem conta?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.footerLink}>Cadastre-se</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <FeedbackModal
+        visible={Boolean(modalError)}
+        type="error"
+        title="Não foi possível entrar"
+        message={modalError ?? ''}
+        onConfirm={dismissError}
+      />
+    </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  keyboardView: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  logoBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primary[600],
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-    ...shadows.md,
-  },
-  brandTitle: {
-    fontSize: fontSize.display,
-    fontWeight: fontWeight.extrabold,
-    color: colors.secondary[900],
-    letterSpacing: -0.5,
-  },
-  brandSubtitle: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: spacing.xl,
-  },
-  footerText: {
-    fontSize: fontSize.body,
-    color: colors.secondary[600],
-  },
-  signupLink: {
-    fontSize: fontSize.body,
-    fontWeight: fontWeight.bold,
-    color: colors.primary[600],
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    scrollContent: { padding: spacing.md, gap: spacing.lg },
+    brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 4, paddingVertical: spacing.xs },
+    logoBox: {
+      width: 48,
+      height: 48,
+      borderRadius: borderRadius.md,
+      backgroundColor: theme.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    brandName: { fontSize: fontSize.title, fontWeight: fontWeight.extrabold, color: theme.text },
+    brandTag: { fontSize: fontSize.caption, color: theme.textSecondary },
+    footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: spacing.xs },
+    footerText: { fontSize: fontSize.body, color: theme.textSecondary },
+    footerLink: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: theme.primary },
+  });

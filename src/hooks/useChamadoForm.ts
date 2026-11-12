@@ -1,173 +1,145 @@
-import { useState, useMemo, useCallback } from 'react';
-import { ChamadoFormSchema, extractZodFieldErrors } from '../utils/schemas';
-import { gerarTriagemIaAutomatica } from '../services/chamadoService';
-import { CategoriaChamado, Localizacao } from '../types';
+import { useCallback, useMemo, useState } from 'react';
+import { useCategoriasChamado, useChamadoDetail } from '@/hooks/useChamados';
+import { useChamadoMutations } from '@/hooks/useChamadoMutations';
+import { useLocalizacao, type LocalizacaoCapturada } from '@/hooks/useLocalizacao';
+import type { Chamado } from '@/types/chamado';
+import { getApiErrorMessage } from '@/utils/apiError';
+import { toChamadoRequest } from '@/utils/chamadoMappers';
+import { formatCep } from '@/utils/formatters';
+import { ChamadoFormSchema, type ChamadoFormData } from '@/utils/schemas';
 
-export const FOTOS_SIMULADAS = [
-  {
-    rotulo: 'Buraco',
-    url: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    rotulo: 'Poste Apagado',
-    url: 'https://images.unsplash.com/photo-1780415493361-07c5a78dbaef?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    rotulo: 'Bueiro',
-    url: 'https://images.unsplash.com/photo-1581375922343-ac6b40caf5e3?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    rotulo: 'Entulho',
-    url: 'https://images.unsplash.com/photo-1605600659908-0ef719419d41?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    rotulo: 'Árvore/Galho',
-    url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80',
-  },
-];
+const INITIAL_CHAMADO_FORM: ChamadoFormData = {
+  titulo: '',
+  categoriaId: 0,
+  descricao: '',
+  cep: '',
+  rua: '',
+  numero: '',
+  referencia: '',
+  fotoBase64: undefined,
+};
 
-export const useChamadoForm = () => {
-  const [titulo, setTituloState] = useState('');
-  const [categoria, setCategoria] = useState<CategoriaChamado>('Buraco na Rua');
-  const [descricao, setDescricaoState] = useState('');
-  const [fotoUrl, setFotoUrl] = useState<string>(FOTOS_SIMULADAS[0].url);
+interface UseChamadoFormOptions {
+  mode: 'create' | 'edit';
+  chamadoId?: number;
+}
 
-  const [logradouro, setLogradouroState] = useState('');
-  const [numero, setNumeroState] = useState('');
-  const [bairro, setBairroState] = useState('');
-  const [cidade, setCidade] = useState('São Paulo');
-  const [cep, setCep] = useState('');
-  const [pontoReferencia, setPontoReferencia] = useState('');
-  const [coordenadas, setCoordenadas] = useState<{ lat: number; lng: number }>({
-    lat: -23.5629,
-    lng: -46.6544,
-  });
+export function useChamadoForm({ mode, chamadoId }: UseChamadoFormOptions) {
+  const isEdit = mode === 'edit';
+  const { categorias, isLoading: loadingCategorias } = useCategoriasChamado();
+  const detailQuery = useChamadoDetail(isEdit ? chamadoId : undefined);
+  const { criarChamado, atualizarChamado, isCreating, isUpdating } = useChamadoMutations();
+  const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao, limparLocalizacao } = useLocalizacao();
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [draft, setDraft] = useState<Partial<ChamadoFormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ChamadoFormData, string>>>({});
+  const [localizacaoPreview, setLocalizacaoPreview] = useState<LocalizacaoCapturada | null>(null);
+  const [erroModal, setErroModal] = useState<string | null>(null);
 
-  const clearFieldError = useCallback((field: string) => {
-    setErrors((prev) => (prev[field] ? { ...prev, [field]: '' } : prev));
-  }, []);
+  const values = useMemo<ChamadoFormData>(() => {
+    const chamado = detailQuery.chamado;
+    const base: ChamadoFormData =
+      isEdit && chamado
+        ? {
+            titulo: chamado.titulo,
+            categoriaId: chamado.categoriaId,
+            descricao: chamado.descricao,
+            cep: formatCep(chamado.endereco.cep),
+            rua: chamado.endereco.rua || '',
+            numero: chamado.endereco.numero || '',
+            referencia: chamado.endereco.referencia || '',
+            fotoBase64: undefined,
+          }
+        : INITIAL_CHAMADO_FORM;
 
-  const setTitulo = useCallback(
-    (v: string) => {
-      setTituloState(v);
-      clearFieldError('titulo');
-    },
-    [clearFieldError]
-  );
+    return { ...base, ...draft };
+  }, [detailQuery.chamado, draft, isEdit]);
 
-  const setDescricao = useCallback(
-    (v: string) => {
-      setDescricaoState(v);
-      clearFieldError('descricao');
-    },
-    [clearFieldError]
-  );
-
-  const setLogradouro = useCallback(
-    (v: string) => {
-      setLogradouroState(v);
-      clearFieldError('logradouro');
-    },
-    [clearFieldError]
-  );
-
-  const setNumero = useCallback(
-    (v: string) => {
-      setNumeroState(v);
-      clearFieldError('numero');
-    },
-    [clearFieldError]
-  );
-
-  const setBairro = useCallback(
-    (v: string) => {
-      setBairroState(v);
-      clearFieldError('bairro');
-    },
-    [clearFieldError]
-  );
-
-  const triagemPreview = useMemo(
-    () => gerarTriagemIaAutomatica(categoria, titulo, descricao),
-    [categoria, titulo, descricao]
-  );
-
-  const preencherLocalizacaoSimulada = useCallback(() => {
-    setLogradouroState('Avenida Paulista');
-    setNumeroState('1106');
-    setBairroState('Bela Vista');
-    setCidade('São Paulo');
-    setCep('01310-100');
-    setPontoReferencia('Em frente ao Edifício FIESP e Metrô Trianon');
-    setCoordenadas({ lat: -23.5629, lng: -46.6544 });
-    setErrors((prev) => ({ ...prev, logradouro: '', numero: '', bairro: '' }));
-  }, []);
-
-  const validate = useCallback((): boolean => {
-    const parsed = ChamadoFormSchema.safeParse({
-      titulo: titulo.trim(),
-      categoria,
-      descricao: descricao.trim(),
-      logradouro: logradouro.trim(),
-      numero: numero.trim(),
-      bairro: bairro.trim(),
-      cep: cep.trim(),
-      pontoReferencia: pontoReferencia.trim(),
-      fotoUrl,
+  const setFieldValue = useCallback(<K extends keyof ChamadoFormData>(field: K, value: ChamadoFormData[K]) => {
+    setDraft((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
     });
+  }, []);
 
-    if (!parsed.success) {
-      setErrors(extractZodFieldErrors(parsed.error));
-      return false;
-    }
+  const handleUsarGps = useCallback(async () => {
+    const loc = await capturarLocalizacao();
+    if (!loc) return;
 
+    setLocalizacaoPreview(loc);
+    setDraft((prev) => ({
+      ...prev,
+      cep: loc.cep ? formatCep(loc.cep) : prev.cep,
+      rua: loc.rua || prev.rua,
+      numero: loc.numero || prev.numero || 'S/N',
+      referencia: loc.referencia || prev.referencia,
+    }));
+  }, [capturarLocalizacao]);
+
+  const resetForm = useCallback(() => {
+    setDraft({});
     setErrors({});
-    return true;
-  }, [titulo, categoria, descricao, logradouro, numero, bairro, cep, pontoReferencia, fotoUrl]);
+    setLocalizacaoPreview(null);
+    limparLocalizacao();
+    setErroModal(null);
+  }, [limparLocalizacao]);
 
-  const buildLocalizacao = useCallback((): Localizacao => {
-    return {
-      logradouro: logradouro.trim(),
-      numero: numero.trim(),
-      bairro: bairro.trim(),
-      cidade: cidade.trim() || 'São Paulo',
-      cep: cep.trim() || '01310-100',
-      pontoReferencia: pontoReferencia.trim(),
-      latitude: coordenadas.lat,
-      longitude: coordenadas.lng,
-    };
-  }, [logradouro, numero, bairro, cidade, cep, pontoReferencia, coordenadas]);
+  const submit = useCallback(
+    (onSuccess: (chamado: Chamado) => void) => {
+      const result = ChamadoFormSchema.safeParse(values);
+      if (!result.success) {
+        const nextErrors: Partial<Record<keyof ChamadoFormData, string>> = {};
+        for (const issue of result.error.issues) {
+          const key = issue.path[0] as keyof ChamadoFormData | undefined;
+          if (key && !nextErrors[key]) nextErrors[key] = issue.message;
+        }
+        setErrors(nextErrors);
+        return;
+      }
+
+      setErrors({});
+      setErroModal(null);
+      const payload = toChamadoRequest(result.data);
+
+      if (isEdit && chamadoId) {
+        atualizarChamado(chamadoId, payload, {
+          onSuccess,
+          onError: (err) => setErroModal(getApiErrorMessage(err, 'Falha ao salvar alterações.')),
+        });
+        return;
+      }
+
+      criarChamado(payload, {
+        onSuccess: (created) => {
+          resetForm();
+          onSuccess(created);
+        },
+        onError: (err) => setErroModal(getApiErrorMessage(err, 'Erro ao registrar chamado.')),
+      });
+    },
+    [atualizarChamado, chamadoId, criarChamado, isEdit, resetForm, values]
+  );
 
   return {
-    titulo,
-    setTitulo,
-    categoria,
-    setCategoria,
-    descricao,
-    setDescricao,
-    fotoUrl,
-    setFotoUrl,
-    logradouro,
-    setLogradouro,
-    numero,
-    setNumero,
-    bairro,
-    setBairro,
-    cidade,
-    setCidade,
-    cep,
-    setCep,
-    pontoReferencia,
-    setPontoReferencia,
-    coordenadas,
-    setCoordenadas,
+    values,
     errors,
-    setErrors,
-    triagemPreview,
-    preencherLocalizacaoSimulada,
-    validate,
-    buildLocalizacao,
+    setFieldValue,
+    categorias,
+    loadingCategorias,
+    chamadoOriginal: detailQuery.chamado,
+    loadingChamado: isEdit ? detailQuery.isLoading : false,
+    loadError: isEdit ? detailQuery.error : null,
+    submitting: isCreating || isUpdating,
+    capturandoGps,
+    erroGps,
+    localizacaoPreview: localizacaoPreview ?? ultimaLocalizacao,
+    erroModal,
+    clearErroModal: () => setErroModal(null),
+    handleUsarGps,
+    resetForm,
+    submit,
   };
-};
+}

@@ -1,167 +1,99 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native';
-import { Button } from '../../../components/Button';
-import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../../../theme';
-import { StatusChamado } from '../../../types';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BaseModal } from '@/components/BaseModal';
+import { Button } from '@/components/Button';
+import { Input } from '@/components/Input';
+import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useZodForm } from '@/hooks/useZodForm';
+import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import { STATUS_OPTIONS } from '@/theme/semanticConfig';
+import type { StatusChamado } from '@/types/categoria';
+import { StatusUpdateSchema, type StatusUpdateFormData } from '@/utils/schemas';
 
 interface StatusChangeModalProps {
   visible: boolean;
-  selectedStatus: StatusChamado;
-  statusFeedback: string;
-  loading: boolean;
-  onSelectStatus: (st: StatusChamado) => void;
-  onFeedbackChange: (text: string) => void;
-  onConfirm: () => void;
-  onCancel: () => void;
+  currentStatus: StatusChamado;
+  onClose: () => void;
+  onSubmit: (data: StatusUpdateFormData) => void;
+  submitting: boolean;
 }
 
 export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   visible,
-  selectedStatus,
-  statusFeedback,
-  loading,
-  onSelectStatus,
-  onFeedbackChange,
-  onConfirm,
-  onCancel,
+  currentStatus,
+  onClose,
+  onSubmit,
+  submitting,
 }) => {
+  const styles = useThemedStyles(createStyles);
+  const { values, errors, setFieldValue, validate } = useZodForm(StatusUpdateSchema, {
+    status: currentStatus,
+    observacao: '',
+  });
+
+  const handleConfirm = () => {
+    const parsed = validate();
+    if (parsed) onSubmit(parsed);
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, shadows.lg]}>
-          <Text style={styles.modalTitle}>Atualizar Status</Text>
-          <Text style={styles.modalSub}>
-            Selecione a etapa atual de atendimento desta demanda:
-          </Text>
+    <BaseModal visible={visible} title="Atualizar Status" subtitle="Selecione a nova situação e informe um parecer técnico" onClose={onClose}>
+      <View style={styles.form}>
+        <Text style={styles.label}>Novo Status *</Text>
+        <View style={styles.chipsWrap}>
+          {STATUS_OPTIONS.map((opt) => {
+            const active = values.status === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setFieldValue('status', opt.value)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
-          <View style={styles.statusOptionsRow}>
-            {(['Aberto', 'Em Andamento', 'Resolvido'] as StatusChamado[]).map((st) => {
-              const isSelected = selectedStatus === st;
-              return (
-                <TouchableOpacity
-                  key={st}
-                  style={[
-                    styles.statusSelectButton,
-                    isSelected && styles.statusSelectButtonActive,
-                  ]}
-                  onPress={() => onSelectStatus(st)}
-                >
-                  <Text
-                    style={[
-                      styles.statusSelectText,
-                      isSelected && styles.statusSelectTextActive,
-                    ]}
-                  >
-                    {st}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+        <Input
+          label="Parecer / Observação *"
+          placeholder="Descreva a vistoria, encaminhamento ou motivo da decisão..."
+          value={values.observacao}
+          onChangeText={(text) => setFieldValue('observacao', text)}
+          multiline
+          numberOfLines={3}
+          maxLength={255}
+          style={styles.textArea}
+          error={errors.observacao}
+        />
 
-          <TextInput
-            style={styles.modalTextInput}
-            placeholder="Observação ou parecer técnico (opcional)..."
-            placeholderTextColor={colors.text.tertiary}
-            value={statusFeedback}
-            onChangeText={onFeedbackChange}
-            multiline
-            numberOfLines={3}
-          />
-
-          <View style={styles.modalButtonsRow}>
-            <Button
-              title="Cancelar"
-              variant="ghost"
-              onPress={onCancel}
-              style={{ flex: 1 }}
-            />
-            <Button
-              title="Confirmar"
-              variant="primary"
-              onPress={onConfirm}
-              loading={loading}
-              style={{ flex: 1 }}
-            />
-          </View>
+        <View style={styles.actions}>
+          <Button title="Cancelar" variant="outline" onPress={onClose} style={styles.btn} disabled={submitting} />
+          <Button title="Confirmar" onPress={handleConfirm} loading={submitting} style={styles.btn} />
         </View>
       </View>
-    </Modal>
+    </BaseModal>
   );
 };
 
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-  },
-  modalTitle: {
-    fontSize: fontSize.title,
-    fontWeight: fontWeight.bold,
-    color: colors.secondary[900],
-    marginBottom: 4,
-  },
-  modalSub: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
-    marginBottom: spacing.md,
-  },
-  statusOptionsRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  statusSelectButton: {
-    flex: 1,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    backgroundColor: colors.secondary[50],
-  },
-  statusSelectButtonActive: {
-    backgroundColor: colors.primary[600],
-    borderColor: colors.primary[600],
-  },
-  statusSelectText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.semibold,
-    color: colors.secondary[700],
-  },
-  statusSelectTextActive: {
-    color: colors.surface,
-  },
-  modalTextInput: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-    fontSize: fontSize.bodySmall,
-    color: colors.text.primary,
-    minHeight: 74,
-    textAlignVertical: 'top',
-    marginBottom: spacing.md,
-  },
-  modalButtonsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    form: { gap: spacing.sm },
+    label: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.semibold, color: theme.text },
+    chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs + 2, marginBottom: spacing.xs },
+    chip: {
+      paddingHorizontal: spacing.sm + 4,
+      paddingVertical: spacing.xs + 3,
+      borderRadius: borderRadius.full,
+      backgroundColor: theme.cardSubtle,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    chipActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+    chipText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
+    chipTextActive: { color: theme.inverseText },
+    textArea: { minHeight: 84, textAlignVertical: 'top', paddingTop: spacing.sm },
+    actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+    btn: { flex: 1 },
+  });
