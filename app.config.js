@@ -29,7 +29,7 @@ function getGitMetadata(fallback) {
     const hash =
       envCommitHash ||
       fallback?.commitHash ||
-      '516b8b92afbb31a075c1f5befbc59cc9ebc5fcc8';
+      'aadd0280465f961ba5af44fad2da73be8909b2db';
     return {
       commitHash: hash,
       shortCommitHash: hash.slice(0, 7),

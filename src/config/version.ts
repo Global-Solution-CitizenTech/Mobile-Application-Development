@@ -19,7 +19,7 @@ export interface GitCommitMetadata {
 
 const dynamicGitInfo = Constants.expoConfig?.extra?.gitCommit as Partial<GitCommitMetadata> | undefined;
 
-const FALLBACK_HASH = 'b7778de1a580da848ad7f06a855f2add08886b0b';
+const FALLBACK_HASH = 'aadd0280465f961ba5af44fad2da73be8909b2db';
 
 export const GIT_COMMIT_INFO: GitCommitMetadata = {
   commitHash: dynamicGitInfo?.commitHash || FALLBACK_HASH,
@@ -76,7 +76,7 @@ export const APP_VERSION_INFO = {
   appName: 'ZelaFix',
   tagline: 'Zeladoria Urbana Colaborativa & Cidades Sustentáveis (ODS 11)',
   version: '1.0.0',
-  buildNumber: '12',
+  buildNumber: '3',
   sprint: 'Global Solution 2026/2',
   disciplina: 'Mobile Application Development',
   instituicao: 'FIAP - 2TDSPG',
@@ -86,6 +86,6 @@ export const APP_VERSION_INFO = {
   commitDate: GIT_COMMIT_INFO.commitDate,
   branch: GIT_COMMIT_INFO.branch,
   commitMessage: GIT_COMMIT_INFO.commitMessage,
-  target: 'Firebase App Distribution / APK Android',
+  target: 'EAS Build / APK Android',
   equipe: INTEGRANTES_EQUIPE,
 } as const;
