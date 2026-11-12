@@ -1,25 +1,22 @@
-import { FiltroChamados } from '../types';
+import type { FiltroChamados } from '@/types/chamado';
 
-/**
- * Fábrica centralizada de Query Keys do TanStack Query (Padrão Challenge_Clyvo_4)
- */
 export const queryKeys = {
   auth: {
-    me: ['auth', 'me'] as const,
-    session: ['auth', 'session'] as const,
+    all: ['auth'] as const,
+    me: () => ['auth', 'me'] as const,
   },
   chamados: {
     all: ['chamados'] as const,
-    list: (filtros?: FiltroChamados, usuarioId?: string) =>
-      [
-        'chamados',
-        'list',
-        filtros?.categoria ?? 'Todas',
-        filtros?.status ?? 'Todos',
-        filtros?.busca ?? '',
-        Boolean(filtros?.apenasMeus),
-        usuarioId ?? 'anon',
-      ] as const,
-    detail: (id?: string) => ['chamados', 'detail', id ?? ''] as const,
+    lists: () => ['chamados', 'list'] as const,
+    list: (filtros: FiltroChamados, usuarioId?: number | null) => ['chamados', 'list', { filtros, usuarioId: usuarioId ?? null }] as const,
+    details: () => ['chamados', 'detail'] as const,
+    detail: (id?: number | null) => ['chamados', 'detail', id ?? null] as const,
+    estatisticas: () => ['chamados', 'estatisticas'] as const,
+    categorias: () => ['chamados', 'categorias'] as const,
+  },
+  ai: {
+    all: ['ai'] as const,
+    insights: (bairro?: string | null) => ['ai', 'insights', bairro?.trim() || 'geral'] as const,
+    sessions: () => ['ai', 'sessions'] as const,
   },
 };

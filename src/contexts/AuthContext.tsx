@@ -1,58 +1,45 @@
-/**
- * Contexto Central de Autenticação e Sessão
- * Integrado com TanStack QueryClient e Warmup HTTP (Padrão Challenge_Clyvo_4)
- */
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { queryClient } from '@/lib/queryClient';
+import { queryKeys } from '@/lib/queryKeys';
+import { HttpService, registerUnauthorizedHandler } from '@/services/api';
+import { authService } from '@/services/authService';
+import { storageService } from '@/services/storageService';
+import type { LoginCredentials, Usuario, UsuarioRequest } from '@/types/auth';
+import { getApiErrorMessage, getAuthErrorMessage } from '@/utils/apiError';
 
-import React, { createContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { Usuario, LoginCredentials, RegisterData } from '../types';
-import { authService } from '../services/authService';
-import { storageService } from '../services/storageService';
-import { registerUnauthorizedHandler, HttpService } from '../services/api';
-import { queryClient } from '../lib/queryClient';
-import { getAuthErrorMessage } from '../utils/apiError';
-
-export interface AuthContextData {
+interface AuthContextData {
   usuario: Usuario | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
-  logout: () => Promise<void>;
+  authError: string | null;
+  signIn: (credentials: LoginCredentials) => Promise<void>;
+  signUp: (data: UsuarioRequest) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  updateProfile: (data: UsuarioRequest) => Promise<Usuario>;
   clearError: () => void;
-  updateUser: (user: Usuario) => Promise<void>;
-  updateProfile: (dados: Partial<Usuario> & { novaSenha?: string }) => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const clearError = useCallback(() => setAuthError(null), []);
+
+  const signOut = useCallback(async () => {
+    await storageService.clearSession();
+    setToken(null);
+    setUsuario(null);
+    setAuthError(null);
+    queryClient.clear();
+  }, []);
 
   useEffect(() => {
-    async function loadStoredSession() {
-      try {
-        const storedToken = await storageService.getToken();
-        const storedUser = await storageService.getUser();
-
-        if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUsuario(storedUser);
-        }
-      } catch (err) {
-        console.error('Erro ao restaurar sessão:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadStoredSession();
-    HttpService.warmup();
-
     registerUnauthorizedHandler(() => {
       setToken(null);
       setUsuario(null);
@@ -60,106 +47,122 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
   }, []);
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const { token: authToken, usuario: authUser } = await authService.login(credentials);
-      setToken(authToken);
-      setUsuario(authUser);
-      queryClient.invalidateQueries();
-    } catch (err: unknown) {
-      const msg = getAuthErrorMessage(err);
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    let active = true;
 
-  const register = useCallback(async (data: RegisterData) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const { token: authToken, usuario: authUser } = await authService.register(data);
-      setToken(authToken);
-      setUsuario(authUser);
-      queryClient.invalidateQueries();
-    } catch (err: unknown) {
-      const msg = getAuthErrorMessage(err, 'Falha ao cadastrar cidadão.');
-      setError(msg);
-      throw new Error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      await authService.logout();
-    } catch (err) {
-      console.warn('Erro durante logout:', err);
-    } finally {
-      setToken(null);
-      setUsuario(null);
-      queryClient.clear();
-      setIsLoading(false);
-    }
-  }, []);
-
-  const updateUser = useCallback(async (updated: Usuario) => {
-    setUsuario(updated);
-    await storageService.saveUser(updated);
-  }, []);
-
-  const updateProfile = useCallback(
-    async (dados: Partial<Usuario> & { novaSenha?: string }) => {
+    async function bootstrap() {
+      void HttpService.warmup();
       try {
-        setIsLoading(true);
-        setError(null);
-        const updated = await authService.updateProfile(dados);
-        setUsuario(updated);
-      } catch (err: unknown) {
-        const msg = getAuthErrorMessage(err, 'Falha ao atualizar dados do perfil.');
-        setError(msg);
-        throw new Error(msg);
+        const [storedToken, storedUser] = await Promise.all([storageService.getToken(), storageService.getUsuario()]);
+        if (!active) return;
+
+        if (!storedToken) {
+          setIsLoading(false);
+          return;
+        }
+
+        setToken(storedToken);
+        if (storedUser) {
+          setUsuario(storedUser);
+        }
+
+        const freshUser = await authService.getMe();
+        if (!active) return;
+        await storageService.saveUsuario(freshUser);
+        setUsuario(freshUser);
+      } catch {
+        if (!active) return;
+        const stillHasToken = await storageService.getToken();
+        if (!stillHasToken) {
+          setToken(null);
+          setUsuario(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
-    },
-    []
+    }
+
+    void bootstrap();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const signIn = useCallback(async (credentials: LoginCredentials) => {
+    setAuthError(null);
+    try {
+      const response = await authService.login(credentials);
+      await storageService.saveSession(response.token, response.user);
+      setToken(response.token);
+      setUsuario(response.user);
+      queryClient.invalidateQueries();
+    } catch (error) {
+      const message = getAuthErrorMessage(error);
+      setAuthError(message);
+      throw error;
+    }
+  }, []);
+
+  const signUp = useCallback(async (data: UsuarioRequest) => {
+    setAuthError(null);
+    try {
+      await authService.register(data);
+      const loginResponse = await authService.login({ email: data.email, senha: data.senha });
+      await storageService.saveSession(loginResponse.token, loginResponse.user);
+      setToken(loginResponse.token);
+      setUsuario(loginResponse.user);
+      queryClient.invalidateQueries();
+    } catch (error) {
+      const message = getApiErrorMessage(error, 'Não foi possível concluir o cadastro.');
+      setAuthError(message);
+      throw error;
+    }
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    const freshUser = await authService.getMe();
+    await storageService.saveUsuario(freshUser);
+    setUsuario(freshUser);
+  }, []);
+
+  const updateProfile = useCallback(async (data: UsuarioRequest): Promise<Usuario> => {
+    const { usuario: updated, novoToken } = await authService.updateProfile(data);
+    if (novoToken) {
+      await storageService.saveSession(novoToken, updated);
+      setToken(novoToken);
+    } else {
+      await storageService.saveUsuario(updated);
+    }
+    setUsuario(updated);
+    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    return updated;
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        usuario,
+        token,
+        isAuthenticated: Boolean(usuario && token),
+        isLoading,
+        authError,
+        signIn,
+        signUp,
+        signOut,
+        refreshProfile,
+        updateProfile,
+        clearError,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
-
-  const clearError = useCallback(() => setError(null), []);
-
-  const value = useMemo(
-    () => ({
-      usuario,
-      token,
-      isAuthenticated: !!token,
-      isLoading,
-      error,
-      login,
-      register,
-      logout,
-      clearError,
-      updateUser,
-      updateProfile,
-    }),
-    [
-      usuario,
-      token,
-      isLoading,
-      error,
-      login,
-      register,
-      logout,
-      clearError,
-      updateUser,
-      updateProfile,
-    ]
-  );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export function useAuth(): AuthContextData {
+  const context = useContext(AuthContext);
+  if (!context || !context.signIn) {
+    throw new Error('useAuth deve ser utilizado dentro de um AuthProvider');
+  }
+  return context;
+}

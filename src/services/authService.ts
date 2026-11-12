@@ -1,129 +1,54 @@
-/**
- * Serviço de Autenticação e Perfil (Java Spring Security JWT / .NET Minimal API)
- * Endpoints REST preparados:
- * - POST /auth/login
- * - POST /auth/register
- * - GET  /auth/me (ou /usuarios/me)
- * - PUT  /auth/me (ou /usuarios/me)
- */
+import { api } from '@/services/api';
+import type { LoginCredentials, LoginResponse, Usuario, UsuarioRequest } from '@/types/auth';
+import { buildEnderecoRequest } from '@/utils/chamadoMappers';
+import { splitPhoneDigits } from '@/utils/formatters';
 
-import { api } from './api';
-import { storageService } from './storageService';
-import { env } from '../config/env';
-import { DEMO_USER } from '../mocks/chamadosMock';
-import { AuthResponse, LoginCredentials, RegisterData, Usuario } from '../types';
+export interface UsuarioFormInput {
+  nome: string;
+  email: string;
+  telefone: string;
+  cep: string;
+  rua?: string;
+  numero: string;
+  referencia: string;
+  senha: string;
+}
+
+export function buildUsuarioRequest(input: UsuarioFormInput): UsuarioRequest {
+  const { ddd, numeroTelefone } = splitPhoneDigits(input.telefone);
+  return {
+    nome: input.nome.trim(),
+    email: input.email.trim().toLowerCase(),
+    senha: input.senha,
+    ddd,
+    numeroTelefone,
+    endereco: buildEnderecoRequest(input),
+  };
+}
 
 export const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    try {
-      const response = await api.post<AuthResponse>('/auth/login', credentials);
-      const { token, usuario } = response.data;
-
-      await storageService.saveToken(token);
-      await storageService.saveUser(usuario);
-
-      return { token, usuario };
-    } catch (error: any) {
-      if (env.enableMockFallback && (!error.status || error.status === 0 || error.status >= 500)) {
-        const isDemo =
-          credentials.email.toLowerCase() === DEMO_USER.email.toLowerCase() ||
-          credentials.email.includes('@');
-
-        if (isDemo && credentials.senha.length >= 4) {
-          const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.zelafix_${Date.now()}`;
-          const cachedUser = await storageService.getUser();
-          const usuario: Usuario =
-            cachedUser && cachedUser.email.toLowerCase() === credentials.email.toLowerCase()
-              ? cachedUser
-              : {
-                  ...DEMO_USER,
-                  email: credentials.email.trim().toLowerCase(),
-                };
-
-          await storageService.saveToken(mockToken);
-          await storageService.saveUser(usuario);
-
-          return { token: mockToken, usuario };
-        }
-      }
-
-      throw error;
-    }
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    const { data } = await api.post<LoginResponse>('/login', {
+      email: credentials.email.trim().toLowerCase(),
+      senha: credentials.senha,
+    });
+    return data;
   },
 
-  async register(data: RegisterData): Promise<AuthResponse> {
-    try {
-      const response = await api.post<AuthResponse>('/auth/register', data);
-      const { token, usuario } = response.data;
-
-      await storageService.saveToken(token);
-      await storageService.saveUser(usuario);
-
-      return { token, usuario };
-    } catch (error: any) {
-      if (env.enableMockFallback && (!error.status || error.status === 0 || error.status >= 500)) {
-        const mockToken = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.zelafix_${Date.now()}`;
-        const novoUsuario: Usuario = {
-          id: `usr_${Date.now().toString().slice(-6)}`,
-          nome: data.nome,
-          email: data.email,
-          cpf: data.cpf,
-          telefone: data.telefone,
-          bairro: data.bairro,
-          createdAt: new Date().toISOString(),
-          avatarUrl:
-            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-        };
-
-        await storageService.saveToken(mockToken);
-        await storageService.saveUser(novoUsuario);
-
-        return { token: mockToken, usuario: novoUsuario };
-      }
-
-      throw error;
-    }
+  async register(payload: UsuarioRequest): Promise<Usuario> {
+    const { data } = await api.post<Usuario>('/usuarios', payload);
+    return data;
   },
 
-  async getProfile(): Promise<Usuario> {
-    try {
-      const response = await api.get<Usuario>('/auth/me');
-      await storageService.saveUser(response.data);
-      return response.data;
-    } catch {
-      const cached = await storageService.getUser();
-      if (cached) return cached;
-      return DEMO_USER;
-    }
+  async getMe(): Promise<Usuario> {
+    const { data } = await api.get<Usuario>('/usuarios/me');
+    return data;
   },
 
-  async updateProfile(dados: Partial<Usuario> & { novaSenha?: string }): Promise<Usuario> {
-    try {
-      const response = await api.put<Usuario>('/auth/me', dados);
-      await storageService.saveUser(response.data);
-      return response.data;
-    } catch (error: any) {
-      if (env.enableMockFallback) {
-        const current = (await storageService.getUser()) || DEMO_USER;
-        const updated: Usuario = {
-          ...current,
-          nome: dados.nome || current.nome,
-          email: dados.email || current.email,
-          telefone: dados.telefone || current.telefone,
-          bairro: dados.bairro || current.bairro,
-        };
-        await storageService.saveUser(updated);
-        return updated;
-      }
-      throw error;
-    }
-  },
-
-  async logout(): Promise<void> {
-    try {
-      await api.post('/auth/logout').catch(() => {});
-    } finally {
-      await storageService.clearSession();
-    }
+  async updateProfile(payload: UsuarioRequest): Promise<{ usuario: Usuario; novoToken?: string }> {
+    const response = await api.put<Usuario>('/usuarios/me', payload);
+    const headerToken = response.headers['x-novo-token'];
+    const novoToken = typeof headerToken === 'string' && headerToken.trim() ? headerToken.trim() : undefined;
+    return { usuario: response.data, novoToken };
   },
 };

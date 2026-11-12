@@ -1,6 +1,6 @@
-import { colors } from './colors';
-import { spacing, borderRadius, shadows } from './spacing';
-import { fontSize, fontWeight } from './typography';
+import { colors } from '@/theme/colors';
+import { spacing, borderRadius, shadows } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
 
 export const theme = {
   colors,
@@ -13,4 +13,3 @@ export const theme = {
 
 export type Theme = typeof theme;
 export { colors, spacing, borderRadius, shadows, fontSize, fontWeight };
-

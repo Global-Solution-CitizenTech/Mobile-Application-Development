@@ -1,6 +1,6 @@
 import { Alert } from 'react-native';
-import axios, { AxiosError } from 'axios';
-import { ApiError, ApiErrorResponse, ActionCallbacks } from '../types/api';
+import { AxiosError, isAxiosError } from 'axios';
+import { ApiError, ApiErrorResponse, ActionCallbacks } from '@/types/api';
 
 /**
  * Normaliza qualquer erro (AxiosError, ApiError, Error nativo ou desconhecido)
@@ -12,7 +12,7 @@ export function normalizeHttpError(error: unknown): ApiError {
     return error;
   }
 
-  if (axios.isAxiosError(error)) {
+  if (isAxiosError(error)) {
     const axiosError = error as AxiosError<ApiErrorResponse>;
     const status = axiosError.response?.status ?? 0;
     const data = axiosError.response?.data;

@@ -1,114 +1,57 @@
-/**
- * Serviço de Armazenamento Local Seguro e Sessão
- * Utiliza AsyncStorage com chaves tipadas e isoladas
- */
-
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Usuario, Chamado } from '../types';
+import type { Usuario } from '@/types/auth';
 
-const STORAGE_KEYS = {
-  TOKEN: '@zelafix:auth_token',
-  USER: '@zelafix:current_user',
-  CHAMADOS: '@zelafix:chamados_data',
-  API_URL: '@zelafix:custom_api_url',
-};
-
-const memoryStore: Record<string, string> = {};
+const TOKEN_KEY = 'zelafix_jwt_token';
+const USER_KEY = '@zelafix:usuario';
 
 export const storageService = {
-  // --- Token JWT ---
-  async saveToken(token: string): Promise<void> {
-    try {
-      memoryStore[STORAGE_KEYS.TOKEN] = token;
-      await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token);
-    } catch (error) {
-      console.warn('Armazenado em memória (fallback):', error);
-    }
+  async getToken(): Promise<string | null> {
+    if (Platform.OS === 'web') return AsyncStorage.getItem(TOKEN_KEY);
+    return SecureStore.getItemAsync(TOKEN_KEY);
   },
 
-  async getToken(): Promise<string | null> {
-    try {
-      const token = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
-      return token || memoryStore[STORAGE_KEYS.TOKEN] || null;
-    } catch (error) {
-      return memoryStore[STORAGE_KEYS.TOKEN] || null;
+  async saveToken(token: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+      return;
     }
+    await SecureStore.setItemAsync(TOKEN_KEY, token);
   },
 
   async removeToken(): Promise<void> {
+    if (Platform.OS === 'web') {
+      await AsyncStorage.removeItem(TOKEN_KEY);
+      return;
+    }
+    await SecureStore.deleteItemAsync(TOKEN_KEY);
+  },
+
+  async getUsuario(): Promise<Usuario | null> {
+    const raw = await AsyncStorage.getItem(USER_KEY);
+    if (!raw) return null;
     try {
-      delete memoryStore[STORAGE_KEYS.TOKEN];
-      await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
-    } catch (error) {
-      delete memoryStore[STORAGE_KEYS.TOKEN];
+      return JSON.parse(raw) as Usuario;
+    } catch {
+      await AsyncStorage.removeItem(USER_KEY);
+      return null;
     }
   },
 
-  // --- Usuário ---
-  async saveUser(user: Usuario): Promise<void> {
-    try {
-      const data = JSON.stringify(user);
-      memoryStore[STORAGE_KEYS.USER] = data;
-      await AsyncStorage.setItem(STORAGE_KEYS.USER, data);
-    } catch (error) {
-      console.warn('Usuário em memória (fallback):', error);
-    }
+  async saveUsuario(usuario: Usuario): Promise<void> {
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(usuario));
   },
 
-  async getUser(): Promise<Usuario | null> {
-    try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.USER);
-      if (data) return JSON.parse(data);
-      const inMemory = memoryStore[STORAGE_KEYS.USER];
-      return inMemory ? JSON.parse(inMemory) : null;
-    } catch (error) {
-      const inMemory = memoryStore[STORAGE_KEYS.USER];
-      return inMemory ? JSON.parse(inMemory) : null;
-    }
+  async removeUsuario(): Promise<void> {
+    await AsyncStorage.removeItem(USER_KEY);
   },
 
-  async removeUser(): Promise<void> {
-    try {
-      delete memoryStore[STORAGE_KEYS.USER];
-      await AsyncStorage.removeItem(STORAGE_KEYS.USER);
-    } catch (error) {
-      delete memoryStore[STORAGE_KEYS.USER];
-    }
+  async saveSession(token: string, usuario: Usuario): Promise<void> {
+    await Promise.all([this.saveToken(token), this.saveUsuario(usuario)]);
   },
 
-  // --- Chamados Offline / Cache ---
-  async saveChamados(chamados: Chamado[]): Promise<void> {
-    try {
-      const data = JSON.stringify(chamados);
-      memoryStore[STORAGE_KEYS.CHAMADOS] = data;
-      await AsyncStorage.setItem(STORAGE_KEYS.CHAMADOS, data);
-    } catch (error) {
-      console.warn('Chamados em memória (fallback):', error);
-    }
-  },
-
-  async getChamados(): Promise<Chamado[] | null> {
-    try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.CHAMADOS);
-      if (data) return JSON.parse(data);
-      const inMemory = memoryStore[STORAGE_KEYS.CHAMADOS];
-      return inMemory ? JSON.parse(inMemory) : null;
-    } catch (error) {
-      const inMemory = memoryStore[STORAGE_KEYS.CHAMADOS];
-      return inMemory ? JSON.parse(inMemory) : null;
-    }
-  },
-
-  // --- Limpeza de Sessão (Logout) ---
   async clearSession(): Promise<void> {
-    try {
-      delete memoryStore[STORAGE_KEYS.TOKEN];
-      delete memoryStore[STORAGE_KEYS.USER];
-      await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
-      await AsyncStorage.removeItem(STORAGE_KEYS.USER);
-    } catch (error) {
-      delete memoryStore[STORAGE_KEYS.TOKEN];
-      delete memoryStore[STORAGE_KEYS.USER];
-    }
+    await Promise.all([this.removeToken(), this.removeUsuario()]);
   },
 };

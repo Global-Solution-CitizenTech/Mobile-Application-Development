@@ -1,27 +1,35 @@
-/**
- * Contratos de Resposta, Paginação (Spring Data JPA Pageable) e Erros da API Backend (Java / .NET)
- */
+export interface SpringPageInfo {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
+}
 
-export interface FieldValidationError {
+export interface SpringPageResponse<T> {
+  content: T[];
+  page: SpringPageInfo;
+}
+
+export interface ApiFieldError {
   campo?: string;
-  field?: string;
   mensagem?: string;
+  field?: string;
   message?: string;
 }
 
 export interface ApiErrorResponse {
+  timestamp?: string;
   status?: number;
   error?: string;
   message?: string;
   mensagem?: string;
-  timestamp?: string;
   path?: string;
-  erros?: FieldValidationError[];
+  erros?: ApiFieldError[];
 }
 
 export class ApiError extends Error {
-  public readonly code: string;
-  public readonly status: number;
+  code: string;
+  status: number;
 
   constructor(code: string, message: string, status = 0) {
     super(message);
@@ -31,21 +39,7 @@ export class ApiError extends Error {
   }
 }
 
-export interface ActionCallbacks<TData = unknown> {
+export interface ActionCallbacks<TData = void> {
   onSuccess?: (data: TData) => void;
   onError?: (error: unknown) => void;
-}
-
-/**
- * Contrato padrão de paginação retornado pelo Spring Data JPA (`Page<T>`)
- */
-export interface SpringPageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
 }
