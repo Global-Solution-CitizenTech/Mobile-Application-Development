@@ -1,347 +1,142 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  ViewStyle,
-} from 'react-native';
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Chamado, PrioridadeChamado } from '../../types';
-import { getCategoryIconName } from '../CategoryBadge';
-import { colors, borderRadius, spacing, fontSize, fontWeight, shadows } from '../../theme';
+import { CategoryBadge } from '@/components/CategoryBadge';
+import { StatusBadge } from '@/components/StatusBadge';
+import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
+import { canSupportChamado, getPriorityVisuals } from '@/theme/semanticConfig';
+import type { Chamado } from '@/types/chamado';
+import { formatShortDate, getFirstName, getShortEndereco } from '@/utils/formatters';
 
 interface ChamadoCardProps {
   chamado: Chamado;
   onPress: () => void;
-  onSupportPress?: () => void;
-  rankNumber?: number;
-  style?: ViewStyle;
+  onApoiar?: () => void;
 }
 
-export function getPriorityConfig(prioridade?: PrioridadeChamado) {
-  switch (prioridade) {
-    case 'Crítica':
-      return {
-        bg: '#FEF2F2',
-        text: '#DC2626',
-        border: '#FECACA',
-        dot: '#DC2626',
-        icon: 'flame' as const,
-      };
-    case 'Alta':
-      return {
-        bg: '#FFFBEB',
-        text: '#D97706',
-        border: '#FDE68A',
-        dot: '#D97706',
-        icon: 'warning' as const,
-      };
-    case 'Média':
-      return {
-        bg: '#EFF6FF',
-        text: '#2563EB',
-        border: '#BFDBFE',
-        dot: '#2563EB',
-        icon: 'alert-circle' as const,
-      };
-    default:
-      return {
-        bg: '#F8FAFC',
-        text: '#475569',
-        border: '#E2E8F0',
-        dot: '#64748B',
-        icon: 'information-circle' as const,
-      };
-  }
-}
-
-function getStatusColor(status: Chamado['status']) {
-  switch (status) {
-    case 'Aberto':
-      return { dot: '#F59E0B', text: '#B45309' };
-    case 'Em Andamento':
-      return { dot: '#3B82F6', text: '#1D4ED8' };
-    case 'Resolvido':
-    default:
-      return { dot: '#10B981', text: '#047857' };
-  }
-}
-
-export const ChamadoCard: React.FC<ChamadoCardProps> = ({
-  chamado,
-  onPress,
-  onSupportPress,
-  rankNumber,
-  style,
-}) => {
-  const [imageError, setImageError] = useState(false);
-
-  const formatDate = (isoString: string) => {
-    try {
-      const date = new Date(isoString);
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-      });
-    } catch {
-      return isoString;
-    }
-  };
-
-  const prio = getPriorityConfig(chamado.prioridade);
-  const statusColor = getStatusColor(chamado.status);
-  const categoriaCurta =
-    chamado.categoria === 'Entulho e Descarte Irregular'
-      ? 'Descarte Irregular'
-      : chamado.categoria;
+export const ChamadoCard: React.FC<ChamadoCardProps> = ({ chamado, onPress, onApoiar }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const podeApoiar = Boolean(onApoiar) && canSupportChamado(chamado.status);
+  const triagem = chamado.triagemIa ? getPriorityVisuals(chamado.triagemIa.prioridade, theme) : null;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      style={[styles.card, shadows.sm, style]}
-      onPress={onPress}
-    >
-      <View style={styles.mainRow}>
-        {chamado.fotoUrl && !imageError ? (
-          <Image
-            source={{ uri: chamado.fotoUrl }}
-            style={styles.thumbnail}
-            resizeMode="cover"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <View style={styles.thumbnailFallback}>
-            <Ionicons
-              name={getCategoryIconName(chamado.categoria)}
-              size={24}
-              color={colors.primary[600]}
-            />
-          </View>
-        )}
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+      <View style={styles.topRow}>
+        <CategoryBadge categoria={chamado.categoriaNome} compact />
+        <StatusBadge status={chamado.status} compact />
+      </View>
 
-        <View style={styles.contentColumn}>
-          <View style={styles.metaTopRow}>
-            <Text style={styles.categoryMetaText} numberOfLines={1}>
-              {categoriaCurta} • {chamado.localizacao.bairro}
-            </Text>
-
-            <View style={styles.statusInline}>
-              <View style={[styles.statusDot, { backgroundColor: statusColor.dot }]} />
-              <Text style={[styles.statusInlineText, { color: statusColor.text }]}>
-                {chamado.status}
-              </Text>
-            </View>
-          </View>
-
+      <View style={styles.contentRow}>
+        <View style={styles.mainInfo}>
+          <Text style={styles.metaText}>
+            Protocolo #{chamado.idChamado} • {formatShortDate(chamado.dtAbertura)}
+          </Text>
           <Text style={styles.title} numberOfLines={2}>
             {chamado.titulo}
           </Text>
-
-          <Text style={styles.addressText} numberOfLines={1}>
-            {chamado.localizacao.logradouro}, {chamado.localizacao.numero}
+          <Text style={styles.description} numberOfLines={2}>
+            {chamado.descricao}
           </Text>
         </View>
+
+        {chamado.fotoUrl ? <Image source={{ uri: chamado.fotoUrl }} style={styles.thumbnail} /> : null}
+      </View>
+
+      <View style={styles.locationRow}>
+        <Ionicons name="location-outline" size={14} color={theme.textMuted} />
+        <Text style={styles.locationText} numberOfLines={1}>
+          {getShortEndereco(chamado.endereco)}
+        </Text>
       </View>
 
       <View style={styles.footerRow}>
-        <View style={styles.footerLeft}>
-          {typeof rankNumber === 'number' && (
-            <View style={styles.rankBadge}>
-              <Text style={styles.rankBadgeText}>#{rankNumber}</Text>
-            </View>
-          )}
-
-          <View style={styles.priorityInline}>
-            <View style={[styles.priorityDot, { backgroundColor: prio.dot }]} />
-            <Text style={[styles.priorityLabel, { color: prio.text }]}>
-              Urgência {chamado.prioridade || 'Média'}
-            </Text>
+        {triagem ? (
+          <View style={[styles.priorityPill, { backgroundColor: triagem.bg }]}>
+            <Ionicons name="sparkles" size={11} color={triagem.color} />
+            <Text style={[styles.priorityText, { color: triagem.color }]}>IA: {triagem.label}</Text>
           </View>
-
-          <Text style={styles.dotSeparator}>•</Text>
-
-          <Text style={styles.supportCountText}>
-            {chamado.apoiosCount || 1} {chamado.apoiosCount === 1 ? 'apoio' : 'apoios'}
-          </Text>
-        </View>
-
-        {onSupportPress && chamado.status !== 'Resolvido' ? (
-          <TouchableOpacity
-            style={[
-              styles.supportBtn,
-              chamado.apoiadoPeloUsuario && styles.supportBtnActive,
-            ]}
-            onPress={onSupportPress}
-            activeOpacity={0.75}
-          >
-            <Ionicons
-              name={chamado.apoiadoPeloUsuario ? 'checkmark' : 'add'}
-              size={14}
-              color={chamado.apoiadoPeloUsuario ? colors.surface : colors.primary[700]}
-            />
-            <Text
-              style={[
-                styles.supportBtnText,
-                chamado.apoiadoPeloUsuario && styles.supportBtnTextActive,
-              ]}
-            >
-              {chamado.apoiadoPeloUsuario ? 'Apoiado' : 'Apoiar'}
-            </Text>
-          </TouchableOpacity>
         ) : (
-          <Text style={styles.dateText}>{formatDate(chamado.dataAbertura)}</Text>
+          <View style={styles.authorPill}>
+            <Ionicons name="person-outline" size={12} color={theme.textMuted} />
+            <Text style={styles.authorText}>{getFirstName(chamado.usuarioNome)}</Text>
+          </View>
         )}
+
+        <TouchableOpacity
+          style={[styles.voteBtn, chamado.apoiadoPorMim && styles.voteBtnActive, !podeApoiar && styles.voteBtnDisabled]}
+          onPress={onApoiar}
+          disabled={!podeApoiar}
+          activeOpacity={0.75}
+          hitSlop={6}
+        >
+          <Ionicons
+            name={chamado.apoiadoPorMim ? 'thumbs-up' : 'thumbs-up-outline'}
+            size={14}
+            color={chamado.apoiadoPorMim ? theme.primary : theme.textSecondary}
+          />
+          <Text style={[styles.voteText, chamado.apoiadoPorMim && styles.voteTextActive]}>
+            {chamado.totalVotos} {chamado.totalVotos === 1 ? 'apoio' : 'apoios'}
+          </Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm + 4,
-    borderWidth: 1,
-    borderColor: '#EEF2F6',
-  },
-  mainRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm + 4,
-  },
-  thumbnail: {
-    width: 68,
-    height: 68,
-    borderRadius: 14,
-    backgroundColor: colors.secondary[100],
-  },
-  thumbnailFallback: {
-    width: 68,
-    height: 68,
-    borderRadius: 14,
-    backgroundColor: colors.primary[50],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contentColumn: {
-    flex: 1,
-    minHeight: 68,
-    justifyContent: 'space-between',
-  },
-  metaTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: 3,
-  },
-  categoryMetaText: {
-    flex: 1,
-    fontSize: 11.5,
-    fontWeight: fontWeight.medium,
-    color: colors.secondary[500],
-  },
-  statusInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusInlineText: {
-    fontSize: 11.5,
-    fontWeight: fontWeight.semibold,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: fontWeight.semibold,
-    color: colors.secondary[900],
-    lineHeight: 20,
-    marginBottom: 3,
-  },
-  addressText: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[400],
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.sm + 2,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  footerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  rankBadge: {
-    backgroundColor: colors.secondary[900],
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginRight: 6,
-  },
-  rankBadgeText: {
-    color: colors.surface,
-    fontSize: 10,
-    fontWeight: fontWeight.bold,
-  },
-  priorityInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  priorityDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  priorityLabel: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.semibold,
-  },
-  dotSeparator: {
-    marginHorizontal: 6,
-    color: colors.secondary[300],
-    fontSize: fontSize.caption,
-  },
-  supportCountText: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[500],
-    fontWeight: fontWeight.medium,
-  },
-  supportBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: colors.primary[50],
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: borderRadius.full,
-  },
-  supportBtnActive: {
-    backgroundColor: colors.primary[600],
-  },
-  supportBtnText: {
-    fontSize: fontSize.caption,
-    fontWeight: fontWeight.semibold,
-    color: colors.primary[700],
-  },
-  supportBtnTextActive: {
-    color: colors.surface,
-  },
-  dateText: {
-    fontSize: fontSize.caption,
-    color: colors.secondary[400],
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: theme.surface,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      borderWidth: 1,
+      borderColor: theme.border,
+      gap: spacing.sm,
+      ...shadows.sm,
+    },
+    topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs },
+    contentRow: { flexDirection: 'row', gap: spacing.sm + 4 },
+    mainInfo: { flex: 1, gap: 4 },
+    metaText: { fontSize: fontSize.tiny + 1, color: theme.textMuted, fontWeight: fontWeight.medium },
+    title: { fontSize: fontSize.bodyLarge, fontWeight: fontWeight.bold, color: theme.text, lineHeight: 21 },
+    description: { fontSize: fontSize.bodySmall, color: theme.textSecondary, lineHeight: 18 },
+    thumbnail: { width: 72, height: 72, borderRadius: borderRadius.md, backgroundColor: theme.cardSubtle },
+    locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    locationText: { flex: 1, fontSize: fontSize.caption, color: theme.textSecondary },
+    footerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: spacing.xs + 2,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+    },
+    priorityPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: borderRadius.full,
+    },
+    priorityText: { fontSize: fontSize.tiny + 1, fontWeight: fontWeight.bold },
+    authorPill: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    authorText: { fontSize: fontSize.caption, color: theme.textMuted, fontWeight: fontWeight.medium },
+    voteBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: 5,
+      borderRadius: borderRadius.full,
+      backgroundColor: theme.cardSubtle,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    voteBtnActive: { backgroundColor: theme.primaryLight, borderColor: theme.primary },
+    voteBtnDisabled: { opacity: 0.65 },
+    voteText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
+    voteTextActive: { color: theme.primary },
+  });

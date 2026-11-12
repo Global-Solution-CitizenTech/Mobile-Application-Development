@@ -1,94 +1,95 @@
 import React from 'react';
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { MainTabParamList } from './types';
-import { HomeScreen } from '../screens/Home/HomeScreen';
-import { RadarBairroScreen } from '../screens/RadarBairro/RadarBairroScreen';
-import { MeusChamadosScreen } from '../screens/MeusChamados/MeusChamadosScreen';
-import { ProfileScreen } from '../screens/Profile/ProfileScreen';
-import { colors, fontSize, fontWeight } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/contexts/ThemeContext';
+import type { AppTabParamList } from '@/navigation/types';
+import { HomeScreen } from '@/screens/Home/HomeScreen';
+import { MeusChamadosScreen } from '@/screens/MeusChamados/MeusChamadosScreen';
+import { NovoChamadoScreen } from '@/screens/NovoChamado/NovoChamadoScreen';
+import { ProfileScreen } from '@/screens/Profile/ProfileScreen';
+import { RadarBairroScreen } from '@/screens/RadarBairro/RadarBairroScreen';
+import { fontSize, fontWeight } from '@/theme';
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+const Tab = createBottomTabNavigator<AppTabParamList>();
 
 export const TabNavigator: React.FC = () => {
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 60 + Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+
   return (
     <Tab.Navigator
-      initialRouteName="HomeTab"
-      screenOptions={({ route }) => ({
+      screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary[600],
-        tabBarInactiveTintColor: colors.secondary[400],
-        tabBarStyle: styles.tabBar,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          switch (route.name) {
-            case 'HomeTab':
-              iconName = focused ? 'home' : 'home-outline';
-              break;
-            case 'RadarTab':
-              iconName = focused ? 'flame' : 'flame-outline';
-              break;
-            case 'MeusChamadosTab':
-              iconName = focused ? 'document-text' : 'document-text-outline';
-              break;
-            case 'ProfileTab':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
-            default:
-              iconName = 'cube-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
+        tabBarActiveTintColor: theme.tabBarActive,
+        tabBarInactiveTintColor: theme.tabBarInactive,
+        tabBarLabelStyle: { fontSize: fontSize.tiny, fontWeight: fontWeight.semibold, marginBottom: 4 },
+        tabBarStyle: {
+          backgroundColor: theme.tabBarBg,
+          borderTopColor: theme.tabBarBorder,
+          borderTopWidth: 1,
+          height: tabBarHeight,
+          paddingTop: 6,
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8),
         },
-      })}
+      }}
     >
       <Tab.Screen
         name="HomeTab"
         component={HomeScreen}
         options={{
-          tabBarLabel: 'Início',
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
-        name="RadarTab"
+        name="RadarBairroTab"
         component={RadarBairroScreen}
         options={{
-          tabBarLabel: 'Demandas',
+          title: 'Radar',
+          tabBarIcon: ({ color, size }) => <Ionicons name="compass-outline" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="NovoChamadoTab"
+        component={NovoChamadoScreen}
+        options={{
+          title: 'Reportar',
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: focused ? theme.primaryDark : theme.primary,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 8,
+              }}
+            >
+              <Ionicons name="add" size={26} color={theme.inverseText} />
+            </View>
+          ),
         }}
       />
       <Tab.Screen
         name="MeusChamadosTab"
         component={MeusChamadosScreen}
         options={{
-          tabBarLabel: 'Meus Relatos',
+          title: 'Meus',
+          tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
         name="ProfileTab"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Perfil',
+          title: 'Perfil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    height: Platform.OS === 'ios' ? 88 : 64,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-    paddingTop: 8,
-    elevation: 8,
-  },
-  tabBarLabel: {
-    fontSize: fontSize.tiny,
-    fontWeight: fontWeight.semibold,
-  },
-});

@@ -1,68 +1,83 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../hooks/useAuth';
-import { AuthNavigator } from './AuthNavigator';
-import { AppNavigator } from './AppNavigator';
-import { colors, fontSize, fontWeight } from '../theme';
+import { useAuth } from '@/contexts/AuthContext';
+import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { AuthNavigator } from '@/navigation/AuthNavigator';
+import { AppNavigator } from '@/navigation/AppNavigator';
+import { fontSize, fontWeight } from '@/theme';
 
 export const NavigationRouter: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
 
-  // Tela de Inicialização / Splash enquanto recupera a sessão do storage
+  const navigationTheme = useMemo(() => {
+    const base = theme.isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      dark: theme.isDark,
+      colors: {
+        ...base.colors,
+        primary: theme.primary,
+        background: theme.background,
+        card: theme.surface,
+        text: theme.text,
+        border: theme.border,
+        notification: theme.primary,
+      },
+    };
+  }, [theme]);
+
   if (isLoading) {
     return (
       <View style={styles.splashContainer}>
         <View style={styles.logoBadge}>
-          <Ionicons name="leaf" size={48} color={colors.surface} />
+          <Ionicons name="leaf" size={48} color={theme.inverseText} />
         </View>
         <Text style={styles.splashTitle}>ZelaFix</Text>
         <Text style={styles.splashSubtitle}>Zeladoria Urbana Colaborativa</Text>
-        <ActivityIndicator
-          size="small"
-          color={colors.primary[600]}
-          style={styles.spinner}
-        />
+        <ActivityIndicator size="small" color={theme.primary} style={styles.spinner} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       {isAuthenticated ? <AppNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };
 
-const styles = StyleSheet.create({
-  splashContainer: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoBadge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary[600],
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  splashTitle: {
-    fontSize: fontSize.display,
-    fontWeight: fontWeight.extrabold,
-    color: colors.secondary[900],
-  },
-  splashSubtitle: {
-    fontSize: fontSize.bodySmall,
-    color: colors.secondary[500],
-    marginTop: 4,
-  },
-  spinner: {
-    marginTop: 24,
-  },
-});
-
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    splashContainer: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    logoBadge: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    splashTitle: {
+      fontSize: fontSize.display,
+      fontWeight: fontWeight.extrabold,
+      color: theme.text,
+    },
+    splashSubtitle: {
+      fontSize: fontSize.bodySmall,
+      color: theme.textSecondary,
+      marginTop: 4,
+    },
+    spinner: {
+      marginTop: 24,
+    },
+  });

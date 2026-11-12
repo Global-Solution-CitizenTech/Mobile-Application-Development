@@ -1,24 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './src/lib/queryClient';
-import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
-import { AuthProvider } from './src/contexts/AuthContext';
-import { NavigationRouter } from './src/navigation';
-
-const AppStatusBar: React.FC = () => {
-  const { isDark } = useTheme();
-  return <StatusBar style={isDark ? 'light' : 'dark'} />;
-};
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { bindReactNativeQueryLifecycle, queryClient } from '@/lib/queryClient';
+import { NavigationRouter } from '@/navigation/index';
 
 export default function App() {
+  useEffect(() => {
+    return bindReactNativeQueryLifecycle();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <AppStatusBar />
           <AuthProvider>
+            <StatusBar style="auto" />
             <NavigationRouter />
           </AuthProvider>
         </ThemeProvider>

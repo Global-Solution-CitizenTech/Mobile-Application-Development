@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, spacing, fontSize, fontWeight } from '../../theme';
+import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { spacing, fontSize, fontWeight } from '@/theme';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -13,33 +14,37 @@ interface LoadingSpinnerProps {
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message,
   size = 'large',
-  color = colors.primary[600],
+  color,
   fullScreen = false,
   style,
 }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={[styles.container, fullScreen && styles.fullScreen, style]}>
-      <ActivityIndicator size={size} color={color} />
+      <ActivityIndicator size={size} color={color || theme.primary} />
       {message && <Text style={styles.message}>{message}</Text>}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  fullScreen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  message: {
-    marginTop: spacing.sm,
-    fontSize: fontSize.bodySmall,
-    fontWeight: fontWeight.medium,
-    color: colors.secondary[600],
-    textAlign: 'center',
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    fullScreen: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
+    message: {
+      marginTop: spacing.sm,
+      fontSize: fontSize.bodySmall,
+      fontWeight: fontWeight.medium,
+      color: theme.textSecondary,
+      textAlign: 'center',
+    },
+  });

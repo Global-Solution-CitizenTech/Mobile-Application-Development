@@ -1,9 +1,4 @@
-/**
- * Tipagens das Rotas e Parâmetros de Navegação
- * React Navigation + TypeScript
- */
-
-import { NavigatorScreenParams } from '@react-navigation/native';
+import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -11,24 +6,18 @@ export type AuthStackParamList = {
   Register: undefined;
 };
 
-export type MainTabParamList = {
+export type AppTabParamList = {
   HomeTab: undefined;
-  RadarTab: undefined;
+  RadarBairroTab: { categoria?: string } | undefined;
+  NovoChamadoTab: undefined;
   MeusChamadosTab: undefined;
   ProfileTab: undefined;
 };
 
-export type RootStackParamList = {
-  Auth: NavigatorScreenParams<AuthStackParamList>;
-  Main: NavigatorScreenParams<MainTabParamList>;
-  ChamadoDetails: { id: string };
-  EditarChamado: { id: string };
-  NovoChamado: undefined;
+export type AppStackParamList = {
+  MainTabs: NavigatorScreenParams<AppTabParamList>;
+  ChamadoDetails: { id: number };
+  EditarChamado: { id: number };
+  ZelaBot: { chamadoId?: number } | undefined;
   SobreApp: undefined;
 };
-
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
-}

@@ -1,15 +1,7 @@
-import React from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  ViewStyle,
-  TextStyle,
-  TouchableOpacityProps,
-  View,
-} from 'react-native';
-import { colors, borderRadius, spacing, fontSize, fontWeight } from '../../theme';
+import React, { useMemo } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, TouchableOpacityProps, View } from 'react-native';
+import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, spacing, fontSize, fontWeight } from '@/theme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -25,6 +17,21 @@ export interface ButtonProps extends TouchableOpacityProps {
   textStyle?: TextStyle;
 }
 
+const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; fontSize: number }> = {
+  sm: {
+    container: { paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md },
+    fontSize: fontSize.caption,
+  },
+  md: {
+    container: { paddingVertical: spacing.sm + 4, paddingHorizontal: spacing.lg },
+    fontSize: fontSize.body,
+  },
+  lg: {
+    container: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
+    fontSize: fontSize.bodyLarge,
+  },
+};
+
 export const Button: React.FC<ButtonProps> = ({
   title,
   variant = 'primary',
@@ -37,105 +44,57 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...rest
 }) => {
-  const getContainerStyle = (): ViewStyle => {
-    let paddingVertical = spacing.sm + 4;
-    let paddingHorizontal = spacing.lg;
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
 
-    if (size === 'sm') {
-      paddingVertical = spacing.xs + 2;
-      paddingHorizontal = spacing.md;
-    } else if (size === 'lg') {
-      paddingVertical = spacing.md;
-      paddingHorizontal = spacing.xl;
-    }
+  const variantColors = useMemo<
+    Record<ButtonVariant, { bg: string; text: string; borderColor?: string }>
+  >(
+    () => ({
+      primary: { bg: theme.primary, text: theme.inverseText },
+      secondary: { bg: theme.isDark ? '#334155' : '#1E293B', text: theme.inverseText },
+      outline: { bg: 'transparent', text: theme.primary, borderColor: theme.primary },
+      danger: { bg: theme.danger, text: theme.inverseText },
+      ghost: { bg: 'transparent', text: theme.textSecondary },
+    }),
+    [theme]
+  );
 
-    let backgroundColor: string = colors.primary[600];
-    let borderWidth: number | undefined;
-    let borderColor: string | undefined;
-
-    switch (variant) {
-      case 'secondary':
-        backgroundColor = colors.secondary[800];
-        break;
-      case 'outline':
-        backgroundColor = 'transparent';
-        borderWidth = 1.5;
-        borderColor = colors.primary[600];
-        break;
-      case 'danger':
-        backgroundColor = colors.feedback.danger;
-        break;
-      case 'ghost':
-        backgroundColor = 'transparent';
-        break;
-      case 'primary':
-      default:
-        backgroundColor = colors.primary[600];
-        break;
-    }
-
-    return {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: borderRadius.md,
-      opacity: disabled || loading ? 0.6 : 1,
-      paddingVertical,
-      paddingHorizontal,
-      backgroundColor,
-      borderWidth,
-      borderColor,
-    };
-  };
-
-  const getTextStyle = (): TextStyle => {
-    let fontSizeValue = fontSize.body;
-    if (size === 'sm') {
-      fontSizeValue = fontSize.caption;
-    } else if (size === 'lg') {
-      fontSizeValue = fontSize.bodyLarge;
-    }
-
-    let color: string = colors.surface;
-    switch (variant) {
-      case 'outline':
-        color = colors.primary[600];
-        break;
-      case 'ghost':
-        color = colors.secondary[700];
-        break;
-      case 'secondary':
-      case 'danger':
-      case 'primary':
-      default:
-        color = colors.surface;
-        break;
-    }
-
-    return {
-      fontWeight: fontWeight.bold,
-      textAlign: 'center',
-      fontSize: fontSizeValue,
-      color,
-    };
-  };
-
-  const spinnerColor =
-    variant === 'outline' || variant === 'ghost' ? colors.primary[600] : colors.surface;
+  const palette = variantColors[variant];
+  const sizeSpec = SIZE_STYLES[size];
+  const isDisabled = disabled || loading;
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      style={[getContainerStyle(), style]}
-      disabled={disabled || loading}
+      style={[
+        styles.base,
+        sizeSpec.container,
+        {
+          backgroundColor: palette.bg,
+          borderWidth: palette.borderColor ? 1.5 : 0,
+          borderColor: palette.borderColor,
+          opacity: isDisabled ? 0.6 : 1,
+        },
+        style,
+      ]}
+      disabled={isDisabled}
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={spinnerColor} />
+        <ActivityIndicator size="small" color={palette.text} />
       ) : (
         <View style={styles.contentRow}>
           {leftIcon && <View style={styles.leftIconContainer}>{leftIcon}</View>}
-          <Text style={[getTextStyle(), textStyle]}>{title}</Text>
+          <Text
+            style={[
+              styles.textBase,
+              { fontSize: sizeSpec.fontSize, color: palette.text },
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
           {rightIcon && <View style={styles.rightIconContainer}>{rightIcon}</View>}
         </View>
       )}
@@ -143,16 +102,27 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  contentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  leftIconContainer: {
-    marginRight: spacing.sm,
-  },
-  rightIconContainer: {
-    marginLeft: spacing.sm,
-  },
-});
+const createStyles = (_theme: AppTheme) =>
+  StyleSheet.create({
+    base: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: borderRadius.md,
+    },
+    contentRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    textBase: {
+      fontWeight: fontWeight.bold,
+      textAlign: 'center',
+    },
+    leftIconContainer: {
+      marginRight: spacing.sm,
+    },
+    rightIconContainer: {
+      marginLeft: spacing.sm,
+    },
+  });

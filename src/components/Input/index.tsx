@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TextInputProps,
-  TouchableOpacity,
-  ViewStyle,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, TextInputProps, TouchableOpacity, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, borderRadius, spacing, fontSize, fontWeight } from '../../theme';
+import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, spacing, fontSize, fontWeight } from '@/theme';
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -32,13 +25,17 @@ export const Input: React.FC<InputProps> = ({
   containerStyle,
   inputContainerStyle,
   secureTextEntry,
+  onFocus,
+  onBlur,
   style,
   ...rest
 }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  const isSecured = isPassword && !showPassword;
+  const isSecured = isPassword ? !showPassword : secureTextEntry;
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -56,23 +53,29 @@ export const Input: React.FC<InputProps> = ({
 
         <TextInput
           style={[styles.textInput, style]}
-          placeholderTextColor={colors.text.tertiary}
+          placeholderTextColor={theme.textMuted}
           secureTextEntry={isSecured}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={(e) => {
+            setIsFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            onBlur?.(e);
+          }}
           {...rest}
         />
 
         {isPassword && (
           <TouchableOpacity
             style={styles.rightIcon}
-            onPress={() => setShowPassword(!showPassword)}
+            onPress={() => setShowPassword((prev) => !prev)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color={colors.text.tertiary}
+              color={theme.textMuted}
             />
           </TouchableOpacity>
         )}
@@ -89,58 +92,58 @@ export const Input: React.FC<InputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: fontSize.bodySmall,
-    fontWeight: fontWeight.semibold,
-    color: colors.secondary[800],
-    marginBottom: spacing.xs + 2,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1.2,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: 12,
-    minHeight: 48,
-  },
-  inputFocused: {
-    borderColor: colors.primary[600],
-    backgroundColor: colors.surface,
-  },
-  inputError: {
-    borderColor: colors.feedback.danger,
-    backgroundColor: '#FFF5F5',
-  },
-  leftIcon: {
-    marginRight: spacing.xs + 2,
-  },
-  rightIcon: {
-    marginLeft: spacing.xs + 2,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.text.primary,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: 0,
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-  },
-  errorText: {
-    fontSize: fontSize.caption,
-    color: colors.feedback.danger,
-    marginTop: spacing.xs,
-    fontWeight: fontWeight.medium,
-  },
-  helperText: {
-    fontSize: fontSize.caption,
-    color: colors.text.tertiary,
-    marginTop: spacing.xs,
-  },
-});
+const createStyles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      fontSize: fontSize.bodySmall,
+      fontWeight: fontWeight.semibold,
+      color: theme.textSecondary,
+      marginBottom: spacing.xs + 2,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.isDark ? theme.inputBg : theme.surface,
+      borderWidth: 1.2,
+      borderColor: theme.border,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: 12,
+      minHeight: 48,
+    },
+    inputFocused: {
+      borderColor: theme.primary,
+    },
+    inputError: {
+      borderColor: theme.danger,
+      backgroundColor: theme.dangerBg,
+    },
+    leftIcon: {
+      marginRight: spacing.xs + 2,
+    },
+    rightIcon: {
+      marginLeft: spacing.xs + 2,
+    },
+    textInput: {
+      flex: 1,
+      fontSize: 15,
+      color: theme.text,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: 0,
+      includeFontPadding: false,
+      textAlignVertical: 'center',
+    },
+    errorText: {
+      fontSize: fontSize.caption,
+      color: theme.danger,
+      marginTop: spacing.xs,
+      fontWeight: fontWeight.medium,
+    },
+    helperText: {
+      fontSize: fontSize.caption,
+      color: theme.textMuted,
+      marginTop: spacing.xs,
+    },
+  });

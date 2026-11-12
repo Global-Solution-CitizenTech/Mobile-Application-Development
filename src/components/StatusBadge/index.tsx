@@ -1,88 +1,42 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { StatusChamado } from '../../types';
-import { colors, borderRadius, fontSize, fontWeight } from '../../theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import { getStatusVisuals } from '@/theme/semanticConfig';
+import type { StatusChamado } from '@/types/categoria';
 
 interface StatusBadgeProps {
   status: StatusChamado;
-  size?: 'sm' | 'md';
-  style?: ViewStyle;
+  compact?: boolean;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({
-  status,
-  size = 'md',
-  style,
-}) => {
-  const getBadgeConfig = () => {
-    switch (status) {
-      case 'Aberto':
-        return {
-          bg: colors.status.aberto.bg,
-          text: colors.status.aberto.text,
-          dot: colors.status.aberto.icon,
-        };
-      case 'Em Andamento':
-        return {
-          bg: colors.status.emAndamento.bg,
-          text: colors.status.emAndamento.text,
-          dot: colors.status.emAndamento.icon,
-        };
-      case 'Resolvido':
-      default:
-        return {
-          bg: colors.status.resolvido.bg,
-          text: colors.status.resolvido.text,
-          dot: colors.status.resolvido.icon,
-        };
-    }
-  };
-
-  const config = getBadgeConfig();
-  const isSmall = size === 'sm';
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, compact = false }) => {
+  const { theme } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const visuals = getStatusVisuals(status, theme);
 
   return (
-    <View
-      style={[
-        styles.badge,
-        {
-          backgroundColor: config.bg,
-          paddingVertical: isSmall ? 3 : 5,
-          paddingHorizontal: isSmall ? 8 : 10,
-        },
-        style,
-      ]}
-    >
-      <View style={[styles.dot, { backgroundColor: config.dot }]} />
-      <Text
-        style={[
-          styles.text,
-          {
-            color: config.text,
-            fontSize: isSmall ? 11 : fontSize.caption,
-          },
-        ]}
-      >
-        {status}
-      </Text>
+    <View style={[styles.badge, { backgroundColor: visuals.bg, borderColor: visuals.border }, compact && styles.compact]}>
+      <Ionicons name={visuals.iconName} size={compact ? 12 : 14} color={visuals.icon} />
+      <Text style={[styles.text, { color: visuals.text }, compact && styles.textCompact]}>{visuals.label}</Text>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: borderRadius.full,
-    alignSelf: 'flex-start',
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 5,
-  },
-  text: {
-    fontWeight: fontWeight.semibold,
-  },
-});
+const createStyles = (_theme: AppTheme) =>
+  StyleSheet.create({
+    badge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      alignSelf: 'flex-start',
+    },
+    compact: { paddingHorizontal: spacing.sm, paddingVertical: 3 },
+    text: { fontSize: fontSize.caption, fontWeight: fontWeight.bold },
+    textCompact: { fontSize: fontSize.tiny + 1 },
+  });
