@@ -1,27 +1,28 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme, IoniconName } from '@/theme/types';
 import { spacing, fontSize, fontWeight } from '@/theme';
 
 interface EmptyStateProps {
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: IoniconName;
   title: string;
   description: string;
   actionTitle?: string;
   onAction?: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({
+export const EmptyState = ({
   icon = 'clipboard-outline',
   title,
   description,
   actionTitle,
   onAction,
   style,
-}) => {
+}: EmptyStateProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 

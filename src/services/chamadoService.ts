@@ -1,7 +1,16 @@
 import { api } from '@/services/api';
 import type { SpringPageResponse } from '@/types/api';
 import type { CategoriaResponse } from '@/types/categoria';
-import type { Chamado, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados, FiltroChamados } from '@/types/chamado';
+import type {
+  Chamado,
+  ChamadoRequest,
+  ChamadoResponse,
+  ChamadoStatusRequest,
+  ChamadoTriagemPreview,
+  ChamadoTriagemRequest,
+  EstatisticasChamados,
+} from '@/types/chamado';
+import type { FiltroChamados } from '@/types/filters';
 import { mapChamadoResponse } from '@/utils/chamadoMappers';
 
 export const chamadoService = {
@@ -31,6 +40,13 @@ export const chamadoService = {
   async criar(payload: ChamadoRequest): Promise<Chamado> {
     const { data } = await api.post<ChamadoResponse>('/chamados', payload);
     return mapChamadoResponse(data);
+  },
+
+  async analisarTriagemIa(payload: ChamadoTriagemRequest): Promise<ChamadoTriagemPreview> {
+    const { data } = await api.post<ChamadoTriagemPreview>('/chamados/triagem', payload, {
+      timeout: 35000,
+    });
+    return data;
   },
 
   async atualizar(id: number, payload: ChamadoRequest): Promise<Chamado> {

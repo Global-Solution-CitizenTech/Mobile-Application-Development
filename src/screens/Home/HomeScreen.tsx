@@ -1,28 +1,22 @@
-import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { type CompositeNavigationProp, useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
+import { FeedbackModal } from '@/components/FeedbackModal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useHomeData } from '@/hooks/useHomeData';
-import type { AppStackParamList, AppTabParamList } from '@/navigation/types';
+import type { HomeTabNavigationProp } from '@/navigation/types';
 import { HomeCategoryList } from '@/screens/Home/components/HomeCategoryList';
 import { HomePanoramaCard } from '@/screens/Home/components/HomePanoramaCard';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 import { getFirstName } from '@/utils/formatters';
 
-type HomeNavProp = CompositeNavigationProp<
-  BottomTabNavigationProp<AppTabParamList, 'HomeTab'>,
-  NativeStackNavigationProp<AppStackParamList>
->;
-
-export const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<HomeNavProp>();
+export const HomeScreen = () => {
+  const navigation = useNavigation<HomeTabNavigationProp>();
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
@@ -38,62 +32,92 @@ export const HomeScreen: React.FC = () => {
     error,
     onRefresh,
     apoiarChamado,
+    supportError,
+    clearSupportError,
   } = useHomeData();
 
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, spacing.md) }]}
-      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => { void onRefresh(); }} tintColor={theme.primary} />}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingTop: Math.max(insets.top, spacing.md) + spacing.xs,
+          paddingLeft: Math.max(insets.left, spacing.md),
+          paddingRight: Math.max(insets.right, spacing.md),
+          paddingBottom: spacing.xxl,
+        },
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => {
+            void onRefresh();
+          }}
+          tintColor={theme.primary}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.heroHeader}>
         <View style={styles.greetingBox}>
           <Text style={styles.greeting}>Olá, {getFirstName(usuario?.nome)}!</Text>
           <Text style={styles.subtitle}>
-            {usuario?.endereco?.bairro ? `${usuario.endereco.bairro}, ${usuario.endereco.cidade}` : 'Zeladoria urbana colaborativa'}
+            {usuario?.endereco?.bairro
+              ? `${usuario.endereco.bairro}, ${usuario.endereco.cidade}`
+              : 'Zeladoria urbana colaborativa'}
           </Text>
         </View>
-        <TouchableOpacity style={styles.reportPill} onPress={() => navigation.navigate('NovoChamadoTab')} activeOpacity={0.85}>
-          <Ionicons name="add-circle-outline" size={16} color={theme.inverseText} />
-          <Text style={styles.reportPillText}>Reportar</Text>
+        <TouchableOpacity
+          style={styles.radarPill}
+          onPress={() => navigation.navigate('RadarBairroTab')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="compass-outline" size={16} color={theme.primary} />
+          <Text style={styles.radarPillText}>Radar</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.aiCard} onPress={() => navigation.navigate('ZelaBot')} activeOpacity={0.85}>
-        <View style={styles.aiIconBox}>
-          <Ionicons name="sparkles" size={22} color={theme.primary} />
-        </View>
-        <View style={styles.aiBody}>
-          <Text style={styles.aiTitle}>ZelaBot IA • Assistente Cívico</Text>
-          <Text style={styles.aiSubtitle}>Tire dúvidas sobre prazos, órgãos e decretos de zeladoria</Text>
-        </View>
-        <Ionicons name="arrow-forward" size={18} color={theme.primary} />
-      </TouchableOpacity>
-
       {isLoading && !estatisticas ? (
-        <LoadingSpinner message="Carregando panorama da cidade..." />
+        <LoadingSpinner message="Carregando ocorrências recentes..." />
       ) : error && !estatisticas ? (
         <EmptyState
           icon="cloud-offline-outline"
           title="Falha ao carregar dados"
           description={error}
           actionTitle="Tentar Novamente"
-          onAction={() => { void onRefresh(); }}
+          onAction={() => {
+            void onRefresh();
+          }}
         />
       ) : (
         <>
-          {estatisticas && <HomePanoramaCard estatisticas={estatisticas} taxaResolucao={taxaResolucao} />}
+          {estatisticas ? <HomePanoramaCard estatisticas={estatisticas} taxaResolucao={taxaResolucao} /> : null}
 
           <HomeCategoryList
             categorias={categorias}
             onSelectCategoria={(categoria) => navigation.navigate('RadarBairroTab', { categoria })}
           />
 
+          <TouchableOpacity
+            style={styles.aiCard}
+            onPress={() => navigation.navigate('ZelaBotTab')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.aiIconBox}>
+              <Ionicons name="sparkles" size={22} color={theme.primary} />
+            </View>
+            <View style={styles.aiBody}>
+              <Text style={styles.aiTitle}>ZelaBot IA • Assistente Cívico</Text>
+              <Text style={styles.aiSubtitle}>Tire dúvidas sobre prazos, órgãos e decretos de zeladoria</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={18} color={theme.primary} />
+          </TouchableOpacity>
+
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ocorrências Recentes</Text>
+            <Text style={styles.sectionTitle}>Ocorrências Mais Recentes</Text>
             <TouchableOpacity onPress={() => navigation.navigate('RadarBairroTab')}>
-              <Text style={styles.seeAll}>Ver Radar</Text>
+              <Text style={styles.seeAll}>Abrir Radar</Text>
             </TouchableOpacity>
           </View>
 
@@ -101,9 +125,9 @@ export const HomeScreen: React.FC = () => {
             <EmptyState
               icon="megaphone-outline"
               title="Nenhuma ocorrência registrada"
-              description="Seja o primeiro cidadão a reportar uma melhoria urbana no seu bairro."
-              actionTitle="Reportar Ocorrência"
-              onAction={() => navigation.navigate('NovoChamadoTab')}
+              description="Acesse o Radar da Cidade para registrar a primeira melhoria urbana do seu bairro."
+              actionTitle="Ir para o Radar"
+              onAction={() => navigation.navigate('RadarBairroTab')}
             />
           ) : (
             <View style={styles.list}>
@@ -119,6 +143,14 @@ export const HomeScreen: React.FC = () => {
           )}
         </>
       )}
+
+      <FeedbackModal
+        visible={Boolean(supportError)}
+        type="error"
+        title="Não foi possível apoiar"
+        message={supportError ?? ''}
+        onConfirm={clearSupportError}
+      />
     </ScrollView>
   );
 };
@@ -126,21 +158,23 @@ export const HomeScreen: React.FC = () => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    content: { paddingHorizontal: spacing.md, paddingBottom: spacing.xxl, gap: spacing.md },
+    content: { gap: spacing.md },
     heroHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
     greetingBox: { flex: 1 },
     greeting: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
     subtitle: { fontSize: fontSize.bodySmall, color: theme.textSecondary, marginTop: 2 },
-    reportPill: {
+    radarPill: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      backgroundColor: theme.primary,
+      gap: 6,
+      backgroundColor: theme.primaryLight,
+      borderWidth: 1,
+      borderColor: theme.primaryBorder,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       borderRadius: borderRadius.full,
     },
-    reportPillText: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.inverseText },
+    radarPillText: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.primaryDark },
     aiCard: {
       flexDirection: 'row',
       alignItems: 'center',

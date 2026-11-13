@@ -1,84 +1,89 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { spacing, fontSize, fontWeight } from '@/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
   showBack?: boolean;
   onBack?: () => void;
-  rightAction?: React.ReactNode;
+  rightAction?: ReactNode;
   centerTitle?: boolean;
-  style?: ViewStyle;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header = ({
   title,
   subtitle,
   showBack = false,
   onBack,
   rightAction,
   centerTitle = false,
-  style,
-}) => {
+}: HeaderProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
+
+  const containerInsets = {
+    paddingTop: Math.max(insets.top, spacing.md) + spacing.xs,
+    paddingLeft: Math.max(insets.left, spacing.md),
+    paddingRight: Math.max(insets.right, spacing.md),
+  };
+
+  const backBtn = showBack && onBack ? (
+    <TouchableOpacity
+      style={styles.backButton}
+      onPress={onBack}
+      activeOpacity={0.75}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel="Voltar"
+    >
+      <Ionicons name="arrow-back" size={20} color={theme.text} />
+    </TouchableOpacity>
+  ) : null;
 
   if (centerTitle) {
     return (
-      <View style={[styles.container, style]}>
-        {showBack ? (
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={onBack}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.placeholderSide} />
-        )}
+      <View style={[styles.container, containerInsets]}>
+        {backBtn ?? <View style={styles.placeholderSide} />}
 
-        <Text style={styles.centeredTitle} numberOfLines={1}>
-          {title}
-        </Text>
+        <View style={styles.centeredWrap}>
+          <Text style={styles.centeredTitle} numberOfLines={1}>
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text style={styles.centeredSubtitle} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
 
-        {rightAction ? (
-          <View style={styles.rightAction}>{rightAction}</View>
-        ) : (
-          <View style={styles.placeholderSide} />
-        )}
+        {rightAction ? <View style={styles.rightAction}>{rightAction}</View> : <View style={styles.placeholderSide} />}
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, containerInsets]}>
       <View style={styles.leftRow}>
-        {showBack && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={onBack}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
-        )}
+        {backBtn}
         <View style={styles.titleContainer}>
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
-          {subtitle && (
+          {subtitle ? (
             <Text style={styles.subtitle} numberOfLines={1}>
               {subtitle}
             </Text>
-          )}
+          ) : null}
         </View>
       </View>
 
-      {rightAction && <View style={styles.rightAction}>{rightAction}</View>}
+      {rightAction ? <View style={styles.rightAction}>{rightAction}</View> : null}
     </View>
   );
 };
@@ -89,43 +94,53 @@ const createStyles = (theme: AppTheme) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm + 4,
-      backgroundColor: theme.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      paddingBottom: spacing.sm + 4,
+      backgroundColor: theme.background,
+      gap: spacing.sm,
     },
     leftRow: {
       flexDirection: 'row',
       alignItems: 'center',
       flex: 1,
+      gap: spacing.sm + 4,
     },
     backButton: {
-      marginRight: spacing.sm,
-      padding: 4,
-    },
-    iconBtn: {
-      padding: 4,
-      minWidth: 32,
+      width: 40,
+      height: 40,
+      borderRadius: borderRadius.md,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.sm,
     },
     placeholderSide: {
-      width: 32,
+      width: 40,
+    },
+    centeredWrap: {
+      flex: 1,
+      alignItems: 'center',
     },
     titleContainer: {
       flex: 1,
     },
     title: {
       fontSize: fontSize.title,
-      fontWeight: fontWeight.bold,
+      fontWeight: fontWeight.extrabold,
       color: theme.text,
     },
     centeredTitle: {
-      flex: 1,
-      textAlign: 'center',
       fontSize: fontSize.bodyLarge,
-      fontWeight: fontWeight.bold,
+      fontWeight: fontWeight.extrabold,
       color: theme.text,
-      marginHorizontal: spacing.xs,
+      textAlign: 'center',
+    },
+    centeredSubtitle: {
+      fontSize: fontSize.caption,
+      color: theme.textSecondary,
+      textAlign: 'center',
+      marginTop: 2,
     },
     subtitle: {
       fontSize: fontSize.caption,
@@ -133,8 +148,7 @@ const createStyles = (theme: AppTheme) =>
       marginTop: 2,
     },
     rightAction: {
-      marginLeft: spacing.sm,
-      minWidth: 32,
+      minWidth: 40,
       alignItems: 'flex-end',
     },
   });

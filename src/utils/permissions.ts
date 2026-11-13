@@ -1,34 +1,36 @@
 import type { CargoUsuario, Usuario } from '@/types/auth';
 import type { Chamado } from '@/types/chamado';
+import type { StatusChamado } from '@/types/categoria';
 
-export function isGestorOuAdmin(usuario?: Usuario | null): boolean {
-  return usuario?.cargo === 'GESTOR' || usuario?.cargo === 'ADMIN';
+function isGestor(usuario?: Usuario | null): boolean {
+  return usuario?.cargo === 'GESTOR';
 }
 
-export function isAdminUsuario(usuario?: Usuario | null): boolean {
-  return usuario?.cargo === 'ADMIN';
+function isAutorOuGestor(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
+  if (!usuario || !chamado || !canAccessMobileApp(usuario)) return false;
+  return chamado.usuarioId === usuario.id || isGestor(usuario);
+}
+
+export function canAccessMobileApp(usuario?: Usuario | null): boolean {
+  return usuario?.cargo === 'CIDADAO' || usuario?.cargo === 'GESTOR';
 }
 
 export function getCargoLabel(cargo?: CargoUsuario): string {
-  switch (cargo) {
-    case 'ADMIN':
-      return 'Administrador';
-    case 'GESTOR':
-      return 'Gestor Público';
-    default:
-      return 'Cidadão';
-  }
+  return cargo === 'GESTOR' ? 'Gestor Público' : 'Cidadão';
 }
 
 export function canEditChamado(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
-  if (!usuario || !chamado) return false;
-  return chamado.usuarioId === usuario.id || isGestorOuAdmin(usuario);
+  return isAutorOuGestor(usuario, chamado);
 }
 
 export function canChangeChamadoStatus(usuario?: Usuario | null): boolean {
-  return isGestorOuAdmin(usuario);
+  return isGestor(usuario);
 }
 
-export function canDeleteChamado(usuario?: Usuario | null): boolean {
-  return isAdminUsuario(usuario);
+export function canDeleteChamado(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
+  return isAutorOuGestor(usuario, chamado);
+}
+
+export function canSupportChamado(status: StatusChamado): boolean {
+  return status !== 'CONCLUIDO' && status !== 'REJEITADO';
 }

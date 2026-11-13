@@ -1,9 +1,9 @@
-import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { MeusChamadosTab } from '@/hooks/useMeusChamadosData';
+import { useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import type { MeusChamadosTab } from '@/types/filters';
 
 interface MeusChamadosHeaderProps {
   total: number;
@@ -20,19 +20,28 @@ const TABS: { key: MeusChamadosTab; label: string }[] = [
   { key: 'CONCLUIDOS', label: 'Finalizados' },
 ];
 
-export const MeusChamadosHeader: React.FC<MeusChamadosHeaderProps> = ({
+export const MeusChamadosHeader = ({
   total,
   abertos,
   emAndamento,
   concluidos,
   activeTab,
   onSelectTab,
-}) => {
+}: MeusChamadosHeaderProps) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: Math.max(insets.top, spacing.md) + spacing.xs,
+          paddingLeft: Math.max(insets.left, spacing.md),
+          paddingRight: Math.max(insets.right, spacing.md),
+        },
+      ]}
+    >
       <Text style={styles.title}>Meus Chamados</Text>
       <Text style={styles.subtitle}>
         {total} {total === 1 ? 'ocorrência registrada' : 'ocorrências registradas'}

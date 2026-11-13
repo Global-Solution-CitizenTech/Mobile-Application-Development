@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useChamadosList } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
-
-export type MeusChamadosTab = 'TODOS' | 'ATIVOS' | 'CONCLUIDOS';
+import type { MeusChamadosTab } from '@/types/filters';
 
 export function useMeusChamadosData() {
   const [filterTab, setFilterTab] = useState<MeusChamadosTab>('TODOS');
@@ -12,12 +11,12 @@ export function useMeusChamadosData() {
     size: 50,
     sort: 'dtAbertura,desc',
   });
-  const { apoiarChamado } = useChamadoMutations();
+  const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
 
   const contadores = useMemo(() => {
     const abertos = chamados.filter((c) => c.status === 'PENDENTE' || c.status === 'ABERTO').length;
     const emAndamento = chamados.filter((c) => c.status === 'EM_ANALISE' || c.status === 'EM_EXECUCAO').length;
-    const concluidos = chamados.filter((c) => c.status === 'CONCLUIDO').length;
+    const concluidos = chamados.filter((c) => c.status === 'CONCLUIDO' || c.status === 'REJEITADO').length;
     return { total: chamados.length, abertos, emAndamento, concluidos };
   }, [chamados]);
 
@@ -42,5 +41,7 @@ export function useMeusChamadosData() {
     error,
     refetch,
     apoiarChamado,
+    supportError,
+    clearSupportError,
   };
 }

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,17 +6,29 @@ import { useTheme } from '@/contexts/ThemeContext';
 import type { AppTabParamList } from '@/navigation/types';
 import { HomeScreen } from '@/screens/Home/HomeScreen';
 import { MeusChamadosScreen } from '@/screens/MeusChamados/MeusChamadosScreen';
-import { NovoChamadoScreen } from '@/screens/NovoChamado/NovoChamadoScreen';
 import { ProfileScreen } from '@/screens/Profile/ProfileScreen';
 import { RadarBairroScreen } from '@/screens/RadarBairro/RadarBairroScreen';
-import { fontSize, fontWeight } from '@/theme';
+import { ZelaBotScreen } from '@/screens/ZelaBot/ZelaBotScreen';
+import { fontSize, fontWeight, shadows } from '@/theme';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
-export const TabNavigator: React.FC = () => {
+const styles = StyleSheet.create({
+  centerTabIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+});
+
+export const TabNavigator = () => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const tabBarHeight = 60 + Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8);
+  const tabBarHeight = 60 + bottomInset;
 
   return (
     <Tab.Navigator
@@ -25,14 +36,19 @@ export const TabNavigator: React.FC = () => {
         headerShown: false,
         tabBarActiveTintColor: theme.tabBarActive,
         tabBarInactiveTintColor: theme.tabBarInactive,
-        tabBarLabelStyle: { fontSize: fontSize.tiny, fontWeight: fontWeight.semibold, marginBottom: 4 },
+        tabBarHideOnKeyboard: true,
+        tabBarLabelStyle: {
+          fontSize: fontSize.tiny,
+          fontWeight: fontWeight.semibold,
+          marginBottom: 4,
+        },
         tabBarStyle: {
           backgroundColor: theme.tabBarBg,
           borderTopColor: theme.tabBarBorder,
           borderTopWidth: 1,
           height: tabBarHeight,
           paddingTop: 6,
-          paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 16 : 8),
+          paddingBottom: bottomInset,
         },
       }}
     >
@@ -53,23 +69,19 @@ export const TabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="NovoChamadoTab"
-        component={NovoChamadoScreen}
+        name="ZelaBotTab"
+        component={ZelaBotScreen}
         options={{
-          title: 'Reportar',
+          title: 'ZelaBot IA',
           tabBarIcon: ({ focused }) => (
             <View
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: focused ? theme.primaryDark : theme.primary,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 8,
-              }}
+              style={[
+                styles.centerTabIcon,
+                shadows.md,
+                { backgroundColor: focused ? theme.primaryDark : theme.primary },
+              ]}
             >
-              <Ionicons name="add" size={26} color={theme.inverseText} />
+              <Ionicons name="sparkles" size={22} color={theme.inverseText} />
             </View>
           ),
         }}

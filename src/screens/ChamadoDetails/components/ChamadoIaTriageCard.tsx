@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
 import type { TriagemIa } from '@/types/chamado';
@@ -10,7 +10,7 @@ interface ChamadoIaTriageCardProps {
   triagem?: TriagemIa;
 }
 
-export const ChamadoIaTriageCard: React.FC<ChamadoIaTriageCardProps> = ({ triagem }) => {
+export const ChamadoIaTriageCard = ({ triagem }: ChamadoIaTriageCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 

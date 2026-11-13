@@ -2,7 +2,53 @@ import { z } from 'zod';
 import type { StatusChamado } from '@/types/categoria';
 import { onlyDigits, splitPhoneDigits } from '@/utils/formatters';
 
-export const STATUS_CHAMADO_VALUES = ['PENDENTE', 'ABERTO', 'EM_ANALISE', 'EM_EXECUCAO', 'CONCLUIDO', 'REJEITADO'] as const satisfies readonly StatusChamado[];
+export type FormErrors<T> = Partial<Record<keyof T, string>>;
+
+/**
+ * Converte erros de validação do Zod em um mapa plano campo -> primeira mensagem
+ * usando `z.flattenError` nativo do Zod v4.
+ */
+export function extractFieldErrors<T extends Record<string, unknown>>(error: z.ZodError<T>): FormErrors<T> {
+  const { fieldErrors } = z.flattenError(error);
+  const result: FormErrors<T> = {};
+
+  for (const [key, messages] of Object.entries(fieldErrors)) {
+    const first = Array.isArray(messages) ? messages[0] : undefined;
+    if (typeof first === 'string' && first.length > 0) {
+      result[key as keyof T] = first;
+    }
+  }
+
+  return result;
+}
+
+export const StoredUsuarioSchema = z.object({
+  id: z.number(),
+  nome: z.string(),
+  email: z.string(),
+  cargo: z.enum(['CIDADAO', 'GESTOR']),
+  ddd: z.string(),
+  numeroTelefone: z.string(),
+  endereco: z.object({
+    id: z.number(),
+    cep: z.string(),
+    numero: z.string(),
+    rua: z.string(),
+    referencia: z.string(),
+    bairro: z.string(),
+    cidade: z.string(),
+    estado: z.string(),
+  }),
+});
+
+export const RadarLocationPrefSchema = z.object({
+  userId: z.number(),
+  userCity: z.string(),
+  nivel: z.enum(['CIDADE', 'BAIRRO', 'ESTADO']),
+  valor: z.string().nullable(),
+});
+
+const STATUS_CHAMADO_VALUES = ['PENDENTE', 'ABERTO', 'EM_ANALISE', 'EM_EXECUCAO', 'CONCLUIDO', 'REJEITADO'] as const satisfies readonly StatusChamado[];
 
 const DDDS_VALIDOS = new Set([
   '11', '12', '13', '14', '15', '16', '17', '18', '19',
@@ -17,7 +63,7 @@ const DDDS_VALIDOS = new Set([
 ]);
 
 const nomeField = z.string().trim().min(3, 'Informe seu nome completo').max(100, 'Máximo de 100 caracteres');
-const emailField = z.string().trim().email('E-mail inválido').max(100, 'Máximo de 100 caracteres');
+const emailField = z.string().trim().pipe(z.email('E-mail inválido')).pipe(z.string().max(100, 'Máximo de 100 caracteres'));
 const senhaField = z.string().min(6, 'A senha deve ter no mínimo 6 caracteres').max(60, 'Máximo de 60 caracteres');
 
 const telefoneField = z
@@ -71,6 +117,11 @@ export const ChamadoFormSchema = z.object({
   descricao: z.string().trim().min(15, 'Detalhe a ocorrência (mínimo 15 caracteres)').max(1000, 'Máximo de 1000 caracteres'),
   ...enderecoFields,
   fotoBase64: z.string().optional(),
+});
+
+export const ChamadoCreateSchema = ChamadoFormSchema.extend({
+  categoriaId: z.number().int().nonnegative().optional().default(0),
+  fotoBase64: z.string().trim().min(1, 'Envie uma foto da ocorrência'),
 });
 
 export const StatusUpdateSchema = z.object({

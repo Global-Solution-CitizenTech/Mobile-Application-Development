@@ -1,54 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useColorScheme, ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '@/theme/colors';
+import type { AppTheme, ThemeContextData, ThemeMode } from '@/theme/types';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
-
-export interface AppTheme {
-  isDark: boolean;
-  background: string;
-  surface: string;
-  card: string;
-  cardSubtle: string;
-  inputBg: string;
-  text: string;
-  textSecondary: string;
-  textMuted: string;
-  inverseText: string;
-  border: string;
-  cardBorder: string;
-  divider: string;
-  overlay: string;
-  primary: string;
-  primaryLight: string;
-  primaryBorder: string;
-  primaryDark: string;
-  danger: string;
-  dangerBg: string;
-  dangerText: string;
-  dangerBorder: string;
-  warning: string;
-  warningBg: string;
-  warningText: string;
-  warningBorder: string;
-  info: string;
-  infoBg: string;
-  infoText: string;
-  infoBorder: string;
-  success: string;
-  successBg: string;
-  successText: string;
-  pillBg: string;
-  pillActiveBg: string;
-  pillActiveText: string;
-  tabBarBg: string;
-  tabBarBorder: string;
-  tabBarActive: string;
-  tabBarInactive: string;
-}
-
-export const lightTheme: AppTheme = {
+const lightTheme: AppTheme = {
   isDark: false,
   background: colors.background,
   surface: colors.surface,
@@ -89,9 +47,10 @@ export const lightTheme: AppTheme = {
   tabBarBorder: colors.border,
   tabBarActive: colors.primary[600],
   tabBarInactive: colors.secondary[400],
+  secondaryButtonBg: colors.secondary[800],
 };
 
-export const darkTheme: AppTheme = {
+const darkTheme: AppTheme = {
   isDark: true,
   background: '#0B1120',
   surface: '#162032',
@@ -132,21 +91,14 @@ export const darkTheme: AppTheme = {
   tabBarBorder: '#1E293B',
   tabBarActive: '#10B981',
   tabBarInactive: '#64748B',
+  secondaryButtonBg: '#334155',
 };
-
-interface ThemeContextData {
-  themeMode: ThemeMode;
-  isDark: boolean;
-  theme: AppTheme;
-  toggleTheme: () => void;
-  setThemeMode: (mode: ThemeMode) => void;
-}
 
 const THEME_STORAGE_KEY = '@zelafix:theme_mode';
 
-const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
+const ThemeContext = createContext<ThemeContextData | null>(null);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemColorScheme = useColorScheme();
   const [themeMode, setThemeModeState] = useState<ThemeMode>('light');
 
@@ -158,10 +110,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           setThemeModeState(salvo);
         }
       } catch {
-        // ignore
+        // Preferência local indisponível: mantém o tema padrão.
       }
     }
-    carregarTemaSalvo();
+    void carregarTemaSalvo();
   }, []);
 
   const setThemeMode = useCallback(async (mode: ThemeMode) => {
@@ -169,7 +121,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch {
-      // ignore
+      // Persistência é opcional; o tema continua aplicado na sessão.
     }
   }, []);
 
@@ -181,27 +133,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [themeMode, systemColorScheme]);
 
   const toggleTheme = useCallback(() => {
-    setThemeMode(isDark ? 'light' : 'dark');
+    void setThemeMode(isDark ? 'light' : 'dark');
   }, [isDark, setThemeMode]);
 
-  const activeTheme = useMemo(() => (isDark ? darkTheme : lightTheme), [isDark]);
+  const theme = useMemo(() => (isDark ? darkTheme : lightTheme), [isDark]);
 
-  const value = useMemo(
+  const value = useMemo<ThemeContextData>(
     () => ({
-      themeMode,
       isDark,
-      theme: activeTheme,
+      theme,
       toggleTheme,
-      setThemeMode,
     }),
-    [themeMode, isDark, activeTheme, toggleTheme, setThemeMode]
+    [isDark, theme, toggleTheme]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-export function useTheme() {
-  const context = useContext(ThemeContext);
+export function useTheme(): ThemeContextData {
+  const context = use(ThemeContext);
   if (!context) {
     throw new Error('useTheme deve ser utilizado dentro de um ThemeProvider');
   }
@@ -211,7 +161,7 @@ export function useTheme() {
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
 /**
- * Passar preferencialmente uma função `createStyles` declarada fora do componente
+ * Recebe preferencialmente uma função `createStyles` declarada fora do componente
  * para aproveitar a memoização sem recriação a cada render.
  */
 export function useThemedStyles<T extends NamedStyles<T>>(

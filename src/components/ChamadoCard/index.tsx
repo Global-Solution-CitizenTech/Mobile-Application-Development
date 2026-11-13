@@ -1,13 +1,15 @@
-import React from 'react';
+import { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryBadge } from '@/components/CategoryBadge';
 import { StatusBadge } from '@/components/StatusBadge';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import { canSupportChamado, getPriorityVisuals } from '@/theme/semanticConfig';
+import { getPriorityVisuals } from '@/theme/semanticConfig';
 import type { Chamado } from '@/types/chamado';
 import { formatShortDate, getFirstName, getShortEndereco } from '@/utils/formatters';
+import { canSupportChamado } from '@/utils/permissions';
 
 interface ChamadoCardProps {
   chamado: Chamado;
@@ -15,11 +17,13 @@ interface ChamadoCardProps {
   onApoiar?: () => void;
 }
 
-export const ChamadoCard: React.FC<ChamadoCardProps> = ({ chamado, onPress, onApoiar }) => {
+export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
   const podeApoiar = Boolean(onApoiar) && canSupportChamado(chamado.status);
   const triagem = chamado.triagemIa ? getPriorityVisuals(chamado.triagemIa.prioridade, theme) : null;
+  const showThumbnail = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
@@ -41,7 +45,13 @@ export const ChamadoCard: React.FC<ChamadoCardProps> = ({ chamado, onPress, onAp
           </Text>
         </View>
 
-        {chamado.fotoUrl ? <Image source={{ uri: chamado.fotoUrl }} style={styles.thumbnail} /> : null}
+        {showThumbnail ? (
+          <Image
+            source={{ uri: chamado.fotoUrl }}
+            style={styles.thumbnail}
+            onError={() => setFailedFotoUrl(chamado.fotoUrl ?? null)}
+          />
+        ) : null}
       </View>
 
       <View style={styles.locationRow}>
@@ -66,10 +76,15 @@ export const ChamadoCard: React.FC<ChamadoCardProps> = ({ chamado, onPress, onAp
 
         <TouchableOpacity
           style={[styles.voteBtn, chamado.apoiadoPorMim && styles.voteBtnActive, !podeApoiar && styles.voteBtnDisabled]}
-          onPress={onApoiar}
+          onPress={(event) => {
+            event.stopPropagation();
+            onApoiar?.();
+          }}
           disabled={!podeApoiar}
           activeOpacity={0.75}
           hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={chamado.apoiadoPorMim ? 'Remover apoio da ocorrência' : 'Apoiar ocorrência'}
         >
           <Ionicons
             name={chamado.apoiadoPorMim ? 'thumbs-up' : 'thumbs-up-outline'}

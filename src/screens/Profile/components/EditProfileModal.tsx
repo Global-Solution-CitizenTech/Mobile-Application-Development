@@ -1,23 +1,22 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { spacing } from '@/theme';
 import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
-import type { ProfileEditFormData } from '@/utils/schemas';
+import type { FormErrors, ProfileEditFormData } from '@/utils/schemas';
 
 interface EditProfileModalProps {
   visible: boolean;
   onClose: () => void;
   values: ProfileEditFormData;
-  errors: Partial<Record<keyof ProfileEditFormData, string>>;
+  errors: FormErrors<ProfileEditFormData>;
   onChangeField: <K extends keyof ProfileEditFormData>(field: K, value: ProfileEditFormData[K]) => void;
   onSave: () => void;
   saving: boolean;
 }
 
-export const EditProfileModal: React.FC<EditProfileModalProps> = ({
+export const EditProfileModal = ({
   visible,
   onClose,
   values,
@@ -25,8 +24,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onChangeField,
   onSave,
   saving,
-}) => (
-  <BaseModal visible={visible} title="Editar Perfil" subtitle="Atualize seus dados cadastrais na API" onClose={onClose}>
+}: EditProfileModalProps) => (
+  <BaseModal
+    visible={visible}
+    title="Editar Perfil"
+    subtitle="Atualize seus dados cadastrais na API"
+    onClose={onClose}
+    dismissable={!saving}
+  >
     <View style={styles.form}>
       <Input
         label="Nome Completo *"
@@ -96,7 +101,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       <Input
         label="Senha Atual ou Nova Senha *"
         placeholder="Necessária para confirmar alteração (mín. 6 caracteres)"
-        secureTextEntry
+        isPassword
         value={values.senha}
         onChangeText={(text) => onChangeField('senha', text)}
         maxLength={60}

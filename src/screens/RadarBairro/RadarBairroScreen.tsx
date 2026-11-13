@@ -1,28 +1,23 @@
-import React from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { type CompositeNavigationProp, type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
+import { FeedbackModal } from '@/components/FeedbackModal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useRadarData } from '@/hooks/useRadarData';
-import type { AppStackParamList, AppTabParamList } from '@/navigation/types';
+import type { AppTabRouteProp, RadarBairroTabNavigationProp } from '@/navigation/types';
 import { RadarHeaderFilters } from '@/screens/RadarBairro/components/RadarHeaderFilters';
 import { spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 
-type NavProp = CompositeNavigationProp<
-  BottomTabNavigationProp<AppTabParamList, 'RadarBairroTab'>,
-  NativeStackNavigationProp<AppStackParamList>
->;
-type RadarRoute = RouteProp<AppTabParamList, 'RadarBairroTab'>;
-
-export const RadarBairroScreen: React.FC = () => {
-  const navigation = useNavigation<NavProp>();
-  const route = useRoute<RadarRoute>();
+export const RadarBairroScreen = () => {
+  const navigation = useNavigation<RadarBairroTabNavigationProp>();
+  const route = useRoute<AppTabRouteProp<'RadarBairroTab'>>();
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
 
   const radar = useRadarData(route.params?.categoria);
 
@@ -36,11 +31,16 @@ export const RadarBairroScreen: React.FC = () => {
         onChangeCategoria={radar.setCategoriaFiltro}
         statusFiltro={radar.statusFiltro}
         onChangeStatus={radar.setStatusFiltro}
+        locationFilter={radar.locationFilter}
+        onChangeLocation={radar.setLocationFilter}
+        locationOptions={radar.locationOptions}
+        userCity={radar.userCity}
         sortBy={radar.sortBy}
         onChangeSort={radar.setSortBy}
-        totalCount={radar.totalElements}
+        totalCount={radar.totalCount}
         hasActiveFilters={radar.hasActiveFilters}
         onClearFilters={radar.limparFiltros}
+        onPressReportar={() => navigation.navigate('NovoChamado')}
       />
 
       {radar.isLoading ? (
@@ -51,7 +51,9 @@ export const RadarBairroScreen: React.FC = () => {
           title="Erro ao consultar radar"
           description={radar.error}
           actionTitle="Tentar Novamente"
-          onAction={() => { void radar.refetch(); }}
+          onAction={() => {
+            void radar.refetch();
+          }}
         />
       ) : (
         <FlatList
@@ -64,20 +66,51 @@ export const RadarBairroScreen: React.FC = () => {
               onApoiar={() => radar.apoiarChamado(item.idChamado)}
             />
           )}
-          contentContainerStyle={[styles.listContent, radar.chamados.length === 0 && styles.emptyContainer]}
+          contentContainerStyle={[
+            styles.listContent,
+            {
+              paddingLeft: Math.max(insets.left, spacing.md),
+              paddingRight: Math.max(insets.right, spacing.md),
+            },
+            radar.chamados.length === 0 && styles.emptyContainer,
+          ]}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          refreshControl={<RefreshControl refreshing={radar.isRefreshing} onRefresh={() => { void radar.refetch(); }} tintColor={theme.primary} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={radar.isRefreshing}
+              onRefresh={() => {
+                void radar.refetch();
+              }}
+              tintColor={theme.primary}
+            />
+          }
           ListEmptyComponent={
             <EmptyState
               icon="search-outline"
               title="Nenhuma ocorrência encontrada"
-              description="Tente ajustar os filtros de busca ou categoria para visualizar mais registros."
-              actionTitle={radar.hasActiveFilters ? 'Limpar Filtros' : 'Reportar Agora'}
-              onAction={() => (radar.hasActiveFilters ? radar.limparFiltros() : navigation.navigate('NovoChamadoTab'))}
+              description={
+                radar.locationFilter.valor
+                  ? `Nenhum registro encontrado para ${radar.locationFilter.valor}. Você pode ampliar os filtros ou reportar um problema agora.`
+                  : 'Tente ajustar os filtros de busca ou categoria para visualizar mais registros.'
+              }
+              actionTitle={radar.hasActiveFilters || radar.locationFilter.valor ? 'Mostrar Todas / Limpar' : 'Reportar Agora'}
+              onAction={() =>
+                radar.hasActiveFilters || radar.locationFilter.valor
+                  ? radar.limparFiltros()
+                  : navigation.navigate('NovoChamado')
+              }
             />
           }
         />
       )}
+
+      <FeedbackModal
+        visible={Boolean(radar.supportError)}
+        type="error"
+        title="Não foi possível apoiar"
+        message={radar.supportError ?? ''}
+        onConfirm={radar.clearSupportError}
+      />
     </View>
   );
 };
@@ -85,7 +118,7 @@ export const RadarBairroScreen: React.FC = () => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    listContent: { padding: spacing.md, paddingBottom: spacing.xxl },
+    listContent: { paddingTop: spacing.md, paddingBottom: spacing.xxl },
     emptyContainer: { flexGrow: 1, justifyContent: 'center' },
     separator: { height: spacing.sm + 4 },
   });

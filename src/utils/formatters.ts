@@ -1,3 +1,5 @@
+import type { EnderecoResumo } from '@/types/endereco';
+
 export function onlyDigits(value?: string | null): string {
   return (value ?? '').replace(/\D/g, '');
 }
@@ -6,7 +8,13 @@ export function formatDate(isoDate?: string | null): string {
   if (!isoDate) return '--';
   const date = new Date(isoDate);
   if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export function formatShortDate(isoDate?: string | null): string {
@@ -65,7 +73,7 @@ export function getFirstName(name?: string | null): string {
   return parts[0] || 'Cidadão';
 }
 
-export function getShortEndereco(endereco?: { bairro?: string; cidade?: string; rua?: string; referencia?: string } | null): string {
+export function getShortEndereco(endereco?: EnderecoResumo | null): string {
   if (!endereco) return 'Região não informada';
   if (endereco.bairro && endereco.cidade) return `${endereco.bairro}, ${endereco.cidade}`;
   if (endereco.bairro) return endereco.bairro;

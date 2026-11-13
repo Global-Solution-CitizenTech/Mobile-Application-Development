@@ -1,50 +1,22 @@
-import { Platform, ViewStyle } from 'react-native';
+import { Platform } from 'react-native';
+import type { ViewStyle } from 'react-native';
+import { colors } from '@/theme/colors';
 
 interface ShadowOptions {
-  color?: string;
-  offsetX?: number;
-  offsetY?: number;
-  blur?: number;
-  opacity?: number;
+  offsetY: number;
+  blur: number;
+  opacity: number;
 }
 
-function parseHexToRgb(color: string): [number, number, number] {
-  if (color.startsWith('#')) {
-    let hex = color.slice(1);
-    if (hex.length === 3) {
-      hex = hex
-        .split('')
-        .map((c) => c + c)
-        .join('');
-    }
-    if (hex.length === 6) {
-      return [
-        parseInt(hex.slice(0, 2), 16),
-        parseInt(hex.slice(2, 4), 16),
-        parseInt(hex.slice(4, 6), 16),
-      ];
-    }
-  }
-  return [15, 23, 42];
-}
-
-export function createShadow({
-  color = '#0F172A',
-  offsetX = 0,
-  offsetY = 2,
-  blur = 4,
-  opacity = 0.06,
-}: ShadowOptions = {}): ViewStyle {
-  const [r, g, b] = parseHexToRgb(color);
-
+function createShadow({ offsetY, blur, opacity }: ShadowOptions): ViewStyle {
   return (
     Platform.select<ViewStyle>({
       web: {
-        boxShadow: `${offsetX}px ${offsetY}px ${blur}px rgba(${r}, ${g}, ${b}, ${opacity})`,
-      } as ViewStyle,
+        boxShadow: `0px ${offsetY}px ${blur}px rgba(15, 23, 42, ${opacity})`,
+      },
       default: {
-        shadowColor: color,
-        shadowOffset: { width: offsetX, height: offsetY },
+        shadowColor: colors.secondary[900],
+        shadowOffset: { width: 0, height: offsetY },
         shadowOpacity: opacity,
         shadowRadius: blur,
         elevation: Math.max(1, Math.round(blur / 2)),

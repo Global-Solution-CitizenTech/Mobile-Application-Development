@@ -2,9 +2,8 @@ import { useCallback, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useChamadoDetail } from '@/hooks/useChamados';
-import { canSupportChamado } from '@/theme/semanticConfig';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { canChangeChamadoStatus, canDeleteChamado, canEditChamado } from '@/utils/permissions';
+import { canChangeChamadoStatus, canDeleteChamado, canEditChamado, canSupportChamado } from '@/utils/permissions';
 import type { StatusUpdateFormData } from '@/utils/schemas';
 
 export function useChamadoDetails(id: number) {
@@ -19,9 +18,8 @@ export function useChamadoDetails(id: number) {
   const chamado = detailQuery.chamado;
   const podeEditar = canEditChamado(usuario, chamado);
   const podeAlterarStatus = canChangeChamadoStatus(usuario);
-  const podeExcluir = canDeleteChamado(usuario);
+  const podeExcluir = canDeleteChamado(usuario, chamado);
   const podeApoiar = chamado ? canSupportChamado(chamado.status) : false;
-  const jaApoiado = chamado?.apoiadoPorMim ?? false;
 
   const handleApoiar = useCallback(() => {
     if (!chamado || !podeApoiar) return;
@@ -65,19 +63,20 @@ export function useChamadoDetails(id: number) {
     [chamado, excluirChamado]
   );
 
+  const clearActionError = useCallback(() => setActionError(null), []);
+
   return {
     chamado,
     isLoading: detailQuery.isLoading,
     isRefetching: detailQuery.isRefetching,
     fetchError: detailQuery.error,
     actionError,
-    clearActionError: () => setActionError(null),
+    clearActionError,
     refetch: detailQuery.refetch,
     podeEditar,
     podeAlterarStatus,
     podeExcluir,
     podeApoiar,
-    jaApoiado,
     isSupporting,
     isChangingStatus,
     isDeleting,

@@ -22,11 +22,30 @@ export interface RetrievedSource {
   similarity_score: number;
 }
 
+export interface AiHistoryMessage {
+  sender: 'user' | 'model';
+  text: string;
+}
+
 export interface AiChatRequest {
   pergunta: string;
   chamadoContext?: ChamadoContextPayload;
-  historico?: { sender: string; text: string }[];
+  historico?: AiHistoryMessage[];
   sessionId?: string;
+}
+
+export interface AiSessionResponse {
+  session_id: string;
+  titulo: string;
+  total_mensagens: number;
+  last_activity?: string;
+}
+
+export interface AiHistoryResponse {
+  id: number;
+  sender: string;
+  text: string;
+  timestamp?: string;
 }
 
 export interface AiChatResponse {
@@ -36,8 +55,8 @@ export interface AiChatResponse {
   acoes_recomendadas?: string[];
   origem_resposta: string;
   sessionId?: string;
-  sources_used: RetrievedSource[];
-  rag_grounded: boolean;
+  sources_used?: RetrievedSource[];
+  rag_grounded?: boolean;
 }
 
 export interface AiMessage {

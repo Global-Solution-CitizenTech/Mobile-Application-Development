@@ -1,22 +1,25 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { type NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { ChamadoFormFields } from '@/components/ChamadoFormFields';
 import { EmptyState } from '@/components/EmptyState';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { Header } from '@/components/Header';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { useChamadoForm } from '@/hooks/useChamadoForm';
 import type { AppStackParamList } from '@/navigation/types';
-import { CategoryGridSelector } from '@/screens/NovoChamado/components/CategoryGridSelector';
+import { CategoryGridSelector } from '@/components/CategoryGridSelector';
 import { spacing } from '@/theme';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'EditarChamado'>;
 
-export const EditarChamadoScreen: React.FC<Props> = ({ navigation, route }) => {
+export const EditarChamadoScreen = ({ navigation, route }: Props) => {
   const styles = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const { id } = route.params;
   const form = useChamadoForm({ mode: 'edit', chamadoId: id });
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -30,7 +33,18 @@ export const EditarChamadoScreen: React.FC<Props> = ({ navigation, route }) => {
       ) : form.loadError ? (
         <EmptyState icon="alert-circle-outline" title="Erro ao carregar" description={form.loadError} actionTitle="Voltar" onAction={() => navigation.goBack()} />
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingBottom: Math.max(insets.bottom, spacing.xl) + spacing.lg,
+              paddingLeft: Math.max(insets.left, spacing.md),
+              paddingRight: Math.max(insets.right, spacing.md),
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <CategoryGridSelector
             categorias={form.categorias}
             selectedCategoriaId={form.values.categoriaId}
@@ -62,7 +76,9 @@ export const EditarChamadoScreen: React.FC<Props> = ({ navigation, route }) => {
             <Button
               title="Salvar Alterações"
               loading={form.submitting}
-              onPress={() => form.submit(() => setSavedSuccess(true))}
+              onPress={() => {
+                void form.submit(() => setSavedSuccess(true));
+              }}
               style={styles.btn}
             />
           </View>

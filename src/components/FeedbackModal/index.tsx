@@ -1,9 +1,10 @@
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from '@/components/BaseModal';
-import { Button, ButtonVariant } from '@/components/Button';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { Button } from '@/components/Button';
+import type { ButtonVariant } from '@/components/Button';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme, IoniconName } from '@/theme/types';
 import { spacing, fontSize, fontWeight } from '@/theme';
 
 export type FeedbackType = 'success' | 'error' | 'warning' | 'info';
@@ -20,7 +21,27 @@ interface FeedbackModalProps {
   confirmLoading?: boolean;
 }
 
-export const FeedbackModal: React.FC<FeedbackModalProps> = ({
+interface FeedbackVisual {
+  icon: IoniconName;
+  color: string;
+  bg: string;
+  btnVariant: ButtonVariant;
+}
+
+function getFeedbackVisual(type: FeedbackType, theme: AppTheme): FeedbackVisual {
+  switch (type) {
+    case 'success':
+      return { icon: 'checkmark-circle-outline', color: theme.success, bg: theme.successBg, btnVariant: 'primary' };
+    case 'error':
+      return { icon: 'close-circle-outline', color: theme.danger, bg: theme.dangerBg, btnVariant: 'danger' };
+    case 'warning':
+      return { icon: 'alert-circle-outline', color: theme.warning, bg: theme.warningBg, btnVariant: 'secondary' };
+    default:
+      return { icon: 'information-circle-outline', color: theme.info, bg: theme.infoBg, btnVariant: 'primary' };
+  }
+}
+
+export const FeedbackModal = ({
   visible,
   type = 'info',
   title,
@@ -30,21 +51,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onConfirm,
   onCancel,
   confirmLoading = false,
-}) => {
+}: FeedbackModalProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
-
-  const visualMap: Record<
-    FeedbackType,
-    { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; btnVariant: ButtonVariant }
-  > = {
-    success: { icon: 'checkmark-circle-outline', color: theme.success, bg: theme.successBg, btnVariant: 'primary' },
-    error: { icon: 'close-circle-outline', color: theme.danger, bg: theme.dangerBg, btnVariant: 'danger' },
-    warning: { icon: 'alert-circle-outline', color: theme.warning, bg: theme.warningBg, btnVariant: 'secondary' },
-    info: { icon: 'information-circle-outline', color: theme.info, bg: theme.infoBg, btnVariant: 'primary' },
-  };
-
-  const config = visualMap[type];
+  const config = getFeedbackVisual(type, theme);
 
   return (
     <BaseModal
@@ -53,6 +63,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
       maxWidth={380}
       centered
       scrollable={false}
+      dismissable={!confirmLoading}
     >
       <View style={styles.content}>
         <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>

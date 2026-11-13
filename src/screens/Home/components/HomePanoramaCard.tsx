@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { StatCard } from '@/components/StatCard';
-import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { EstatisticasChamados } from '@/types/chamado';
 
@@ -10,7 +10,7 @@ interface HomePanoramaCardProps {
   taxaResolucao: number;
 }
 
-export const HomePanoramaCard: React.FC<HomePanoramaCardProps> = ({ estatisticas, taxaResolucao }) => {
+export const HomePanoramaCard = ({ estatisticas, taxaResolucao }: HomePanoramaCardProps) => {
   const styles = useThemedStyles(createStyles);
 
   return (

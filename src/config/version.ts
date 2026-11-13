@@ -1,32 +1,17 @@
 import Constants from 'expo-constants';
-
-export interface IntegranteGrupo {
-  nome: string;
-  rm: string;
-  turma: string;
-  funcao: string;
-  github: string;
-  linkedin: string;
-}
-
-export interface GitCommitMetadata {
-  commitHash: string;
-  shortCommitHash: string;
-  commitDate: string;
-  branch: string;
-  commitMessage: string;
-}
+import type { GitCommitMetadata, IntegranteGrupo } from '@/types/version';
 
 const dynamicGitInfo = Constants.expoConfig?.extra?.gitCommit as Partial<GitCommitMetadata> | undefined;
 
-const FALLBACK_HASH = 'aadd0280465f961ba5af44fad2da73be8909b2db';
+const FALLBACK_HASH = 'local-dev';
+const fallbackHash = dynamicGitInfo?.commitHash || FALLBACK_HASH;
 
 export const GIT_COMMIT_INFO: GitCommitMetadata = {
-  commitHash: dynamicGitInfo?.commitHash || FALLBACK_HASH,
-  shortCommitHash: dynamicGitInfo?.shortCommitHash || FALLBACK_HASH.slice(0, 7),
-  commitDate: dynamicGitInfo?.commitDate || new Date().toISOString().slice(0, 10),
+  commitHash: fallbackHash,
+  shortCommitHash: dynamicGitInfo?.shortCommitHash || fallbackHash.slice(0, 7),
+  commitDate: dynamicGitInfo?.commitDate || '',
   branch: dynamicGitInfo?.branch || 'main',
-  commitMessage: dynamicGitInfo?.commitMessage || 'Release Build FIAP GS 2026/2',
+  commitMessage: dynamicGitInfo?.commitMessage || 'Build local (metadados Git indisponíveis)',
 };
 
 export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
@@ -75,17 +60,10 @@ export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
 export const APP_VERSION_INFO = {
   appName: 'ZelaFix',
   tagline: 'Zeladoria Urbana Colaborativa & Cidades Sustentáveis (ODS 11)',
-  version: '1.0.0',
-  buildNumber: '3',
-  sprint: 'Global Solution 2026/2',
-  disciplina: 'Mobile Application Development',
-  instituicao: 'FIAP - 2TDSPG',
-  challenge: 'ZelaFix — Tecnologia com o cidadão no centro da inovação',
-  commitHash: GIT_COMMIT_INFO.commitHash,
-  shortCommitHash: GIT_COMMIT_INFO.shortCommitHash,
-  commitDate: GIT_COMMIT_INFO.commitDate,
-  branch: GIT_COMMIT_INFO.branch,
-  commitMessage: GIT_COMMIT_INFO.commitMessage,
-  target: 'EAS Build / APK Android',
-  equipe: INTEGRANTES_EQUIPE,
-} as const;
+  version: Constants.expoConfig?.version ?? '1.0.0',
+  buildNumber: String(
+    Constants.expoConfig?.android?.versionCode ??
+      Constants.expoConfig?.ios?.buildNumber ??
+      'dev'
+  ),
+};

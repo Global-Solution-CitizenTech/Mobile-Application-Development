@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "br.com.fiap.zelafix",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#064E3B",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -48,12 +48,6 @@
       "expo-secure-store"
     ],
     "extra": {
-      "gitCommit": {
-        "commitHash": "aadd0280465f961ba5af44fad2da73be8909b2db",
-        "shortCommitHash": "aadd028",
-        "branch": "main",
-        "commitMessage": "Build oficial versionCode 3 - EAS Build"
-      },
       "eas": {
         "projectId": "f330483f-855a-411e-a5eb-c544d5070ed5"
       }

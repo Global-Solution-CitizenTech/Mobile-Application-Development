@@ -8,7 +8,7 @@ export function useHomeData() {
   const statsQuery = useEstatisticasChamados();
   const recentQuery = useChamadosList({ page: 0, size: 5, sort: 'dtAbertura,desc' });
   const categoriasQuery = useCategoriasChamado();
-  const { apoiarChamado } = useChamadoMutations();
+  const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
 
   const estatisticas = statsQuery.estatisticas;
 
@@ -17,9 +17,13 @@ export function useHomeData() {
     return Math.round((estatisticas.resolvidos / estatisticas.total) * 100);
   }, [estatisticas]);
 
+  const { refetch: refetchEstatisticas } = statsQuery;
+  const { refetch: refetchRecentes } = recentQuery;
+  const { refetch: refetchCategorias } = categoriasQuery;
+
   const onRefresh = useCallback(async () => {
-    await Promise.all([statsQuery.refetch(), recentQuery.refetch(), categoriasQuery.refetch()]);
-  }, [categoriasQuery, recentQuery, statsQuery]);
+    await Promise.all([refetchEstatisticas(), refetchRecentes(), refetchCategorias()]);
+  }, [refetchCategorias, refetchEstatisticas, refetchRecentes]);
 
   return {
     usuario,
@@ -32,5 +36,7 @@ export function useHomeData() {
     error: statsQuery.error || recentQuery.error,
     onRefresh,
     apoiarChamado,
+    supportError,
+    clearSupportError,
   };
 }

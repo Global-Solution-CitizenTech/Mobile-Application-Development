@@ -1,16 +1,15 @@
 /**
- * Cliente HTTP Axios Centralizado (Padrão Challenge_Clyvo_4)
- * Configurado para integrar com o Backend Java (Spring Boot zelafix-api)
- * com injeção automática de token JWT, normalização de erros e timeout tolerante.
+ * Cliente HTTP Axios centralizado.
+ * Integra com o backend Java (Spring Boot zelafix-api), injeta o JWT
+ * automaticamente e normaliza todos os erros da API.
  */
 
-import { create as createAxios, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { storageService } from '@/services/storageService';
+import { AxiosError, create } from 'axios';
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { env } from '@/config/env';
-import { ApiErrorResponse } from '@/types/api';
+import { storageService } from '@/services/storageService';
+import type { ApiErrorResponse } from '@/types/api';
 import { normalizeHttpError } from '@/utils/apiError';
-
-export const DEFAULT_API_URL = env.apiUrl;
 
 export function createThrottledPing(
   action: () => Promise<unknown>,
@@ -21,14 +20,8 @@ export function createThrottledPing(
 
   return async (): Promise<boolean> => {
     const now = Date.now();
-
-    if (now - lastTimestamp < cooldownMs) {
-      return true;
-    }
-
-    if (inFlight) {
-      return inFlight;
-    }
+    if (now - lastTimestamp < cooldownMs) return true;
+    if (inFlight) return inFlight;
 
     inFlight = (async () => {
       try {
@@ -46,16 +39,16 @@ export function createThrottledPing(
   };
 }
 
-export const buildApiAssetUrl = (path?: string | null): string | undefined => {
+export function buildApiAssetUrl(path?: string | null): string | undefined {
   if (!path || path.trim() === '') return undefined;
   const trimmed = path.trim();
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   const base = (api.defaults.baseURL || env.apiUrl).replace(/\/+$/, '');
   const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   return `${base}${normalizedPath}`;
-};
+}
 
-export const api = createAxios({
+export const api: AxiosInstance = create({
   baseURL: env.apiUrl,
   timeout: 40000, // 40s para tolerar cold starts no Azure App Service e upload de imagens Base64
   headers: {
@@ -67,9 +60,14 @@ export const api = createAxios({
 type UnauthorizedCallback = () => void;
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
 
-export const registerUnauthorizedHandler = (callback: UnauthorizedCallback) => {
+export function registerUnauthorizedHandler(callback: UnauthorizedCallback): () => void {
   onUnauthorizedCallback = callback;
-};
+  return () => {
+    if (onUnauthorizedCallback === callback) {
+      onUnauthorizedCallback = null;
+    }
+  };
+}
 
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {

@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, ActivityIndicator, Text, StyleSheet, ViewStyle } from 'react-native';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { spacing, fontSize, fontWeight } from '@/theme';
 
 interface LoadingSpinnerProps {
@@ -8,22 +9,22 @@ interface LoadingSpinnerProps {
   size?: 'small' | 'large';
   color?: string;
   fullScreen?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+export const LoadingSpinner = ({
   message,
   size = 'large',
   color,
   fullScreen = false,
   style,
-}) => {
+}: LoadingSpinnerProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
     <View style={[styles.container, fullScreen && styles.fullScreen, style]}>
-      <ActivityIndicator size={size} color={color || theme.primary} />
+      <ActivityIndicator size={size} color={color ?? theme.primary} />
       {message && <Text style={styles.message}>{message}</Text>}
     </View>
   );

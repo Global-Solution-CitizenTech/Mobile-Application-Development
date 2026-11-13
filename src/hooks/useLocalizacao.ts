@@ -1,16 +1,7 @@
 import { useCallback, useState } from 'react';
 import * as Location from 'expo-location';
+import type { LocalizacaoCapturada } from '@/types/endereco';
 import { onlyDigits } from '@/utils/formatters';
-
-export interface LocalizacaoCapturada {
-  cep: string;
-  rua: string;
-  numero: string;
-  referencia: string;
-  bairro: string;
-  cidade: string;
-  coords: { latitude: number; longitude: number };
-}
 
 export function useLocalizacao() {
   const [capturandoGps, setCapturandoGps] = useState(false);
@@ -29,8 +20,7 @@ export function useLocalizacao() {
       }
 
       const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const { latitude, longitude } = position.coords;
-      const geocodes = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const geocodes = await Location.reverseGeocodeAsync(position.coords);
       const geo = geocodes[0];
 
       const bairro = (geo?.district || geo?.subregion || '').trim();
@@ -44,7 +34,6 @@ export function useLocalizacao() {
         referencia,
         bairro,
         cidade,
-        coords: { latitude, longitude },
       };
 
       setUltimaLocalizacao(resultado);

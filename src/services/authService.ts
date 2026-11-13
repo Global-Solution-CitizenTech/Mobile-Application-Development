@@ -1,18 +1,7 @@
 import { api } from '@/services/api';
-import type { LoginCredentials, LoginResponse, Usuario, UsuarioRequest } from '@/types/auth';
+import type { LoginCredentials, LoginResponse, Usuario, UsuarioFormInput, UsuarioRequest } from '@/types/auth';
 import { buildEnderecoRequest } from '@/utils/chamadoMappers';
 import { splitPhoneDigits } from '@/utils/formatters';
-
-export interface UsuarioFormInput {
-  nome: string;
-  email: string;
-  telefone: string;
-  cep: string;
-  rua?: string;
-  numero: string;
-  referencia: string;
-  senha: string;
-}
 
 export function buildUsuarioRequest(input: UsuarioFormInput): UsuarioRequest {
   const { ddd, numeroTelefone } = splitPhoneDigits(input.telefone);
@@ -47,7 +36,8 @@ export const authService = {
 
   async updateProfile(payload: UsuarioRequest): Promise<{ usuario: Usuario; novoToken?: string }> {
     const response = await api.put<Usuario>('/usuarios/me', payload);
-    const headerToken = response.headers['x-novo-token'];
+    const rawHeader = response.headers['x-novo-token'];
+    const headerToken = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader;
     const novoToken = typeof headerToken === 'string' && headerToken.trim() ? headerToken.trim() : undefined;
     return { usuario: response.data, novoToken };
   },

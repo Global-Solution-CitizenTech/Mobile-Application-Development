@@ -1,4 +1,5 @@
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import type { AppStateStatus } from 'react-native';
 import { QueryClient, focusManager, onlineManager } from '@tanstack/react-query';
 import * as Network from 'expo-network';
 import { normalizeHttpError } from '@/utils/apiError';
@@ -44,8 +45,7 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: true,
     },
     mutations: {
-      retry: (failureCount, error: unknown) => shouldRetry(failureCount, error, 1),
-      retryDelay: 1500,
+      retry: false,
     },
   },
 });

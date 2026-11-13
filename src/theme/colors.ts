@@ -35,58 +35,29 @@ export const colors = {
     900: '#0f172a', // Deep Slate
   },
 
-  // Cores de Status de Ocorrência
+  // Cores de Status de Ocorrência (fundos semânticos)
   status: {
-    aberto: {
-      bg: '#FEF3C7',
-      text: '#D97706',
-      border: '#FCD34D',
-      icon: '#B45309',
-    },
-    emAndamento: {
-      bg: '#EFF6FF',
-      text: '#2563EB',
-      border: '#BFDBFE',
-      icon: '#1D4ED8',
-    },
-    resolvido: {
-      bg: '#ECFDF5',
-      text: '#059669',
-      border: '#A7F3D0',
-      icon: '#047857',
-    },
+    aberto: { bg: '#FEF3C7' },
+    emAndamento: { bg: '#EFF6FF' },
+    resolvido: { bg: '#ECFDF5' },
   },
 
   // Cores de Feedback do Sistema
   feedback: {
     success: '#10B981',
-    successLight: '#D1FAE5',
     warning: '#F59E0B',
-    warningLight: '#FEF3C7',
     danger: '#EF4444',
     dangerLight: '#FEE2E2',
     info: '#3B82F6',
-    infoLight: '#DBEAFE',
   },
 
   // Neutros e Superfícies
   background: '#F8FAFC',
   surface: '#FFFFFF',
-  card: '#FFFFFF',
   border: '#E2E8F0',
   divider: '#F1F5F9',
 
-  // Textos
-  text: {
-    primary: '#0F172A',
-    secondary: '#475569',
-    tertiary: '#94A3B8',
-    inverse: '#FFFFFF',
-    disabled: '#CBD5E1',
-  },
-
   // Específicos
   overlay: 'rgba(15, 23, 42, 0.55)',
-  shadow: '#0F172A',
 };
 

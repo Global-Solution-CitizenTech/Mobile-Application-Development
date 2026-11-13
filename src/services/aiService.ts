@@ -1,11 +1,14 @@
-import { create as createAxios } from 'axios';
+import { AxiosError, create } from 'axios';
+import type { AxiosInstance } from 'axios';
 import { env } from '@/config/env';
 import { createThrottledPing } from '@/services/api';
-import type { AiChatRequest, AiChatResponse, AiChatSession, AiInsightsResponse, AiMessage, ChamadoContextPayload } from '@/types/ai';
+import type { AiChatRequest, AiChatResponse, AiChatSession, AiHistoryResponse, AiInsightsResponse, AiMessage, AiSessionResponse, ChamadoContextPayload } from '@/types/ai';
+import type { ApiErrorResponse } from '@/types/api';
 import type { Chamado } from '@/types/chamado';
+import { normalizeHttpError } from '@/utils/apiError';
 import { formatCep } from '@/utils/formatters';
 
-const aiClient = createAxios({
+const aiClient: AxiosInstance = create({
   baseURL: env.aiUrl,
   timeout: 70000,
   headers: {
@@ -14,19 +17,10 @@ const aiClient = createAxios({
   },
 });
 
-interface RawSessionItem {
-  session_id: string;
-  titulo: string;
-  total_mensagens: number;
-  last_activity?: string;
-}
-
-interface RawHistoryItem {
-  id: number;
-  sender: string;
-  text: string;
-  timestamp?: string;
-}
+aiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError<ApiErrorResponse>) => Promise.reject(normalizeHttpError(error))
+);
 
 function formatMessageTime(isoOrHHMM?: string): string {
   if (!isoOrHHMM) {
@@ -37,7 +31,7 @@ function formatMessageTime(isoOrHHMM?: string): string {
   return parsed.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-export function toChamadoContextPayload(chamado?: Chamado | null): ChamadoContextPayload | undefined {
+function toChamadoContextPayload(chamado?: Chamado | null): ChamadoContextPayload | undefined {
   if (!chamado) return undefined;
   return {
     id: chamado.idChamado,
@@ -66,10 +60,13 @@ export const aiService = {
     const payload: AiChatRequest = {
       pergunta: params.pergunta,
       chamadoContext: toChamadoContextPayload(params.chamado),
-      historico: params.historico.slice(-10).map((m) => ({
-        sender: m.sender === 'user' ? 'user' : 'model',
-        text: m.text,
-      })),
+      historico: params.historico
+        .filter((m) => !m.isError)
+        .slice(-10)
+        .map((m) => ({
+          sender: m.sender === 'user' ? 'user' : 'model',
+          text: m.text,
+        })),
       sessionId: params.sessionId,
     };
 
@@ -100,7 +97,7 @@ export const aiService = {
   },
 
   async listarSessoes(limit = 30): Promise<AiChatSession[]> {
-    const { data } = await aiClient.get<{ sessoes: RawSessionItem[] }>('/ai/sessions', { params: { limit } });
+    const { data } = await aiClient.get<{ sessoes: AiSessionResponse[] }>('/ai/sessions', { params: { limit } });
     return (data.sessoes ?? []).map((item) => ({
       sessionId: item.session_id,
       titulo: item.titulo,
@@ -110,7 +107,7 @@ export const aiService = {
   },
 
   async carregarHistorico(sessionId: string, limit = 80): Promise<AiMessage[]> {
-    const { data } = await aiClient.get<{ mensagens: RawHistoryItem[] }>('/ai/history', {
+    const { data } = await aiClient.get<{ mensagens: AiHistoryResponse[] }>('/ai/history', {
       params: { session_id: sessionId, limit },
     });
     return (data.mensagens ?? []).map((m) => ({

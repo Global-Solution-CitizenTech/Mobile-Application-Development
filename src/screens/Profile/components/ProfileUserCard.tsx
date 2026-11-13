@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { Usuario } from '@/types/auth';
 import { formatCep, formatTelefone, getInitials } from '@/utils/formatters';
@@ -11,7 +11,7 @@ interface ProfileUserCardProps {
   usuario: Usuario;
 }
 
-export const ProfileUserCard: React.FC<ProfileUserCardProps> = ({ usuario }) => {
+export const ProfileUserCard = ({ usuario }: ProfileUserCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 

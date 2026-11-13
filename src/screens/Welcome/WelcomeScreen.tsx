@@ -1,35 +1,41 @@
-import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme, IoniconName } from '@/theme/types';
 import { Button } from '@/components/Button';
 import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
-import { AuthStackParamList } from '@/navigation/types';
+import type { AuthStackParamList } from '@/navigation/types';
 
 type WelcomeNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 
-const PILARES = [
+interface Pilar {
+  icon: IoniconName;
+  titulo: string;
+  descricao: string;
+}
+
+const PILARES: Pilar[] = [
   {
-    icon: 'camera-outline' as const,
+    icon: 'camera-outline',
     titulo: 'Relato Fotográfico Rápido',
     descricao: 'Registre buracos, bueiros ou postes apagados com localização GPS automática.',
   },
   {
-    icon: 'sparkles-outline' as const,
+    icon: 'sparkles-outline',
     titulo: 'Triagem Inteligente com IA',
     descricao: 'Classificação automática de severidade e encaminhamento para o órgão competente.',
   },
   {
-    icon: 'people-outline' as const,
+    icon: 'people-outline',
     titulo: 'Priorização Comunitária',
     descricao: 'Apoie demandas dos seus vizinhos para elevar o ranking de urgência do bairro.',
   },
 ];
 
-export const WelcomeScreen: React.FC = () => {
+export const WelcomeScreen = () => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<WelcomeNavigationProp>();

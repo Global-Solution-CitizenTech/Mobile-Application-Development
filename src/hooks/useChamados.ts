@@ -1,9 +1,8 @@
-import { useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
-import type { FiltroChamados } from '@/types/chamado';
+import type { FiltroChamados } from '@/types/filters';
 import { getApiErrorMessage } from '@/utils/apiError';
 
 export function useChamadosList(filtros: FiltroChamados = {}, enabled = true) {
@@ -19,7 +18,6 @@ export function useChamadosList(filtros: FiltroChamados = {}, enabled = true) {
     chamados: query.data?.content ?? [],
     pageInfo: query.data?.page ?? null,
     isLoading: query.isLoading,
-    isFetching: query.isFetching,
     isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
     refetch: query.refetch,
@@ -28,24 +26,19 @@ export function useChamadosList(filtros: FiltroChamados = {}, enabled = true) {
 
 export function useChamadoDetail(id?: number) {
   const { usuario } = useAuth();
-  const queryClient = useQueryClient();
+
+  const hasValidId = typeof id === 'number' && id > 0;
 
   const query = useQuery({
     queryKey: queryKeys.chamados.detail(id),
-    queryFn: () => chamadoService.buscarPorId(id as number),
-    enabled: Boolean(usuario) && typeof id === 'number' && id > 0,
-  });
-
-  const prefetchChamado = useCallback(
-    (chamadoId: number) => {
-      if (!usuario) return;
-      void queryClient.prefetchQuery({
-        queryKey: queryKeys.chamados.detail(chamadoId),
-        queryFn: () => chamadoService.buscarPorId(chamadoId),
-      });
+    queryFn: () => {
+      if (!hasValidId) {
+        throw new Error('ID de chamado inválido.');
+      }
+      return chamadoService.buscarPorId(id);
     },
-    [queryClient, usuario]
-  );
+    enabled: Boolean(usuario) && hasValidId,
+  });
 
   return {
     chamado: query.data ?? null,
@@ -53,7 +46,6 @@ export function useChamadoDetail(id?: number) {
     isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
     refetch: query.refetch,
-    prefetchChamado,
   };
 }
 

@@ -1,8 +1,8 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, spacing } from '@/theme';
 import type { Chamado } from '@/types/chamado';
 
@@ -19,7 +19,7 @@ interface ChamadoActionBarProps {
   onExcluir: () => void;
 }
 
-export const ChamadoActionBar: React.FC<ChamadoActionBarProps> = ({
+export const ChamadoActionBar = ({
   chamado,
   podeApoiar,
   podeEditar,
@@ -30,9 +30,13 @@ export const ChamadoActionBar: React.FC<ChamadoActionBarProps> = ({
   onEditar,
   onAlterarStatus,
   onExcluir,
-}) => {
+}: ChamadoActionBarProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+
+  if (!podeApoiar && !podeEditar && !podeAlterarStatus && !podeExcluir) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

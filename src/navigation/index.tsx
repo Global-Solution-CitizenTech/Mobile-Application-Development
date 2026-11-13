@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
+import { Image, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { AuthNavigator } from '@/navigation/AuthNavigator';
 import { AppNavigator } from '@/navigation/AppNavigator';
 import { fontSize, fontWeight } from '@/theme';
 
-export const NavigationRouter: React.FC = () => {
+export const NavigationRouter = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -34,7 +34,11 @@ export const NavigationRouter: React.FC = () => {
     return (
       <View style={styles.splashContainer}>
         <View style={styles.logoBadge}>
-          <Ionicons name="leaf" size={48} color={theme.inverseText} />
+          <Image
+            source={require('../../assets/logo-mark.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.splashTitle}>ZelaFix</Text>
         <Text style={styles.splashSubtitle}>Zeladoria Urbana Colaborativa</Text>
@@ -67,6 +71,7 @@ const createStyles = (theme: AppTheme) =>
       justifyContent: 'center',
       marginBottom: 16,
     },
+    logoImage: { width: 36, height: 56 },
     splashTitle: {
       fontSize: fontSize.display,
       fontWeight: fontWeight.extrabold,

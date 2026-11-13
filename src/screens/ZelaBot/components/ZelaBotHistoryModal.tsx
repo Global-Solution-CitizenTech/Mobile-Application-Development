@@ -1,11 +1,11 @@
-import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import type { AiChatSession } from '@/types/ai';
 import { formatDate } from '@/utils/formatters';
@@ -15,6 +15,7 @@ interface ZelaBotHistoryModalProps {
   onClose: () => void;
   sessoes: AiChatSession[];
   loading: boolean;
+  error?: string | null;
   activeSessionId: string;
   loadingSessionId: string | null;
   onSelectSession: (sessionId: string) => void;
@@ -22,17 +23,18 @@ interface ZelaBotHistoryModalProps {
   onNewChat: () => void;
 }
 
-export const ZelaBotHistoryModal: React.FC<ZelaBotHistoryModalProps> = ({
+export const ZelaBotHistoryModal = ({
   visible,
   onClose,
   sessoes,
   loading,
+  error,
   activeSessionId,
   loadingSessionId,
   onSelectSession,
   onDeleteSession,
   onNewChat,
-}) => {
+}: ZelaBotHistoryModalProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -40,6 +42,12 @@ export const ZelaBotHistoryModal: React.FC<ZelaBotHistoryModalProps> = ({
     <BaseModal visible={visible} title="Histórico de Conversas" subtitle="Consultas salvas no servidor ZelaBot AI" onClose={onClose}>
       {loading ? (
         <LoadingSpinner message="Carregando conversas..." />
+      ) : error ? (
+        <EmptyState
+          icon="alert-circle-outline"
+          title="Erro ao carregar histórico"
+          description={error}
+        />
       ) : sessoes.length === 0 ? (
         <EmptyState
           icon="chatbubbles-outline"
@@ -71,7 +79,14 @@ export const ZelaBotHistoryModal: React.FC<ZelaBotHistoryModalProps> = ({
                 {isLoadingThis ? (
                   <ActivityIndicator size="small" color={theme.primary} />
                 ) : (
-                  <TouchableOpacity onPress={() => onDeleteSession(item.sessionId)} hitSlop={8} accessibilityLabel="Excluir conversa">
+                  <TouchableOpacity
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      onDeleteSession(item.sessionId);
+                    }}
+                    hitSlop={8}
+                    accessibilityLabel="Excluir conversa"
+                  >
                     <Ionicons name="trash-outline" size={18} color={theme.danger} />
                   </TouchableOpacity>
                 )}

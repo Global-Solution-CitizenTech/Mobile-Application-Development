@@ -1,6 +1,6 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getStatusVisuals } from '@/theme/semanticConfig';
 import type { HistoricoChamado } from '@/types/chamado';
@@ -10,7 +10,7 @@ interface ChamadoTimelineCardProps {
   historico: HistoricoChamado[];
 }
 
-export const ChamadoTimelineCard: React.FC<ChamadoTimelineCardProps> = ({ historico }) => {
+export const ChamadoTimelineCard = ({ historico }: ChamadoTimelineCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 

@@ -1,89 +1,132 @@
-import React, { useRef } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FeedbackModal } from '@/components/FeedbackModal';
 import { Header } from '@/components/Header';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { PickerTriggerButton, SelectPickerModal } from '@/components/SelectPickerModal';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useZelaBot } from '@/hooks/useZelaBot';
-import type { AppStackParamList } from '@/navigation/types';
+import type { AppTabRouteProp } from '@/navigation/types';
 import { ZelaBotHistoryModal } from '@/screens/ZelaBot/components/ZelaBotHistoryModal';
 import { ZelaBotInputBar } from '@/screens/ZelaBot/components/ZelaBotInputBar';
 import { ZelaBotInsightsBanner } from '@/screens/ZelaBot/components/ZelaBotInsightsBanner';
 import { ZelaBotMessageBubble } from '@/screens/ZelaBot/components/ZelaBotMessageBubble';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 import type { AiMessage } from '@/types/ai';
+import type { SelectPickerOption } from '@/types/filters';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'ZelaBot'>;
+const GERAL_CONTEXT_KEY = '__GERAL__';
 
-export const ZelaBotScreen: React.FC<Props> = ({ navigation, route }) => {
+export const ZelaBotScreen = () => {
+  const route = useRoute<AppTabRouteProp<'ZelaBotTab'>>();
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList<AiMessage>>(null);
+  const [contextModalVisible, setContextModalVisible] = useState(false);
 
   const bot = useZelaBot(route.params?.chamadoId);
 
+  const contextOptions = useMemo<SelectPickerOption<string>[]>(
+    () => [
+      {
+        value: GERAL_CONTEXT_KEY,
+        label: 'Consulta Geral',
+        subtitle: 'Dúvidas sobre prazos, decretos e direitos municipais',
+      },
+      ...bot.chamadosDisponiveis.map((chamado) => ({
+        value: String(chamado.idChamado),
+        label: `#${chamado.idChamado} · ${chamado.titulo}`,
+        subtitle: [chamado.categoriaNome, chamado.endereco.bairro, chamado.endereco.cidade]
+          .filter(Boolean)
+          .join(' • '),
+      })),
+    ],
+    [bot.chamadosDisponiveis]
+  );
+
+  const currentContextLabel = bot.selectedChamado
+    ? `#${bot.selectedChamado.idChamado} · ${bot.selectedChamado.titulo}`
+    : 'Consulta Geral';
+
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <Header
         title="ZelaBot IA"
-        subtitle={bot.selectedChamado ? `Contexto: #${bot.selectedChamado.idChamado}` : 'Assistente de Zeladoria Urbana'}
-        showBack
-        onBack={() => navigation.goBack()}
+        subtitle={
+          bot.selectedChamado
+            ? `Analisando chamado #${bot.selectedChamado.idChamado}`
+            : 'Assistente cívico de zeladoria urbana'
+        }
         rightAction={
           <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.headerBtn} onPress={() => bot.setHistoryModalVisible(true)} activeOpacity={0.75}>
+            <TouchableOpacity
+              style={styles.headerBtn}
+              onPress={() => bot.setHistoryModalVisible(true)}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Histórico de conversas"
+            >
               <Ionicons name="time-outline" size={18} color={theme.text} />
             </TouchableOpacity>
-            {bot.messages.length > 0 && (
-              <TouchableOpacity style={styles.headerBtn} onPress={bot.novaConversa} activeOpacity={0.75}>
+            {bot.messages.length > 0 ? (
+              <TouchableOpacity
+                style={styles.headerBtn}
+                onPress={bot.novaConversa}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel="Nova conversa"
+              >
                 <Ionicons name="add-outline" size={20} color={theme.primary} />
               </TouchableOpacity>
-            )}
+            ) : null}
           </View>
         }
       />
 
-      <View style={styles.contextStrip}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.contextScroll}>
-          <TouchableOpacity
-            style={[styles.contextChip, bot.selectedChamadoId === null && styles.contextChipActive]}
-            onPress={() => bot.selecionarChamadoContexto(null)}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="earth-outline" size={14} color={bot.selectedChamadoId === null ? theme.inverseText : theme.textSecondary} />
-            <Text style={[styles.contextChipText, bot.selectedChamadoId === null && styles.contextChipTextActive]}>
-              Consulta Geral
-            </Text>
-          </TouchableOpacity>
-
-          {bot.chamadosDisponiveis.map((chamado) => {
-            const active = bot.selectedChamadoId === chamado.idChamado;
-            return (
-              <TouchableOpacity
-                key={chamado.idChamado}
-                style={[styles.contextChip, active && styles.contextChipActive]}
-                onPress={() => bot.selecionarChamadoContexto(chamado.idChamado)}
-                activeOpacity={0.75}
-              >
-                <Text style={[styles.contextChipText, active && styles.contextChipTextActive]} numberOfLines={1}>
-                  #{chamado.idChamado} · {chamado.titulo}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+      <View
+        style={[
+          styles.contextBox,
+          {
+            paddingLeft: Math.max(insets.left, spacing.md),
+            paddingRight: Math.max(insets.right, spacing.md),
+          },
+        ]}
+      >
+        <PickerTriggerButton
+          icon={bot.selectedChamado ? 'document-text-outline' : 'earth-outline'}
+          label="Contexto selecionado"
+          valueLabel={currentContextLabel}
+          active={Boolean(bot.selectedChamado)}
+          fullWidth
+          onPress={() => setContextModalVisible(true)}
+        />
       </View>
 
-      <ZelaBotInsightsBanner bairro={bot.bairroAtivo} insights={bot.insights} loading={bot.loadingInsights} />
+      <View style={styles.insightsWrap}>
+        <ZelaBotInsightsBanner bairro={bot.bairroAtivo} insights={bot.insights} loading={bot.loadingInsights} />
+      </View>
 
       <FlatList
         ref={flatListRef}
         data={bot.messages}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ZelaBotMessageBubble message={item} />}
-        contentContainerStyle={[styles.chatContent, bot.messages.length === 0 && styles.chatContentEmpty]}
+        contentContainerStyle={[
+          styles.chatContent,
+          {
+            paddingLeft: Math.max(insets.left, spacing.md),
+            paddingRight: Math.max(insets.right, spacing.md),
+          },
+          bot.messages.length === 0 && styles.chatContentEmpty,
+        ]}
+        ItemSeparatorComponent={() => <View style={styles.msgSeparator} />}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => {
@@ -98,7 +141,7 @@ export const ZelaBotScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.heroDesc}>
               {bot.selectedChamado
                 ? `Analisando a ocorrência #${bot.selectedChamado.idChamado} (${bot.selectedChamado.categoriaNome}). Tire dúvidas sobre prazos e órgãos responsáveis.`
-                : 'Pergunte sobre prazos municipais, legislação de zeladoria urbana, encaminhamento ou selecione um chamado acima.'}
+                : 'Pergunte sobre prazos municipais, legislação de zeladoria urbana, encaminhamento ou toque em "Contexto selecionado" acima para vincular um chamado.'}
             </Text>
           </View>
         }
@@ -118,7 +161,20 @@ export const ZelaBotScreen: React.FC<Props> = ({ navigation, route }) => {
         onSend={bot.enviarPergunta}
         sugestoes={bot.sugestoesRapidas}
         disabled={bot.isSending}
-        bottomInset={insets.bottom}
+      />
+
+      <SelectPickerModal
+        visible={contextModalVisible}
+        onClose={() => setContextModalVisible(false)}
+        title="Contexto do ZelaBot"
+        subtitle="Escolha um chamado específico ou use Consulta Geral"
+        options={contextOptions}
+        selectedValue={bot.selectedChamadoId ? String(bot.selectedChamadoId) : GERAL_CONTEXT_KEY}
+        onSelect={(val) =>
+          bot.selecionarChamadoContexto(val === GERAL_CONTEXT_KEY ? null : Number(val))
+        }
+        searchable={contextOptions.length > 5}
+        searchPlaceholder="Buscar por título, protocolo ou bairro..."
       />
 
       <ZelaBotHistoryModal
@@ -126,11 +182,20 @@ export const ZelaBotScreen: React.FC<Props> = ({ navigation, route }) => {
         onClose={() => bot.setHistoryModalVisible(false)}
         sessoes={bot.sessoes}
         loading={bot.loadingSessoes}
+        error={bot.sessionsError}
         activeSessionId={bot.sessionId}
         loadingSessionId={bot.loadingSessionId}
         onSelectSession={bot.abrirSessao}
         onDeleteSession={bot.removerSessao}
         onNewChat={bot.novaConversa}
+      />
+
+      <FeedbackModal
+        visible={Boolean(bot.sessionError)}
+        type="error"
+        title="Erro na conversa"
+        message={bot.sessionError ?? ''}
+        onConfirm={bot.clearSessionError}
       />
     </KeyboardAvoidingView>
   );
@@ -138,48 +203,70 @@ export const ZelaBotScreen: React.FC<Props> = ({ navigation, route }) => {
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
-    headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-    headerBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: borderRadius.sm,
-      borderWidth: 1,
-      borderColor: theme.border,
-      backgroundColor: theme.surface,
-      alignItems: 'center',
-      justifyContent: 'center',
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
     },
-    contextStrip: { paddingVertical: spacing.xs + 2, borderBottomWidth: 1, borderBottomColor: theme.border },
-    contextScroll: { paddingHorizontal: spacing.md, gap: spacing.xs + 2 },
-    contextChip: {
+    headerActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      maxWidth: 210,
-      paddingHorizontal: spacing.sm + 4,
-      paddingVertical: spacing.xs + 2,
-      borderRadius: borderRadius.full,
-      backgroundColor: theme.surface,
+      gap: spacing.xs + 2,
+    },
+    headerBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: borderRadius.md,
       borderWidth: 1,
       borderColor: theme.border,
-    },
-    contextChipActive: { backgroundColor: theme.primary, borderColor: theme.primary },
-    contextChipText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
-    contextChipTextActive: { color: theme.inverseText },
-    chatContent: { padding: spacing.md, paddingBottom: spacing.sm },
-    chatContentEmpty: { flexGrow: 1, justifyContent: 'center' },
-    emptyHero: { alignItems: 'center', paddingHorizontal: spacing.lg, gap: spacing.sm },
-    heroIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: borderRadius.full,
-      backgroundColor: theme.primaryLight,
+      backgroundColor: theme.surface,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    heroTitle: { fontSize: fontSize.subtitle, fontWeight: fontWeight.bold, color: theme.text, textAlign: 'center' },
-    heroDesc: { fontSize: fontSize.body, color: theme.textSecondary, textAlign: 'center', lineHeight: 20 },
+    contextBox: {
+      paddingBottom: spacing.sm,
+    },
+    insightsWrap: {
+      marginBottom: spacing.xs,
+    },
+    chatContent: {
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+    },
+    chatContentEmpty: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    msgSeparator: {
+      height: spacing.xs,
+    },
+    emptyHero: {
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
+      gap: spacing.sm + 2,
+    },
+    heroIcon: {
+      width: 60,
+      height: 60,
+      borderRadius: borderRadius.full,
+      backgroundColor: theme.primaryLight,
+      borderWidth: 1,
+      borderColor: theme.primaryBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroTitle: {
+      fontSize: fontSize.title,
+      fontWeight: fontWeight.extrabold,
+      color: theme.text,
+      textAlign: 'center',
+    },
+    heroDesc: {
+      fontSize: fontSize.body,
+      color: theme.textSecondary,
+      textAlign: 'center',
+      lineHeight: 21,
+    },
     typingRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -190,7 +277,11 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: borderRadius.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm + 2,
+      marginTop: spacing.sm,
       alignSelf: 'flex-start',
     },
-    typingText: { fontSize: fontSize.bodySmall, color: theme.textSecondary },
+    typingText: {
+      fontSize: fontSize.bodySmall,
+      color: theme.textSecondary,
+    },
   });

@@ -1,6 +1,6 @@
 import { buildApiAssetUrl } from '@/services/api';
-import type { EnderecoRequest } from '@/types/auth';
 import type { Chamado, ChamadoRequest, ChamadoResponse, HistoricoChamado, TriagemIa } from '@/types/chamado';
+import type { EnderecoFormInput, EnderecoRequest } from '@/types/endereco';
 import { onlyDigits } from '@/utils/formatters';
 import type { ChamadoFormData } from '@/utils/schemas';
 
@@ -12,7 +12,17 @@ export function stripDataUriPrefix(base64?: string): string | undefined {
   return cleaned || undefined;
 }
 
-export function parseTriagemIa(historico: HistoricoChamado[]): TriagemIa | undefined {
+export function buildEnderecoRequest(input: EnderecoFormInput): EnderecoRequest {
+  const rua = input.rua?.trim().slice(0, 100);
+  return {
+    cep: onlyDigits(input.cep),
+    numero: (input.numero.trim() || 'S/N').slice(0, 100),
+    referencia: input.referencia.trim().slice(0, 50),
+    ...(rua ? { rua } : {}),
+  };
+}
+
+function parseTriagemIa(historico: HistoricoChamado[]): TriagemIa | undefined {
   for (const item of historico) {
     const match = item.observacao?.match(TRIAGEM_IA_REGEX);
     if (match) {
@@ -48,17 +58,7 @@ export function mapChamadoResponse(item: ChamadoResponse): Chamado {
 }
 
 export function getLatestParecer(chamado: Chamado): HistoricoChamado | undefined {
-  return chamado.historico.find((h) => !h.observacao?.startsWith('[Triagem IA'));
-}
-
-export function buildEnderecoRequest(input: { cep: string; numero: string; referencia: string; rua?: string }): EnderecoRequest {
-  const rua = input.rua?.trim().slice(0, 100);
-  return {
-    cep: onlyDigits(input.cep),
-    numero: (input.numero.trim() || 'S/N').slice(0, 100),
-    referencia: input.referencia.trim().slice(0, 50),
-    ...(rua ? { rua } : {}),
-  };
+  return chamado.historico.find((item) => !item.observacao?.startsWith('[Triagem IA'));
 }
 
 export function toChamadoRequest(form: ChamadoFormData): ChamadoRequest {

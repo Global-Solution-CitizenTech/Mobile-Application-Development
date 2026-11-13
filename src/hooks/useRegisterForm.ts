@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useZodForm } from '@/hooks/useZodForm';
 import { buildUsuarioRequest } from '@/services/authService';
+import type { UsuarioRequest } from '@/types/auth';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { RegisterSchema, type RegisterFormData } from '@/utils/schemas';
 
@@ -18,34 +20,35 @@ const INITIAL_REGISTER: RegisterFormData = {
 };
 
 export function useRegisterForm() {
-  const { signUp, clearError } = useAuth();
+  const { signUp } = useAuth();
   const form = useZodForm(RegisterSchema, INITIAL_REGISTER);
-  const [submitting, setSubmitting] = useState(false);
+  const { validate } = form;
   const [modalError, setModalError] = useState<string | null>(null);
+
+  const registerMutation = useMutation({
+    mutationFn: (payload: UsuarioRequest) => signUp(payload),
+    onError: (error) => {
+      setModalError(getApiErrorMessage(error, 'Não foi possível concluir o cadastro.'));
+    },
+  });
+
+  const { mutate: executeRegister, isPending } = registerMutation;
 
   const dismissError = useCallback(() => {
     setModalError(null);
-    clearError();
-  }, [clearError]);
+  }, []);
 
-  const handleRegister = useCallback(async () => {
-    const parsed = form.validate();
+  const handleRegister = useCallback(() => {
+    const parsed = validate();
     if (!parsed) return;
 
-    setSubmitting(true);
-    dismissError();
-    try {
-      await signUp(buildUsuarioRequest(parsed));
-    } catch (error) {
-      setModalError(getApiErrorMessage(error, 'Não foi possível concluir o cadastro.'));
-    } finally {
-      setSubmitting(false);
-    }
-  }, [dismissError, form, signUp]);
+    setModalError(null);
+    executeRegister(buildUsuarioRequest(parsed));
+  }, [executeRegister, validate]);
 
   return {
     ...form,
-    submitting,
+    submitting: isPending,
     modalError,
     dismissError,
     handleRegister,

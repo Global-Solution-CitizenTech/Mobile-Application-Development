@@ -1,5 +1,5 @@
-import type { EnderecoRequest, EnderecoResponse } from '@/types/auth';
 import type { StatusChamado } from '@/types/categoria';
+import type { EnderecoRequest, EnderecoResponse } from '@/types/endereco';
 
 export interface HistoricoChamado {
   id: number;
@@ -45,19 +45,24 @@ export interface ChamadoRequest {
   fotoBase64?: string;
 }
 
+export interface ChamadoTriagemRequest {
+  titulo?: string;
+  descricao?: string;
+  bairro?: string;
+  fotoBase64: string;
+}
+
+export interface ChamadoTriagemPreview {
+  categoriaId: number;
+  categoriaNome: string;
+  prioridade: string;
+  orgaoResponsavel: string;
+  parecerIa: string;
+}
+
 export interface ChamadoStatusRequest {
   status: StatusChamado;
   observacao: string;
-}
-
-export interface FiltroChamados {
-  status?: StatusChamado;
-  categoria?: string;
-  busca?: string;
-  apenasMeus?: boolean;
-  page?: number;
-  size?: number;
-  sort?: string;
 }
 
 export interface EstatisticasChamados {

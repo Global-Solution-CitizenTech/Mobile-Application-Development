@@ -1,34 +1,34 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 
 interface LoginFormProps {
   email: string;
   senha: string;
   emailError: string | null;
   senhaError: string | null;
-  error: string | null;
   isLoading: boolean;
   onEmailChange: (text: string) => void;
   onSenhaChange: (text: string) => void;
   onSubmit: () => void;
+  onGoToRegister: () => void;
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({
+export const LoginForm = ({
   email,
   senha,
   emailError,
   senhaError,
-  error,
   isLoading,
   onEmailChange,
   onSenhaChange,
   onSubmit,
-}) => {
+  onGoToRegister,
+}: LoginFormProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -36,46 +36,48 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     <View style={[styles.card, shadows.md]}>
       <Text style={styles.formTitle}>Acesse sua conta</Text>
       <Text style={styles.formDescription}>
-        Colabore para transformar nossa cidade em um espaço mais limpo, seguro e sustentável.
+        Colabore com sua comunidade e acompanhe cada ocorrência urbana em tempo real.
       </Text>
 
-      {error && (
-        <View style={styles.errorBanner}>
-          <Ionicons name="alert-circle" size={18} color={theme.danger} />
-          <Text style={styles.errorBannerText}>{error}</Text>
-        </View>
-      )}
+      <View style={styles.fieldsGap}>
+        <Input
+          label="E-mail"
+          placeholder="exemplo@zelafix.com.br"
+          value={email}
+          onChangeText={onEmailChange}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          error={emailError}
+          leftIcon={<Ionicons name="mail-outline" size={18} color={theme.textMuted} />}
+        />
 
-      <Input
-        label="E-mail"
-        placeholder="exemplo@zelafix.com.br"
-        value={email}
-        onChangeText={onEmailChange}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        error={emailError}
-        leftIcon={<Ionicons name="mail-outline" size={20} color={theme.textMuted} />}
-      />
-
-      <Input
-        label="Senha"
-        placeholder="Digite sua senha"
-        value={senha}
-        onChangeText={onSenhaChange}
-        isPassword
-        error={senhaError}
-        leftIcon={<Ionicons name="lock-closed-outline" size={20} color={theme.textMuted} />}
-      />
+        <Input
+          label="Senha"
+          placeholder="Digite sua senha"
+          value={senha}
+          onChangeText={onSenhaChange}
+          isPassword
+          error={senhaError}
+          leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.textMuted} />}
+        />
+      </View>
 
       <Button
-        title="Entrar"
+        title={isLoading ? 'Entrando…' : 'Entrar na Plataforma'}
         variant="primary"
         size="lg"
         onPress={onSubmit}
         loading={isLoading}
         style={styles.loginButton}
       />
+
+      <View style={styles.footerRow}>
+        <Text style={styles.footerText}>Ainda não tem conta?</Text>
+        <TouchableOpacity onPress={onGoToRegister} activeOpacity={0.75} hitSlop={6}>
+          <Text style={styles.footerLink}>Cadastre-se</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -84,39 +86,46 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.card,
-      borderRadius: borderRadius.lg,
-      padding: spacing.xl,
+      borderRadius: borderRadius.xl,
+      padding: spacing.lg + 4,
       borderWidth: 1,
       borderColor: theme.cardBorder,
     },
     formTitle: {
       fontSize: fontSize.title,
-      fontWeight: fontWeight.bold,
+      fontWeight: fontWeight.extrabold,
       color: theme.text,
-      marginBottom: spacing.xs,
+      marginBottom: 6,
     },
     formDescription: {
       fontSize: fontSize.bodySmall,
       color: theme.textSecondary,
-      lineHeight: 18,
+      lineHeight: 19,
       marginBottom: spacing.lg,
     },
-    errorBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      backgroundColor: theme.dangerBg,
-      padding: spacing.sm + 2,
-      borderRadius: borderRadius.sm,
-      marginBottom: spacing.md,
-    },
-    errorBannerText: {
-      fontSize: fontSize.bodySmall,
-      color: theme.dangerText,
-      flex: 1,
-      fontWeight: fontWeight.medium,
+    fieldsGap: {
+      gap: spacing.xs,
     },
     loginButton: {
       marginTop: spacing.sm,
+    },
+    footerRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginTop: spacing.lg,
+      paddingTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: theme.divider,
+    },
+    footerText: {
+      fontSize: fontSize.bodySmall,
+      color: theme.textSecondary,
+    },
+    footerLink: {
+      fontSize: fontSize.bodySmall,
+      fontWeight: fontWeight.bold,
+      color: theme.primary,
     },
   });

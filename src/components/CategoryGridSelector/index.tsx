@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getCategoryVisuals } from '@/theme/semanticConfig';
 import type { CategoriaResponse } from '@/types/categoria';
@@ -13,12 +13,12 @@ interface CategoryGridSelectorProps {
   error?: string;
 }
 
-export const CategoryGridSelector: React.FC<CategoryGridSelectorProps> = ({
+export const CategoryGridSelector = ({
   categorias,
   selectedCategoriaId,
   onSelectCategoriaId,
   error,
-}) => {
+}: CategoryGridSelectorProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -57,7 +57,7 @@ const createStyles = (theme: AppTheme) =>
     label: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.semibold, color: theme.text },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     tile: {
-      width: '48.5%',
+      width: '48%',
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,

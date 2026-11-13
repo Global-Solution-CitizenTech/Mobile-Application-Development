@@ -2,7 +2,7 @@
  * Tipografia e Escala de Fontes
  */
 
-import { TextStyle } from 'react-native';
+import type { TextStyle } from 'react-native';
 
 export const fontSize = {
   tiny: 10,
@@ -17,7 +17,10 @@ export const fontSize = {
   hero: 32,
 };
 
-export const fontWeight: Record<string, TextStyle['fontWeight']> = {
+export const fontWeight: Record<
+  'regular' | 'medium' | 'semibold' | 'bold' | 'extrabold',
+  TextStyle['fontWeight']
+> = {
   regular: '400',
   medium: '500',
   semibold: '600',

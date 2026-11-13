@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { z } from 'zod';
-
-type FormErrors<T> = Partial<Record<keyof T, string>>;
+import { extractFieldErrors, type FormErrors } from '@/utils/schemas';
 
 export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<T>, initialValues: T) {
   const [values, setValues] = useState<T>(initialValues);
@@ -16,17 +15,6 @@ export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<
       return next;
     });
   }, []);
-
-  const setFieldError = useCallback(<K extends keyof T>(field: K, message?: string) => {
-    setErrors((prev) => {
-      const next = { ...prev };
-      if (message) next[field] = message;
-      else delete next[field];
-      return next;
-    });
-  }, []);
-
-  const clearErrors = useCallback(() => setErrors({}), []);
 
   const reset = useCallback(
     (nextValues?: T) => {
@@ -43,24 +31,14 @@ export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<
       return result.data;
     }
 
-    const fieldErrors: FormErrors<T> = {};
-    for (const issue of result.error.issues) {
-      const key = issue.path[0] as keyof T | undefined;
-      if (key && !fieldErrors[key]) {
-        fieldErrors[key] = issue.message;
-      }
-    }
-    setErrors(fieldErrors);
+    setErrors(extractFieldErrors<T>(result.error));
     return null;
   }, [schema, values]);
 
   return {
     values,
     errors,
-    setValues,
     setFieldValue,
-    setFieldError,
-    clearErrors,
     reset,
     validate,
   };

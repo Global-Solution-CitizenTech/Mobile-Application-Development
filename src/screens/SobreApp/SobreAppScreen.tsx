@@ -1,13 +1,16 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Header } from '@/components/Header';
-import { TeamMembersCard } from './components/TeamMembersCard';
 import { APP_VERSION_INFO, GIT_COMMIT_INFO, INTEGRANTES_EQUIPE } from '@/config/version';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
+import type { AppStackParamList } from '@/navigation/types';
+import { TeamMembersCard } from '@/screens/SobreApp/components/TeamMembersCard';
 import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
+import { formatDate } from '@/utils/formatters';
 
 const TECH_STACK = [
   'React Native + Expo SDK 58',
@@ -21,19 +24,20 @@ const TECH_STACK = [
   'Triagem IA + Priorização',
 ];
 
-export const SobreAppScreen: React.FC = () => {
+export const SobreAppScreen = () => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'SobreApp'>>();
 
   const handleShareBuild = () => {
     void Share.share({
       message: `${APP_VERSION_INFO.appName} v${APP_VERSION_INFO.version} (${APP_VERSION_INFO.buildNumber})\nCommit: ${GIT_COMMIT_INFO.commitHash}\nBranch: ${GIT_COMMIT_INFO.branch}`,
-    });
+    }).catch(() => undefined);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <View style={styles.safeArea}>
       <Header
         title="Sobre o Aplicativo"
         showBack
@@ -41,10 +45,24 @@ export const SobreAppScreen: React.FC = () => {
         onBack={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom: Math.max(insets.bottom, spacing.xl) + spacing.lg,
+            paddingLeft: Math.max(insets.left, spacing.md),
+            paddingRight: Math.max(insets.right, spacing.md),
+          },
+        ]}
+      >
         <View style={styles.header}>
           <View style={styles.logoBadge}>
-            <Ionicons name="leaf" size={36} color={theme.inverseText} />
+            <Image
+              source={require('../../../assets/logo-mark.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.brandTitle}>{APP_VERSION_INFO.appName}</Text>
           <Text style={styles.tagline}>{APP_VERSION_INFO.tagline}</Text>
@@ -89,6 +107,15 @@ export const SobreAppScreen: React.FC = () => {
               </View>
               <Text style={styles.branchText}>Branch: {GIT_COMMIT_INFO.branch}</Text>
             </View>
+
+            <View style={styles.commitMetaBlock}>
+              <Text style={styles.commitMetaLabel}>DATA DO COMMIT</Text>
+              <Text style={styles.commitMetaValue} selectable>
+                {formatDate(GIT_COMMIT_INFO.commitDate)}
+              </Text>
+              <Text style={styles.commitMetaLabel}>MENSAGEM</Text>
+              <Text style={styles.commitMetaValue}>{GIT_COMMIT_INFO.commitMessage}</Text>
+            </View>
           </View>
         </View>
 
@@ -127,7 +154,7 @@ export const SobreAppScreen: React.FC = () => {
           FIAP Global Solution 2026/2 • Análise e Desenvolvimento de Sistemas
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -148,6 +175,7 @@ const createStyles = (theme: AppTheme) =>
       marginBottom: spacing.sm + 2,
       ...shadows.md,
     },
+    logoImage: { width: 34, height: 52 },
     brandTitle: {
       fontSize: fontSize.heading,
       fontWeight: fontWeight.extrabold,
@@ -211,6 +239,15 @@ const createStyles = (theme: AppTheme) =>
     },
     shortHashValue: { fontSize: fontSize.tiny, fontWeight: fontWeight.bold, color: theme.primaryDark },
     branchText: { fontSize: fontSize.tiny, color: theme.textMuted },
+    commitMetaBlock: {
+      marginTop: spacing.sm,
+      paddingTop: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: theme.divider,
+      gap: 2,
+    },
+    commitMetaLabel: { fontSize: 10, fontWeight: fontWeight.bold, color: theme.textMuted, letterSpacing: 0.6 },
+    commitMetaValue: { fontSize: fontSize.tiny, color: theme.text, marginBottom: spacing.xs },
     card: {
       backgroundColor: theme.card,
       borderRadius: borderRadius.lg,

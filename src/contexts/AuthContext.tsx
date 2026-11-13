@@ -1,47 +1,35 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { queryKeys } from '@/lib/queryKeys';
 import { HttpService, registerUnauthorizedHandler } from '@/services/api';
 import { authService } from '@/services/authService';
 import { storageService } from '@/services/storageService';
-import type { LoginCredentials, Usuario, UsuarioRequest } from '@/types/auth';
-import { getApiErrorMessage, getAuthErrorMessage } from '@/utils/apiError';
+import type { AuthContextData, LoginCredentials, Usuario, UsuarioRequest } from '@/types/auth';
+import { ApiError } from '@/utils/apiError';
+import { canAccessMobileApp } from '@/utils/permissions';
 
-interface AuthContextData {
-  usuario: Usuario | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  authError: string | null;
-  signIn: (credentials: LoginCredentials) => Promise<void>;
-  signUp: (data: UsuarioRequest) => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  updateProfile: (data: UsuarioRequest) => Promise<Usuario>;
-  clearError: () => void;
-}
+const ADMIN_MOBILE_BLOCKED_MESSAGE =
+  'Contas administrativas (ADMIN) não possuem acesso ao aplicativo móvel. Utilize o painel administrativo.';
 
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+const AuthContext = createContext<AuthContextData | null>(null);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  const clearError = useCallback(() => setAuthError(null), []);
 
   const signOut = useCallback(async () => {
-    await storageService.clearSession();
-    setToken(null);
+    try {
+      await storageService.clearSession();
+    } catch {
+      // O estado local deve ser limpo mesmo se o armazenamento seguro falhar.
+    }
     setUsuario(null);
-    setAuthError(null);
     queryClient.clear();
   }, []);
 
   useEffect(() => {
-    registerUnauthorizedHandler(() => {
-      setToken(null);
+    return registerUnauthorizedHandler(() => {
       setUsuario(null);
       queryClient.clear();
     });
@@ -53,7 +41,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async function bootstrap() {
       void HttpService.warmup();
       try {
-        const [storedToken, storedUser] = await Promise.all([storageService.getToken(), storageService.getUsuario()]);
+        const [storedToken, storedUser] = await Promise.all([
+          storageService.getToken(),
+          storageService.getUsuario(),
+        ]);
         if (!active) return;
 
         if (!storedToken) {
@@ -61,20 +52,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        setToken(storedToken);
         if (storedUser) {
           setUsuario(storedUser);
         }
 
         const freshUser = await authService.getMe();
         if (!active) return;
+        if (!canAccessMobileApp(freshUser)) {
+          await signOut();
+          return;
+        }
         await storageService.saveUsuario(freshUser);
         setUsuario(freshUser);
       } catch {
         if (!active) return;
         const stillHasToken = await storageService.getToken();
         if (!stillHasToken) {
-          setToken(null);
           setUsuario(null);
         }
       } finally {
@@ -86,82 +79,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       active = false;
     };
-  }, []);
+  }, [signOut]);
 
   const signIn = useCallback(async (credentials: LoginCredentials) => {
-    setAuthError(null);
-    try {
-      const response = await authService.login(credentials);
-      await storageService.saveSession(response.token, response.user);
-      setToken(response.token);
-      setUsuario(response.user);
-      queryClient.invalidateQueries();
-    } catch (error) {
-      const message = getAuthErrorMessage(error);
-      setAuthError(message);
-      throw error;
+    const response = await authService.login(credentials);
+    if (!canAccessMobileApp(response.user)) {
+      await storageService.clearSession().catch(() => undefined);
+      throw new ApiError('FORBIDDEN', ADMIN_MOBILE_BLOCKED_MESSAGE, 403);
     }
+    await storageService.saveSession(response.token, response.user);
+    setUsuario(response.user);
+    await queryClient.invalidateQueries();
   }, []);
 
   const signUp = useCallback(async (data: UsuarioRequest) => {
-    setAuthError(null);
-    try {
-      await authService.register(data);
-      const loginResponse = await authService.login({ email: data.email, senha: data.senha });
-      await storageService.saveSession(loginResponse.token, loginResponse.user);
-      setToken(loginResponse.token);
-      setUsuario(loginResponse.user);
-      queryClient.invalidateQueries();
-    } catch (error) {
-      const message = getApiErrorMessage(error, 'Não foi possível concluir o cadastro.');
-      setAuthError(message);
-      throw error;
+    await authService.register(data);
+    const loginResponse = await authService.login({ email: data.email, senha: data.senha });
+    if (!canAccessMobileApp(loginResponse.user)) {
+      await storageService.clearSession().catch(() => undefined);
+      throw new ApiError('FORBIDDEN', ADMIN_MOBILE_BLOCKED_MESSAGE, 403);
     }
+    await storageService.saveSession(loginResponse.token, loginResponse.user);
+    setUsuario(loginResponse.user);
+    await queryClient.invalidateQueries();
   }, []);
 
   const refreshProfile = useCallback(async () => {
     const freshUser = await authService.getMe();
+    if (!canAccessMobileApp(freshUser)) {
+      await signOut();
+      throw new ApiError('FORBIDDEN', ADMIN_MOBILE_BLOCKED_MESSAGE, 403);
+    }
     await storageService.saveUsuario(freshUser);
     setUsuario(freshUser);
-  }, []);
+  }, [signOut]);
 
   const updateProfile = useCallback(async (data: UsuarioRequest): Promise<Usuario> => {
     const { usuario: updated, novoToken } = await authService.updateProfile(data);
     if (novoToken) {
       await storageService.saveSession(novoToken, updated);
-      setToken(novoToken);
     } else {
       await storageService.saveUsuario(updated);
     }
     setUsuario(updated);
-    void queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.chamados.all });
     return updated;
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        usuario,
-        token,
-        isAuthenticated: Boolean(usuario && token),
-        isLoading,
-        authError,
-        signIn,
-        signUp,
-        signOut,
-        refreshProfile,
-        updateProfile,
-        clearError,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextData>(
+    () => ({
+      usuario,
+      isAuthenticated: Boolean(usuario),
+      isLoading,
+      signIn,
+      signUp,
+      signOut,
+      refreshProfile,
+      updateProfile,
+    }),
+    [isLoading, refreshProfile, signIn, signOut, signUp, updateProfile, usuario]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export function useAuth(): AuthContextData {
-  const context = useContext(AuthContext);
-  if (!context || !context.signIn) {
+  const context = use(AuthContext);
+  if (!context) {
     throw new Error('useAuth deve ser utilizado dentro de um AuthProvider');
   }
   return context;

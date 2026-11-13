@@ -1,18 +1,23 @@
-import React from 'react';
+import { useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { getInitials } from '@/utils/formatters';
 import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
-import type { IntegranteGrupo } from '@/config/version';
+import type { IntegranteGrupo } from '@/types/version';
 
 interface TeamMembersCardProps {
   integrantes: IntegranteGrupo[];
 }
 
-export const TeamMembersCard: React.FC<TeamMembersCardProps> = ({ integrantes }) => {
+export const TeamMembersCard = ({ integrantes }: TeamMembersCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+
+  const openLink = useCallback((url: string) => {
+    void Linking.openURL(url).catch(() => undefined);
+  }, []);
 
   return (
     <View style={[styles.card, shadows.sm]}>
@@ -24,8 +29,8 @@ export const TeamMembersCard: React.FC<TeamMembersCardProps> = ({ integrantes })
         Equipe de Engenharia e Desenvolvimento ZelaFix:
       </Text>
 
-      {integrantes.map((integrante, index) => (
-        <View key={integrante.rm || index} style={styles.memberItem}>
+      {integrantes.map((integrante) => (
+        <View key={integrante.rm} style={styles.memberItem}>
           <View style={styles.memberAvatar}>
             <Text style={styles.memberInitials}>{getInitials(integrante.nome)}</Text>
           </View>
@@ -40,7 +45,7 @@ export const TeamMembersCard: React.FC<TeamMembersCardProps> = ({ integrantes })
               {integrante.github ? (
                 <TouchableOpacity
                   style={styles.socialButton}
-                  onPress={() => Linking.openURL(integrante.github!)}
+                  onPress={() => openLink(integrante.github)}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="logo-github" size={14} color={theme.text} />
@@ -50,7 +55,7 @@ export const TeamMembersCard: React.FC<TeamMembersCardProps> = ({ integrantes })
               {integrante.linkedin ? (
                 <TouchableOpacity
                   style={styles.socialButton}
-                  onPress={() => Linking.openURL(integrante.linkedin!)}
+                  onPress={() => openLink(integrante.linkedin)}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="logo-linkedin" size={14} color={theme.info} />

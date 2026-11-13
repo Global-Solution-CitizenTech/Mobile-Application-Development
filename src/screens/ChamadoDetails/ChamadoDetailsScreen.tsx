@@ -1,4 +1,3 @@
-import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { type NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,7 +5,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { Header } from '@/components/Header';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { useChamadoDetails } from '@/hooks/useChamadoDetails';
 import type { AppStackParamList } from '@/navigation/types';
 import { ChamadoActionBar } from '@/screens/ChamadoDetails/components/ChamadoActionBar';
@@ -19,25 +19,26 @@ import { spacing } from '@/theme';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ChamadoDetails'>;
 
-export const ChamadoDetailsScreen: React.FC<Props> = ({ navigation, route }) => {
+export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const details = useChamadoDetails(id);
+  const chamado = details.chamado;
 
   return (
     <View style={styles.container}>
       <Header
-        title={details.chamado ? `Protocolo #${details.chamado.idChamado}` : 'Detalhes do Chamado'}
-        subtitle={details.chamado?.categoriaNome || 'Acompanhamento oficial'}
+        title={chamado ? `Protocolo #${chamado.idChamado}` : 'Detalhes do Chamado'}
+        subtitle={chamado?.categoriaNome || 'Acompanhamento oficial'}
         showBack
         onBack={() => navigation.goBack()}
       />
 
       {details.isLoading ? (
         <LoadingSpinner message="Carregando ocorrência..." />
-      ) : details.fetchError || !details.chamado ? (
+      ) : details.fetchError || !chamado ? (
         <EmptyState
           icon="alert-circle-outline"
           title="Chamado não disponível"
@@ -47,38 +48,45 @@ export const ChamadoDetailsScreen: React.FC<Props> = ({ navigation, route }) => 
         />
       ) : (
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, spacing.xl) + spacing.md }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingBottom: Math.max(insets.bottom, spacing.xl) + spacing.md,
+              paddingLeft: Math.max(insets.left, spacing.md),
+              paddingRight: Math.max(insets.right, spacing.md),
+            },
+          ]}
           refreshControl={<RefreshControl refreshing={details.isRefetching} onRefresh={() => { void details.refetch(); }} tintColor={theme.primary} />}
           showsVerticalScrollIndicator={false}
         >
           <ChamadoSummaryCard
-            chamado={details.chamado}
-            onAskAi={() => navigation.navigate('ZelaBot', { chamadoId: details.chamado!.idChamado })}
+            chamado={chamado}
+            onAskAi={() => navigation.navigate('MainTabs', { screen: 'ZelaBotTab', params: { chamadoId: chamado.idChamado } })}
           />
 
-          <ChamadoIaTriageCard triagem={details.chamado.triagemIa} />
-          <ChamadoLocationCard endereco={details.chamado.endereco} />
-          <ChamadoTimelineCard historico={details.chamado.historico} />
+          <ChamadoIaTriageCard triagem={chamado.triagemIa} />
+          <ChamadoLocationCard endereco={chamado.endereco} />
+          <ChamadoTimelineCard historico={chamado.historico} />
 
           <ChamadoActionBar
-            chamado={details.chamado}
+            chamado={chamado}
             podeApoiar={details.podeApoiar}
             podeEditar={details.podeEditar}
             podeAlterarStatus={details.podeAlterarStatus}
             podeExcluir={details.podeExcluir}
             isSupporting={details.isSupporting}
             onApoiar={details.handleApoiar}
-            onEditar={() => navigation.navigate('EditarChamado', { id: details.chamado!.idChamado })}
+            onEditar={() => navigation.navigate('EditarChamado', { id: chamado.idChamado })}
             onAlterarStatus={() => details.setStatusModalVisible(true)}
             onExcluir={() => details.setDeleteModalVisible(true)}
           />
         </ScrollView>
       )}
 
-      {details.statusModalVisible && details.chamado && (
+      {chamado && (
         <StatusChangeModal
           visible={details.statusModalVisible}
-          currentStatus={details.chamado.status}
+          currentStatus={chamado.status}
           onClose={() => details.setStatusModalVisible(false)}
           onSubmit={details.handleAlterarStatus}
           submitting={details.isChangingStatus}

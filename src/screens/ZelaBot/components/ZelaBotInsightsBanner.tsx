@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
 import type { AiInsightItem } from '@/types/ai';
@@ -12,7 +13,7 @@ interface ZelaBotInsightsBannerProps {
   loading: boolean;
 }
 
-export const ZelaBotInsightsBanner: React.FC<ZelaBotInsightsBannerProps> = ({ bairro, insights, loading }) => {
+export const ZelaBotInsightsBanner = ({ bairro, insights, loading }: ZelaBotInsightsBannerProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [expanded, setExpanded] = useState(false);
@@ -38,7 +39,7 @@ export const ZelaBotInsightsBanner: React.FC<ZelaBotInsightsBannerProps> = ({ ba
           {insights.map((item, idx) => {
             const visuals = getPriorityVisuals(item.urgencia, theme);
             return (
-              <View key={`${item.categoria}_${idx}`} style={styles.itemCard}>
+              <View key={`${idx}-${item.categoria}-${item.titulo}`} style={styles.itemCard}>
                 <View style={styles.itemTop}>
                   <Text style={styles.itemTitle}>{item.titulo}</Text>
                   <View style={[styles.badge, { backgroundColor: visuals.bg }]}>

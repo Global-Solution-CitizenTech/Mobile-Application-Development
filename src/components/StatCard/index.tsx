@@ -1,33 +1,34 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme, IoniconName } from '@/theme/types';
 import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
 
 interface StatCardProps {
   label: string;
   value: number | string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IoniconName;
   color?: string;
   bgColor?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({
+export const StatCard = ({
   label,
   value,
   icon,
   color,
   bgColor,
   style,
-}) => {
+}: StatCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
     <View style={[styles.card, shadows.sm, style]}>
-      <View style={[styles.iconContainer, { backgroundColor: bgColor || theme.primaryLight }]}>
-        <Ionicons name={icon} size={18} color={color || theme.primary} />
+      <View style={[styles.iconContainer, { backgroundColor: bgColor ?? theme.primaryLight }]}>
+        <Ionicons name={icon} size={18} color={color ?? theme.primary} />
       </View>
       <Text style={styles.value}>{value}</Text>
       <Text style={styles.label} numberOfLines={1}>

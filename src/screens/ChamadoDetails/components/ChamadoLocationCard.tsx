@@ -1,16 +1,16 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { EnderecoResponse } from '@/types/auth';
+import type { EnderecoResponse } from '@/types/endereco';
 import { formatCep } from '@/utils/formatters';
 
 interface ChamadoLocationCardProps {
   endereco: EnderecoResponse;
 }
 
-export const ChamadoLocationCard: React.FC<ChamadoLocationCardProps> = ({ endereco }) => {
+export const ChamadoLocationCard = ({ endereco }: ChamadoLocationCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 

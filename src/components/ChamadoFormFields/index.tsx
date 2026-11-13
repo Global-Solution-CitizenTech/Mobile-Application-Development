@@ -1,10 +1,11 @@
-import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Input } from '@/components/Input';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { maskCepInput } from '@/utils/formatters';
+import type { ChamadoFormData, FormErrors } from '@/utils/schemas';
 
 interface ChamadoFormFieldsProps {
   titulo: string;
@@ -19,14 +20,14 @@ interface ChamadoFormFieldsProps {
   onChangeNumero: (v: string) => void;
   referencia: string;
   onChangeReferencia: (v: string) => void;
-  errors: Record<string, string | undefined>;
+  errors: FormErrors<ChamadoFormData>;
   onUsarGps?: () => void;
   capturandoGps?: boolean;
   erroGps?: string | null;
   localizacaoResumo?: string | null;
 }
 
-export const ChamadoFormFields: React.FC<ChamadoFormFieldsProps> = ({
+export const ChamadoFormFields = ({
   titulo,
   onChangeTitulo,
   descricao,
@@ -44,7 +45,7 @@ export const ChamadoFormFields: React.FC<ChamadoFormFieldsProps> = ({
   capturandoGps,
   erroGps,
   localizacaoResumo,
-}) => {
+}: ChamadoFormFieldsProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
@@ -113,7 +114,7 @@ export const ChamadoFormFields: React.FC<ChamadoFormFieldsProps> = ({
       </View>
 
       <Input
-        label="Rua / Logradouro (Opcional — ViaCEP preenche)"
+        label="Rua / Logradouro (Opcional)"
         placeholder="Av. Paulista"
         value={rua ?? ''}
         onChangeText={onChangeRua}

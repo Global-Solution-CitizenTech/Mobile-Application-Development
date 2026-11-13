@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TextInputProps, TouchableOpacity, ViewStyle } from 'react-native';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import type { StyleProp, TextInputProps, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, spacing, fontSize, fontWeight } from '@/theme';
-
 export interface InputProps extends TextInputProps {
   label?: string;
   error?: string | null;
   helperText?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   isPassword?: boolean;
-  containerStyle?: ViewStyle;
-  inputContainerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputContainerStyle?: StyleProp<ViewStyle>;
 }
 
-export const Input: React.FC<InputProps> = ({
+export const Input = ({
   label,
   error,
   helperText,
@@ -29,7 +31,7 @@ export const Input: React.FC<InputProps> = ({
   onBlur,
   style,
   ...rest
-}) => {
+}: InputProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [showPassword, setShowPassword] = useState(false);
@@ -71,6 +73,8 @@ export const Input: React.FC<InputProps> = ({
             style={styles.rightIcon}
             onPress={() => setShowPassword((prev) => !prev)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
           >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -128,7 +132,7 @@ const createStyles = (theme: AppTheme) =>
     },
     textInput: {
       flex: 1,
-      fontSize: 15,
+      fontSize: fontSize.body,
       color: theme.text,
       paddingVertical: spacing.sm,
       paddingHorizontal: 0,

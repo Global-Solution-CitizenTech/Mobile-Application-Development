@@ -1,9 +1,10 @@
-import React from 'react';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { type AppTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { useZodForm } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { STATUS_OPTIONS } from '@/theme/semanticConfig';
@@ -18,18 +19,28 @@ interface StatusChangeModalProps {
   submitting: boolean;
 }
 
-export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
+export const StatusChangeModal = ({
   visible,
   currentStatus,
   onClose,
   onSubmit,
   submitting,
-}) => {
+}: StatusChangeModalProps) => {
   const styles = useThemedStyles(createStyles);
-  const { values, errors, setFieldValue, validate } = useZodForm(StatusUpdateSchema, {
-    status: currentStatus,
-    observacao: '',
-  });
+  const initialValues = useMemo(
+    () => ({ status: currentStatus, observacao: '' }),
+    [currentStatus]
+  );
+  const { values, errors, setFieldValue, validate, reset } = useZodForm(
+    StatusUpdateSchema,
+    initialValues
+  );
+
+  useEffect(() => {
+    if (visible) {
+      reset(initialValues);
+    }
+  }, [initialValues, reset, visible]);
 
   const handleConfirm = () => {
     const parsed = validate();
@@ -37,7 +48,13 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   };
 
   return (
-    <BaseModal visible={visible} title="Atualizar Status" subtitle="Selecione a nova situação e informe um parecer técnico" onClose={onClose}>
+    <BaseModal
+      visible={visible}
+      title="Atualizar Status"
+      subtitle="Selecione a nova situação e informe um parecer técnico"
+      onClose={onClose}
+      dismissable={!submitting}
+    >
       <View style={styles.form}>
         <Text style={styles.label}>Novo Status *</Text>
         <View style={styles.chipsWrap}>

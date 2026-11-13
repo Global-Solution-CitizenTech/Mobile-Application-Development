@@ -73,25 +73,25 @@ Mobile-Application-Development/
 │   │   ├── AuthContext.tsx           # Sessão JWT + invalidação do QueryClient + Warmup API
 │   │   └── ThemeContext.tsx          # Design tokens Light/Dark + useThemedStyles
 │   ├── hooks/
-│   │   ├── useAuth.ts                # Acesso ao contexto de autenticação
 │   │   ├── useChamadoDetails.ts      # Domain hook de detalhes, permissões e ações (Cidadão vs Gestor)
 │   │   ├── useChamadoForm.ts         # Hook unificado de criação/edição com Zod + GPS + Foto
 │   │   ├── useChamadoMutations.ts    # Mutações TanStack Query v5 + apoio otimista
 │   │   ├── useChamados.ts            # Queries e filtros de chamados/categorias
 │   │   ├── useHomeData.ts            # Domain hook da HomeScreen
 │   │   ├── useLocalizacao.ts         # GPS real e Reverse Geocoding via expo-location
-│   │   ├── useLoginForm.ts           # Formulário de login com useZodForm + useMutation
+│   │   ├── useLoginForm.ts           # Formulário de login com Zod
 │   │   ├── useMeusChamadosData.ts    # Domain hook dos chamados do autor
 │   │   ├── useProfileData.ts         # Domain hook de perfil, cargo e sessão
 │   │   ├── useRadarData.ts           # Domain hook do radar comunitário / fila de triagem do gestor
-│   │   ├── useRegisterForm.ts        # Formulário de cadastro com useZodForm + useMutation
+│   │   ├── useRegisterForm.ts        # Formulário de cadastro com Zod
+│   │   ├── useZelaBot.ts             # Chat IA ZelaBot, histórico SQLite e insights preventivos
 │   │   └── useZodForm.ts             # Hook genérico memoizado (Zero `any`) para formulários Zod
 │   ├── lib/
 │   │   ├── queryClient.ts            # Instância global do TanStack QueryClient + AppState/Network
 │   │   └── queryKeys.ts              # Fábrica tipada de Query Keys
 │   ├── navigation/
 │   │   ├── AuthNavigator.tsx         # Stack Público (Welcome, Login, Register)
-│   │   ├── AppNavigator.tsx          # Stack Autenticado (Main Tabs, Details, Novo, Editar, Sobre)
+│   │   ├── AppNavigator.tsx          # Stack Autenticado (Main Tabs, Details, Editar, ZelaBot, Sobre)
 │   │   ├── TabNavigator.tsx          # Bottom Tabs dinâmicas (Tema + SafeAreaInsets)
 │   │   ├── index.tsx                 # Roteador condicional conectado ao NavigationContainer Theme
 │   │   └── types.ts                  # Tipagens estritas do React Navigation
@@ -102,12 +102,14 @@ Mobile-Application-Development/
 │   │   ├── Home/HomeScreen.tsx (+ components/HomePanoramaCard.tsx, HomeCategoryList.tsx)
 │   │   ├── RadarBairro/RadarBairroScreen.tsx (+ components/RadarHeaderFilters.tsx, FilterChipRow.tsx)
 │   │   ├── MeusChamados/MeusChamadosScreen.tsx (+ components/MeusChamadosHeader.tsx)
-│   │   ├── NovoChamado/NovoChamadoScreen.tsx (+ components/PhotoEvidencePicker.tsx, CategoryGridSelector.tsx)
+│   │   ├── NovoChamado/NovoChamadoScreen.tsx (+ components/PhotoEvidencePicker.tsx)
 │   │   ├── EditarChamado/EditarChamadoScreen.tsx
 │   │   ├── ChamadoDetails/ChamadoDetailsScreen.tsx (+ components/ChamadoSummaryCard.tsx, ChamadoIaTriageCard.tsx, ChamadoLocationCard.tsx, ChamadoTimelineCard.tsx, ChamadoActionBar.tsx, StatusChangeModal.tsx)
 │   │   ├── Profile/ProfileScreen.tsx (+ components/ProfileUserCard.tsx, EditProfileModal.tsx)
+│   │   ├── ZelaBot/ZelaBotScreen.tsx (+ components/ZelaBotHistoryModal.tsx, ZelaBotInputBar.tsx, ZelaBotInsightsBanner.tsx, ZelaBotMessageBubble.tsx)
 │   │   └── SobreApp/SobreAppScreen.tsx (+ components/TeamMembersCard.tsx)
 │   ├── services/
+│   │   ├── aiService.ts              # Integração com o microsserviço ZelaBot IA (FastAPI + RAG)
 │   │   ├── api.ts                    # Axios + Interceptor JWT + Azure Health Warmup Throttled
 │   │   ├── authService.ts            # Contratos REST /login e /usuarios/* (Spring Security)
 │   │   ├── chamadoService.ts         # Contratos REST /chamados/* e /categorias (Spring Data JPA Page<T>)
@@ -116,34 +118,46 @@ Mobile-Application-Development/
 │   │   ├── index.ts                  # Design System (Cores base, Tipografia, Sombras, Espaçamentos)
 │   │   └── semanticConfig.ts         # Helpers visuais semânticos de Status e Prioridade
 │   ├── types/
+│   │   ├── ai.ts                     # Contratos de chat IA, histórico e insights
 │   │   ├── api.ts                    # Contratos SpringPageResponse<T>, ApiError, FieldValidationError
-│   │   ├── auth.ts                   # Domínio de usuário, login e endereço
-│   │   ├── categoria.ts              # Categorias, prioridades e status
+│   │   ├── auth.ts                   # Domínio de usuário, login e autenticação
+│   │   ├── categoria.ts              # Categorias de zeladoria
 │   │   ├── chamado.ts                # Domínio de ocorrências e métricas
-│   │   └── index.ts                  # Barrel dos tipos de domínio
+│   │   ├── endereco.ts               # Contratos de endereço e resumo
+│   │   ├── filters.ts                # Tipos de filtros e ordenação
+│   │   ├── forms.ts                  # Tipos auxiliares de formulário
+│   │   ├── localizacao.ts            # Payload de geolocalização capturada
+│   │   ├── status.ts                 # Status de atendimento de chamados
+│   │   └── version.ts                # Metadados de build e equipe
 │   └── utils/
 │       ├── apiError.ts               # Normalizador de erros HTTP / Spring Boot
+│       ├── apiUrl.ts                 # Builder de URLs absolutas de mídia da API
 │       ├── chamadoMappers.ts         # Normalizadores e builders de payload para API Java
+│       ├── enderecoMappers.ts        # Builder de EnderecoRequest para Java
 │       ├── formatters.ts             # Formatadores de data, CEP e texto de usuário
+│       ├── image.ts                  # Normalização de prefixo Base64/Data URI
 │       ├── permissions.ts            # Regras puras Cidadão vs. Gestor Público (zero ADMIN no mobile)
 │       ├── schemas.ts                # Schemas Zod v4
-│       └── shadow.ts                 # Utilitário multiplataforma de sombras (Web boxShadow / Native)
+│       ├── shadow.ts                 # Utilitário multiplataforma de sombras (Web boxShadow / Native)
+│       ├── throttledPing.ts          # Controle de warmup com deduplicação e cooldown
+│       ├── usuarioMappers.ts         # Builder de UsuarioRequest para Java
+│       └── zodToFormErrors.ts        # Conversor de ZodError para FormErrors<T>
 ```
 
 ---
 
-## 4. Mapeamento das 11 Telas (10 Telas Válidas + Sobre o App)
+## 4. Mapeamento das 12 Telas (11 Telas Válidas + Sobre o App)
 
-Conforme regra do edital (*"Mínimo de 6 telas distintas — a tela sobre o app não contabiliza no total de telas"*), o aplicativo conta com **10 telas funcionais distintas** além da tela **Sobre o App**:
+Conforme regra do edital (*"Mínimo de 6 telas distintas — a tela sobre o app não contabiliza no total de telas"*), o aplicativo conta com **11 telas funcionais distintas** além da tela **Sobre o App**:
 
 1. **`WelcomeScreen` (`src/screens/Welcome/WelcomeScreen.tsx`):** Apresentação institucional da plataforma ZelaFix, alinhamento à ODS 11 da ONU e portas de entrada para Login ou Cadastro.
 2. **`LoginScreen` (`src/screens/Login/LoginScreen.tsx`):** Autenticação JWT de produção com validação Zod.
-3. **`RegisterScreen` (`src/screens/Register/RegisterScreen.tsx`):** Cadastro completo de cidadão (Nome, E-mail, CPF, Telefone, CEP/GPS, Bairro e Senha) validado com Zod.
+3. **`RegisterScreen` (`src/screens/Register/RegisterScreen.tsx`):** Cadastro completo de cidadão (Nome, E-mail, Telefone, CEP/GPS, Rua, Número, Referência e Senha) validado com Zod.
 4. **`HomeScreen` (`src/screens/Home/HomeScreen.tsx`):** Painel executivo com Índice de Resolução, métricas inline, CTA de abertura rápida e distribuição por categoria.
 5. **`RadarBairroScreen` (`src/screens/RadarBairro/RadarBairroScreen.tsx`):** Feed colaborativo e ranking de urgência do bairro com busca textual, fila de triagem para **Gestor Público**, filtros por categoria/status e botão de apoio comunitário (`+1`).
 6. **`MeusChamadosScreen` (`src/screens/MeusChamados/MeusChamadosScreen.tsx`):** Gestão dos protocolos abertos pelo próprio cidadão filtrados por etapa de atendimento.
 7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura de relato com câmera/galeria, grid de categorias e autopreenchimento GPS.
-8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, parecer real da Triagem IA (quando presente), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
+8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, parecer real da Triagem IA (quando presente), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor ou **Gestor Público**, apoio comunitário (`+1`) e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
 9. **`EditarChamadoScreen` (`src/screens/EditarChamado/EditarChamadoScreen.tsx`):** Edição cadastral completa de relatos existentes com validação Zod.
 10. **`ProfileScreen` (`src/screens/Profile/ProfileScreen.tsx`):** Dados do usuário autenticado e papel (`Cidadão` / `Gestor Público`), modal de edição de perfil/senha (`useZodForm` + `BaseModal`), alternância de tema Claro/Escuro persistida e acesso à tela Sobre o App.
 11. **`SobreAppScreen` (`src/screens/SobreApp/SobreAppScreen.tsx`):** Exibe o **Hash de Commit de Referência** extraído dinamicamente do Git com compartilhamento nativo, integrantes da equipe FIAP com links diretos para GitHub/LinkedIn e stack tecnológica.
@@ -169,7 +183,7 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente |
 | `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`ABERTO`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
-| `DELETE` | `/chamados/{id}` | Remove chamado pelo ID (autor proprietário) |
+| `DELETE` | `/chamados/{id}` | Remove chamado pelo ID |
 | `GET` | `/actuator/health` | Probe de saúde e aquecimento preventivo no Azure App Service |
 
 ---

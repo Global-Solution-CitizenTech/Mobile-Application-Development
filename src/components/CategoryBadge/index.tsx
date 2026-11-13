@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getCategoryVisuals } from '@/theme/semanticConfig';
 
@@ -10,7 +10,7 @@ interface CategoryBadgeProps {
   compact?: boolean;
 }
 
-export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ categoria, compact = false }) => {
+export const CategoryBadge = ({ categoria, compact = false }: CategoryBadgeProps) => {
   const styles = useThemedStyles(createStyles);
   const { theme } = useTheme();
   const { iconName, color, bg } = getCategoryVisuals(categoria, theme);

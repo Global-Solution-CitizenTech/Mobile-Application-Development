@@ -1,6 +1,6 @@
 const { execSync } = require('child_process');
 
-function getGitMetadata(fallback) {
+function getGitMetadata() {
   const envCommitHash = process.env.EAS_BUILD_GIT_COMMIT_HASH || '';
   try {
     const commitHash = execSync('git rev-parse HEAD', {
@@ -25,17 +25,14 @@ function getGitMetadata(fallback) {
       cleanMsg.length <= 60 ? cleanMsg : `${cleanMsg.slice(0, 60).trim()}...`;
 
     return { commitHash, shortCommitHash, branch, commitDate, commitMessage };
-  } catch (_error) {
-    const hash =
-      envCommitHash ||
-      fallback?.commitHash ||
-      'aadd0280465f961ba5af44fad2da73be8909b2db';
+  } catch {
+    const hash = envCommitHash || 'local-dev';
     return {
       commitHash: hash,
-      shortCommitHash: hash.slice(0, 7),
-      branch: process.env.EAS_BUILD_GIT_BRANCH || fallback?.branch || 'main',
-      commitDate: fallback?.commitDate || new Date().toISOString(),
-      commitMessage: fallback?.commitMessage || 'Release Build FIAP GS 2026/2',
+      shortCommitHash: envCommitHash ? envCommitHash.slice(0, 7) : 'local-dev',
+      branch: process.env.EAS_BUILD_GIT_BRANCH || 'main',
+      commitDate: '',
+      commitMessage: 'Build local (metadados Git indisponíveis)',
     };
   }
 }
@@ -44,6 +41,6 @@ module.exports = ({ config }) => ({
   ...config,
   extra: {
     ...config.extra,
-    gitCommit: getGitMetadata(config.extra?.gitCommit),
+    gitCommit: getGitMetadata(),
   },
 });

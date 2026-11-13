@@ -1,22 +1,6 @@
+import type { EnderecoFormInput, EnderecoRequest, EnderecoResponse } from '@/types/endereco';
+
 export type CargoUsuario = 'CIDADAO' | 'GESTOR' | 'ADMIN';
-
-export interface EnderecoRequest {
-  cep: string;
-  numero: string;
-  referencia: string;
-  rua?: string;
-}
-
-export interface EnderecoResponse {
-  id: number;
-  cep: string;
-  numero: string;
-  rua: string;
-  referencia: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-}
 
 export interface Usuario {
   id: number;
@@ -47,5 +31,20 @@ export interface UsuarioRequest {
   endereco: EnderecoRequest;
 }
 
-export type RegisterData = UsuarioRequest;
-export type UpdateProfilePayload = UsuarioRequest;
+export interface UsuarioFormInput extends EnderecoFormInput {
+  nome: string;
+  email: string;
+  telefone: string;
+  senha: string;
+}
+
+export interface AuthContextData {
+  usuario: Usuario | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signIn: (credentials: LoginCredentials) => Promise<void>;
+  signUp: (data: UsuarioRequest) => Promise<void>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  updateProfile: (data: UsuarioRequest) => Promise<Usuario>;
+}

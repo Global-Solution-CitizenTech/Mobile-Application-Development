@@ -1,9 +1,10 @@
-import React from 'react';
+import { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryBadge } from '@/components/CategoryBadge';
 import { StatusBadge } from '@/components/StatusBadge';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { Chamado } from '@/types/chamado';
 import { getLatestParecer } from '@/utils/chamadoMappers';
@@ -14,11 +15,16 @@ interface ChamadoSummaryCardProps {
   onAskAi: () => void;
 }
 
-export const ChamadoSummaryCard: React.FC<ChamadoSummaryCardProps> = ({ chamado, onAskAi }) => {
+export const ChamadoSummaryCard = ({ chamado, onAskAi }: ChamadoSummaryCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
   const parecer = getLatestParecer(chamado);
-  const showParecer = Boolean(parecer?.observacao && (chamado.status === 'CONCLUIDO' || chamado.status === 'REJEITADO'));
+  const parecerVisivel =
+    parecer?.observacao && (chamado.status === 'CONCLUIDO' || chamado.status === 'REJEITADO')
+      ? parecer
+      : null;
+  const showPhoto = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
 
   return (
     <View style={styles.card}>
@@ -27,8 +33,13 @@ export const ChamadoSummaryCard: React.FC<ChamadoSummaryCardProps> = ({ chamado,
         <StatusBadge status={chamado.status} />
       </View>
 
-      {chamado.fotoUrl ? (
-        <Image source={{ uri: chamado.fotoUrl }} style={styles.photo} resizeMode="cover" />
+      {showPhoto ? (
+        <Image
+          source={{ uri: chamado.fotoUrl }}
+          style={styles.photo}
+          resizeMode="cover"
+          onError={() => setFailedFotoUrl(chamado.fotoUrl ?? null)}
+        />
       ) : (
         <View style={styles.photoPlaceholder}>
           <Ionicons name="image-outline" size={28} color={theme.textMuted} />
@@ -45,12 +56,12 @@ export const ChamadoSummaryCard: React.FC<ChamadoSummaryCardProps> = ({ chamado,
         <Text style={styles.author}>Solicitante: {chamado.usuarioNome}</Text>
       </View>
 
-      {showParecer && parecer && (
+      {parecerVisivel && (
         <View style={[styles.parecerBox, chamado.status === 'REJEITADO' && styles.parecerRejected]}>
           <Text style={styles.parecerTitle}>
             {chamado.status === 'REJEITADO' ? 'Motivo da Rejeição' : 'Parecer de Conclusão'}
           </Text>
-          <Text style={styles.parecerText}>{parecer.observacao}</Text>
+          <Text style={styles.parecerText}>{parecerVisivel.observacao}</Text>
         </View>
       )}
 

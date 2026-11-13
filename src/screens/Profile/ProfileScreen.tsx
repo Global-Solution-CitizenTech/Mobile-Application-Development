@@ -1,32 +1,28 @@
-import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { type CompositeNavigationProp, useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { FeedbackModal } from '@/components/FeedbackModal';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useProfileData } from '@/hooks/useProfileData';
-import type { AppStackParamList, AppTabParamList } from '@/navigation/types';
+import type { ProfileTabNavigationProp } from '@/navigation/types';
 import { EditProfileModal } from '@/screens/Profile/components/EditProfileModal';
+import { ProfileStatsCard } from '@/screens/Profile/components/ProfileStatsCard';
 import { ProfileUserCard } from '@/screens/Profile/components/ProfileUserCard';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 
-type ProfileNavProp = CompositeNavigationProp<
-  BottomTabNavigationProp<AppTabParamList, 'ProfileTab'>,
-  NativeStackNavigationProp<AppStackParamList>
->;
-
-export const ProfileScreen: React.FC = () => {
-  const navigation = useNavigation<ProfileNavProp>();
+export const ProfileScreen = () => {
+  const navigation = useNavigation<ProfileTabNavigationProp>();
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
 
   const {
     usuario,
+    userStats,
+    statsLoading,
     isDark,
     toggleTheme,
     form,
@@ -51,13 +47,37 @@ export const ProfileScreen: React.FC = () => {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, spacing.md) }]}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void handleRefreshProfile(); }} tintColor={theme.primary} />}
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingTop: Math.max(insets.top, spacing.md) + spacing.xs,
+          paddingLeft: Math.max(insets.left, spacing.md),
+          paddingRight: Math.max(insets.right, spacing.md),
+        },
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            void handleRefreshProfile();
+          }}
+          tintColor={theme.primary}
+        />
+      }
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.screenTitle}>Meu Perfil</Text>
 
       <ProfileUserCard usuario={usuario} />
+
+      <ProfileStatsCard
+        total={userStats.total}
+        emAndamento={userStats.emAndamento}
+        concluidos={userStats.concluidos}
+        apoiosRecebidos={userStats.apoiosRecebidos}
+        loading={statsLoading}
+        onPressVerChamados={() => navigation.navigate('MeusChamadosTab')}
+      />
 
       <View style={styles.sectionCard}>
         <TouchableOpacity style={styles.menuRow} onPress={openEditModal} activeOpacity={0.75}>
@@ -80,7 +100,7 @@ export const ProfileScreen: React.FC = () => {
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('ZelaBot')} activeOpacity={0.75}>
+        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('ZelaBotTab')} activeOpacity={0.75}>
           <View style={styles.menuLeft}>
             <Ionicons name="sparkles-outline" size={20} color={theme.primary} />
             <Text style={styles.menuText}>ZelaBot IA</Text>
@@ -139,7 +159,7 @@ export const ProfileScreen: React.FC = () => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    content: { paddingHorizontal: spacing.md, paddingBottom: spacing.xxl, gap: spacing.md },
+    content: { paddingBottom: spacing.xxl, gap: spacing.md },
     screenTitle: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
     sectionCard: {
       backgroundColor: theme.surface,

@@ -2,9 +2,12 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Usuario } from '@/types/auth';
+import type { RadarLocationPreference } from '@/types/filters';
+import { RadarLocationPrefSchema, StoredUsuarioSchema } from '@/utils/schemas';
 
 const TOKEN_KEY = 'zelafix_jwt_token';
 const USER_KEY = '@zelafix:usuario';
+const RADAR_LOCATION_KEY = '@zelafix:radar_location_v1';
 
 export const storageService = {
   async getToken(): Promise<string | null> {
@@ -32,7 +35,10 @@ export const storageService = {
     const raw = await AsyncStorage.getItem(USER_KEY);
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as Usuario;
+      const result = StoredUsuarioSchema.safeParse(JSON.parse(raw));
+      if (result.success) return result.data;
+      await AsyncStorage.removeItem(USER_KEY);
+      return null;
     } catch {
       await AsyncStorage.removeItem(USER_KEY);
       return null;
@@ -47,11 +53,37 @@ export const storageService = {
     await AsyncStorage.removeItem(USER_KEY);
   },
 
+  async getRadarLocationPreference(): Promise<RadarLocationPreference | null> {
+    const raw = await AsyncStorage.getItem(RADAR_LOCATION_KEY);
+    if (!raw) return null;
+    try {
+      const result = RadarLocationPrefSchema.safeParse(JSON.parse(raw));
+      if (result.success) return result.data;
+      await AsyncStorage.removeItem(RADAR_LOCATION_KEY);
+      return null;
+    } catch {
+      await AsyncStorage.removeItem(RADAR_LOCATION_KEY);
+      return null;
+    }
+  },
+
+  async saveRadarLocationPreference(pref: RadarLocationPreference): Promise<void> {
+    await AsyncStorage.setItem(RADAR_LOCATION_KEY, JSON.stringify(pref));
+  },
+
+  async clearRadarLocationPreference(): Promise<void> {
+    await AsyncStorage.removeItem(RADAR_LOCATION_KEY);
+  },
+
   async saveSession(token: string, usuario: Usuario): Promise<void> {
-    await Promise.all([this.saveToken(token), this.saveUsuario(usuario)]);
+    await Promise.all([storageService.saveToken(token), storageService.saveUsuario(usuario)]);
   },
 
   async clearSession(): Promise<void> {
-    await Promise.all([this.removeToken(), this.removeUsuario()]);
+    await Promise.all([
+      storageService.removeToken(),
+      storageService.removeUsuario(),
+      storageService.clearRadarLocationPreference(),
+    ]);
   },
 };

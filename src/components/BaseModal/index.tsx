@@ -1,7 +1,8 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 
 interface BaseModalProps {
@@ -9,15 +10,15 @@ interface BaseModalProps {
   onClose: () => void;
   title?: string;
   subtitle?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
   maxWidth?: number;
   centered?: boolean;
   dismissable?: boolean;
   scrollable?: boolean;
 }
 
-export const BaseModal: React.FC<BaseModalProps> = ({
+export const BaseModal = ({
   visible,
   onClose,
   title,
@@ -28,19 +29,19 @@ export const BaseModal: React.FC<BaseModalProps> = ({
   centered = false,
   dismissable = true,
   scrollable = true,
-}) => {
+}: BaseModalProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const { height: windowHeight } = useWindowDimensions();
-
-  if (!visible) return null;
 
   return (
     <Modal
       transparent
       visible={visible}
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        if (dismissable) onClose();
+      }}
       statusBarTranslucent
     >
       <TouchableWithoutFeedback onPress={dismissable ? onClose : undefined}>
@@ -65,10 +66,13 @@ export const BaseModal: React.FC<BaseModalProps> = ({
                       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
                     </View>
                     <TouchableOpacity
-                      onPress={onClose}
+                      onPress={dismissable ? onClose : undefined}
+                      disabled={!dismissable}
+                      style={!dismissable ? styles.closeButtonDisabled : undefined}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       accessibilityRole="button"
                       accessibilityLabel="Fechar"
+                      accessibilityState={{ disabled: !dismissable }}
                     >
                       <Ionicons name="close" size={22} color={theme.textSecondary} />
                     </TouchableOpacity>
@@ -145,6 +149,9 @@ const createStyles = (theme: AppTheme) =>
     },
     bodyScroll: {
       flexGrow: 0,
+    },
+    closeButtonDisabled: {
+      opacity: 0.4,
     },
     footer: {
       marginTop: spacing.md,

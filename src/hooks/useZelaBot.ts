@@ -5,6 +5,7 @@ import { useChamadoDetail, useChamadosList } from '@/hooks/useChamados';
 import { queryKeys } from '@/lib/queryKeys';
 import { aiService } from '@/services/aiService';
 import type { AiChatSession, AiMessage } from '@/types/ai';
+import { getApiErrorMessage } from '@/utils/apiError';
 
 function gerarSessionId(): string {
   return `zf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -33,6 +34,7 @@ export function useZelaBot(initialChamadoId?: number) {
   const [sessionId, setSessionId] = useState<string>(gerarSessionId);
   const [inputText, setInputText] = useState('');
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   const selectedChamadoId = manualSelection?.seed === seedId ? manualSelection.id : seedId;
 
@@ -96,9 +98,13 @@ export function useZelaBot(initialChamadoId?: number) {
   const loadSessionMutation = useMutation({
     mutationFn: (id: string) => aiService.carregarHistorico(id),
     onSuccess: (loadedMessages, id) => {
+      setSessionError(null);
       setSessionId(id);
       setMessages(loadedMessages);
       setHistoryModalVisible(false);
+    },
+    onError: (error) => {
+      setSessionError(getApiErrorMessage(error, 'Não foi possível carregar a conversa selecionada.'));
     },
   });
 
@@ -110,10 +116,11 @@ export function useZelaBot(initialChamadoId?: number) {
       queryClient.setQueryData<AiChatSession[]>(queryKeys.ai.sessions(), (curr) => curr?.filter((s) => s.sessionId !== id) ?? []);
       return { previous };
     },
-    onError: (_err, _id, ctx) => {
+    onError: (error, _id, ctx) => {
       if (ctx?.previous) {
         queryClient.setQueryData(queryKeys.ai.sessions(), ctx.previous);
       }
+      setSessionError(getApiErrorMessage(error, 'Não foi possível excluir a conversa.'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.ai.sessions() });
@@ -122,8 +129,11 @@ export function useZelaBot(initialChamadoId?: number) {
 
   const novaConversa = useCallback(() => {
     setMessages([]);
+    setSessionError(null);
     setSessionId(gerarSessionId());
   }, []);
+
+  const clearSessionError = useCallback(() => setSessionError(null), []);
 
   const selecionarChamadoContexto = useCallback(
     (id: number | null) => {
@@ -166,6 +176,11 @@ export function useZelaBot(initialChamadoId?: number) {
     [deleteSessionMutation, novaConversa, sessionId]
   );
 
+  const abrirSessao = useCallback(
+    (id: string) => loadSessionMutation.mutate(id),
+    [loadSessionMutation]
+  );
+
   return {
     messages,
     sessionId,
@@ -186,8 +201,13 @@ export function useZelaBot(initialChamadoId?: number) {
     setHistoryModalVisible,
     sessoes: sessionsQuery.data ?? [],
     loadingSessoes: sessionsQuery.isLoading,
+    sessionsError: sessionsQuery.error
+      ? getApiErrorMessage(sessionsQuery.error, 'Não foi possível carregar o histórico de conversas.')
+      : null,
     loadingSessionId: loadSessionMutation.isPending ? loadSessionMutation.variables ?? null : null,
-    abrirSessao: (id: string) => loadSessionMutation.mutate(id),
+    sessionError,
+    clearSessionError,
+    abrirSessao,
     removerSessao,
   };
 }

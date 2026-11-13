@@ -1,7 +1,7 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { type AppTheme, useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
 import type { AiMessage } from '@/types/ai';
@@ -10,7 +10,7 @@ interface ZelaBotMessageBubbleProps {
   message: AiMessage;
 }
 
-export const ZelaBotMessageBubble: React.FC<ZelaBotMessageBubbleProps> = ({ message }) => {
+export const ZelaBotMessageBubble = ({ message }: ZelaBotMessageBubbleProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const isUser = message.sender === 'user';
@@ -50,7 +50,7 @@ export const ZelaBotMessageBubble: React.FC<ZelaBotMessageBubbleProps> = ({ mess
           <View style={styles.actionsBox}>
             <Text style={styles.actionsTitle}>Próximos passos recomendados:</Text>
             {message.acoesRecomendadas.slice(0, 3).map((acao, idx) => (
-              <Text key={idx} style={styles.actionItem}>
+              <Text key={`${idx}-${acao}`} style={styles.actionItem}>
                 • {acao}
               </Text>
             ))}
