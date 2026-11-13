@@ -114,7 +114,7 @@ Mobile-Application-Development/
 │   │   ├── MeusChamados/MeusChamadosScreen.tsx (+ components/MeusChamadosHeader.tsx)
 │   │   ├── NovoChamado/NovoChamadoScreen.tsx (+ components/PhotoEvidencePicker.tsx)
 │   │   ├── EditarChamado/EditarChamadoScreen.tsx
-│   │   ├── ChamadoDetails/ChamadoDetailsScreen.tsx (+ components/ChamadoSummaryCard.tsx, ChamadoIaTriageCard.tsx, ChamadoLocationCard.tsx, ChamadoTimelineCard.tsx, ChamadoActionBar.tsx, StatusChangeModal.tsx)
+│   │   ├── ChamadoDetails/ChamadoDetailsScreen.tsx (+ components/ChamadoSummaryCard.tsx, ChamadoLocationCard.tsx, ChamadoTimelineCard.tsx, ChamadoActionBar.tsx, StatusChangeModal.tsx)
 │   │   ├── Profile/ProfileScreen.tsx (+ components/ProfileUserCard.tsx, ProfileStatsCard.tsx, EditProfileModal.tsx)
 │   │   ├── ZelaBot/ZelaBotScreen.tsx (+ components/ZelaBotHistoryModal.tsx, ZelaBotInputBar.tsx, ZelaBotInsightsBanner.tsx, ZelaBotMessageBubble.tsx)
 │   │   └── SobreApp/SobreAppScreen.tsx (+ components/TeamMembersCard.tsx)
@@ -166,8 +166,8 @@ O aplicativo conta com **11 telas funcionais distintas** além da tela **Sobre o
 4. **`HomeScreen` (`src/screens/Home/HomeScreen.tsx`):** Painel executivo com Índice de Resolução no topo, atalhos por categoria, acesso ao ZelaBot IA e lista de ocorrências mais recentes.
 5. **`RadarBairroScreen` (`src/screens/RadarBairro/RadarBairroScreen.tsx`):** Feed colaborativo e ranking de urgência com busca textual, botão integrado para **Reportar Ocorrência**, seleção em modal (`SelectPickerModal`) por categoria/status/localização (todas as cidades por padrão, com opção por cidade, bairro ou estado) e apoio comunitário (`+1`).
 6. **`MeusChamadosScreen` (`src/screens/MeusChamados/MeusChamadosScreen.tsx`):** Gestão dos protocolos abertos pelo próprio cidadão filtrados por etapa de atendimento.
-7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura de relato a partir do Radar com **foto obrigatória** (câmera/galeria), autopreenchimento GPS e classificação automática de categoria e gravidade pela **Spring AI** (`POST /chamados/triagem`).
-8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, parecer real da Triagem IA (gravidade, órgão e análise), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor ou **Gestor Público**, apoio comunitário (`+1`) e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
+7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura simplificada de ocorrência a partir do Radar com **foto obrigatória** (câmera/galeria) e endereço via CEP/GPS; título, descrição, categoria, prioridade e órgão responsável são preenchidos automaticamente em segundo plano pela triagem assíncrona da **Spring AI** via RabbitMQ.
+8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, dados preenchidos pela Triagem IA (título, descrição, categoria, prioridade e órgão responsável), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor ou **Gestor Público**, apoio comunitário (`+1`) e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
 9. **`EditarChamadoScreen` (`src/screens/EditarChamado/EditarChamadoScreen.tsx`):** Edição cadastral completa de relatos existentes com validação Zod.
 10. **`ProfileScreen` (`src/screens/Profile/ProfileScreen.tsx`):** Dados do usuário autenticado, papel (`Cidadão` / `Gestor Público`), cartão de estatísticas pessoais (`ProfileStatsCard`), modal de edição de perfil/senha (`useZodForm` + `BaseModal`), alternância de tema Claro/Escuro persistida e acesso à tela Sobre o App.
 11. **`ZelaBotScreen` (`src/screens/ZelaBot/ZelaBotScreen.tsx`):** Assistente conversacional integrado ao botão central da barra de navegação, com histórico de sessões e insights preventivos por bairro.
@@ -188,12 +188,11 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `GET` | `/categorias` | Lista o catálogo oficial de categorias de zeladoria |
 | `GET` | `/chamados` | Lista chamados paginados (`Page<ChamadoResponse>`) com filtros |
 | `GET` | `/chamados/estatisticas` | Retorna métricas agregadas do painel executivo |
-| `GET` | `/chamados/{id}` | Detalhes completos do protocolo, triagem IA e histórico |
+| `GET` | `/chamados/{id}` | Detalhes completos do protocolo, classificação IA e histórico |
 | `GET` | `/chamados/{id}/foto` | Recupera a evidência fotográfica armazenada no Oracle BLOB |
-| `POST` | `/chamados/triagem` | Executa pré-análise síncrona com Spring AI para classificar categoria, gravidade e parecer |
-| `POST` | `/chamados` | Cria novo chamado com foto obrigatória em Base64 e validação ViaCEP no backend |
+| `POST` | `/chamados` | Cria novo chamado com foto obrigatória em Base64 + endereço (`ChamadoCreateRequest`) e dispara triagem assíncrona da IA |
 | `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente |
-| `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`ABERTO`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
+| `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`PENDENTE`, `ABERTO`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
 | `DELETE` | `/chamados/{id}` | Remove chamado pelo ID |
 | `GET` | `/actuator/health` | Probe de saúde e aquecimento preventivo no Azure App Service |
