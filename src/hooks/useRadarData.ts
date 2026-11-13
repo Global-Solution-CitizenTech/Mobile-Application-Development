@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCategoriasChamado, useChamadosList } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useDebounce } from '@/hooks/useDebounce';
-import { storageService } from '@/services/storageService';
 import type { LocationFilterLevel, RadarLocationFilter, RadarSortOption, StatusFiltro } from '@/types/filters';
 
 function uniqueSorted(values: (string | undefined | null)[]): string[] {
@@ -21,7 +20,6 @@ function uniqueSorted(values: (string | undefined | null)[]): string[] {
 
 export function useRadarData(initialCategoria?: string) {
   const { usuario } = useAuth();
-  const userId = usuario?.id ?? null;
   const userCity = usuario?.endereco?.cidade?.trim() ?? '';
 
   const routeCategoria = initialCategoria || 'TODAS';
@@ -29,61 +27,10 @@ export function useRadarData(initialCategoria?: string) {
   const [manualCategoria, setManualCategoria] = useState<{ forRoute: string; value: string } | null>(null);
   const [busca, setBusca] = useState('');
   const [sortBy, setSortBy] = useState<RadarSortOption>('RECENTES');
-  const [locationFilter, setLocationFilterState] = useState<RadarLocationFilter>({
+  const [locationFilter, setLocationFilter] = useState<RadarLocationFilter>({
     nivel: 'CIDADE',
-    valor: userCity || null,
+    valor: null,
   });
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadCachedLocation() {
-      if (!userId) return;
-
-      const cached = await storageService.getRadarLocationPreference();
-      if (!active) return;
-
-      if (
-        cached &&
-        cached.userId === userId &&
-        cached.userCity.trim().toLowerCase() === userCity.toLowerCase()
-      ) {
-        setLocationFilterState({ nivel: cached.nivel, valor: cached.valor });
-        return;
-      }
-
-      const nextDefault: RadarLocationFilter = {
-        nivel: 'CIDADE',
-        valor: userCity || null,
-      };
-      setLocationFilterState(nextDefault);
-      await storageService.saveRadarLocationPreference({
-        userId,
-        userCity,
-        ...nextDefault,
-      });
-    }
-
-    void loadCachedLocation();
-    return () => {
-      active = false;
-    };
-  }, [userCity, userId]);
-
-  const setLocationFilter = useCallback(
-    (next: RadarLocationFilter) => {
-      setLocationFilterState(next);
-      if (userId) {
-        void storageService.saveRadarLocationPreference({
-          userId,
-          userCity,
-          nivel: next.nivel,
-          valor: next.valor,
-        });
-      }
-    },
-    [userCity, userId]
-  );
 
   const trimmedBusca = busca.trim();
   const debouncedBusca = useDebounce(trimmedBusca, 350);
@@ -139,8 +86,7 @@ export function useRadarData(initialCategoria?: string) {
   }, [listQuery.chamados, locationFilter.nivel, locationFilter.valor, sortBy]);
 
   const isUsingCustomLocation =
-    locationFilter.nivel !== 'CIDADE' ||
-    (locationFilter.valor ?? '').toLowerCase() !== userCity.toLowerCase();
+    locationFilter.nivel !== 'CIDADE' || locationFilter.valor !== null;
 
   const hasActiveFilters =
     statusFiltro !== 'TODOS' ||
@@ -153,7 +99,7 @@ export function useRadarData(initialCategoria?: string) {
     setManualCategoria({ forRoute: routeCategoria, value: 'TODAS' });
     setBusca('');
     setLocationFilter({ nivel: 'CIDADE', valor: null });
-  }, [routeCategoria, setLocationFilter]);
+  }, [routeCategoria]);
 
   return {
     chamados: chamadosFiltrados,

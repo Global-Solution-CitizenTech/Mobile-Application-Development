@@ -54,9 +54,11 @@ Mobile-Application-Development/
 ├── eslint.config.js                  # ESLint v9 Flat Config com eslint-config-expo
 ├── src/
 │   ├── components/                   # Componentes modulares (Pasta + index.tsx + Temas Claro/Escuro)
+│   │   ├── AuthHeader/index.tsx      # Cabeçalho institucional para Login e Cadastro
 │   │   ├── BaseModal/index.tsx       # Modal base acessível e reutilizável (KeyboardAvoiding + Overlay)
 │   │   ├── Button/index.tsx
 │   │   ├── CategoryBadge/index.tsx
+│   │   ├── CategoryGridSelector/index.tsx
 │   │   ├── ChamadoCard/index.tsx
 │   │   ├── ChamadoFormFields/index.tsx
 │   │   ├── EmptyState/index.tsx
@@ -64,6 +66,7 @@ Mobile-Application-Development/
 │   │   ├── Header/index.tsx
 │   │   ├── Input/index.tsx
 │   │   ├── LoadingSpinner/index.tsx
+│   │   ├── SelectPickerModal/index.tsx # Seletor modal reutilizável para filtros e opções
 │   │   ├── StatCard/index.tsx
 │   │   └── StatusBadge/index.tsx
 │   ├── config/
@@ -77,12 +80,13 @@ Mobile-Application-Development/
 │   │   ├── useChamadoForm.ts         # Hook unificado de criação/edição com Zod + GPS + Foto
 │   │   ├── useChamadoMutations.ts    # Mutações TanStack Query v5 + apoio otimista
 │   │   ├── useChamados.ts            # Queries e filtros de chamados/categorias
-│   │   ├── useHomeData.ts            # Domain hook da HomeScreen
+│   │   ├── useDebounce.ts            # Debounce para busca textual no Radar
+│   │   ├── useHomeData.ts            # Domain hook da HomeScreen (panorama, categorias e recentes)
 │   │   ├── useLocalizacao.ts         # GPS real e Reverse Geocoding via expo-location
 │   │   ├── useLoginForm.ts           # Formulário de login com Zod
 │   │   ├── useMeusChamadosData.ts    # Domain hook dos chamados do autor
-│   │   ├── useProfileData.ts         # Domain hook de perfil, cargo e sessão
-│   │   ├── useRadarData.ts           # Domain hook do radar comunitário / fila de triagem do gestor
+│   │   ├── useProfileData.ts         # Domain hook de perfil, estatísticas do usuário e sessão
+│   │   ├── useRadarData.ts           # Domain hook do radar comunitário (todas as cidades por padrão + filtros modais)
 │   │   ├── useRegisterForm.ts        # Formulário de cadastro com Zod
 │   │   ├── useZelaBot.ts             # Chat IA ZelaBot, histórico SQLite e insights preventivos
 │   │   └── useZodForm.ts             # Hook genérico memoizado (Zero `any`) para formulários Zod
@@ -92,7 +96,7 @@ Mobile-Application-Development/
 │   ├── navigation/
 │   │   ├── AuthNavigator.tsx         # Stack Público (Welcome, Login, Register)
 │   │   ├── AppNavigator.tsx          # Stack Autenticado (Main Tabs, Details, Editar, ZelaBot, Sobre)
-│   │   ├── TabNavigator.tsx          # Bottom Tabs dinâmicas (Tema + SafeAreaInsets)
+│   │   ├── TabNavigator.tsx          # Bottom Tabs dinâmicas com botão central para o ZelaBot IA + SafeAreaInsets
 │   │   ├── index.tsx                 # Roteador condicional conectado ao NavigationContainer Theme
 │   │   └── types.ts                  # Tipagens estritas do React Navigation
 │   ├── screens/                      # Telas declarativas + subcomponentes locais
@@ -100,12 +104,12 @@ Mobile-Application-Development/
 │   │   ├── Login/LoginScreen.tsx (+ components/LoginForm.tsx)
 │   │   ├── Register/RegisterScreen.tsx (+ components/RegisterForm.tsx)
 │   │   ├── Home/HomeScreen.tsx (+ components/HomePanoramaCard.tsx, HomeCategoryList.tsx)
-│   │   ├── RadarBairro/RadarBairroScreen.tsx (+ components/RadarHeaderFilters.tsx, FilterChipRow.tsx)
+│   │   ├── RadarBairro/RadarBairroScreen.tsx (+ components/RadarHeaderFilters.tsx)
 │   │   ├── MeusChamados/MeusChamadosScreen.tsx (+ components/MeusChamadosHeader.tsx)
 │   │   ├── NovoChamado/NovoChamadoScreen.tsx (+ components/PhotoEvidencePicker.tsx)
 │   │   ├── EditarChamado/EditarChamadoScreen.tsx
 │   │   ├── ChamadoDetails/ChamadoDetailsScreen.tsx (+ components/ChamadoSummaryCard.tsx, ChamadoIaTriageCard.tsx, ChamadoLocationCard.tsx, ChamadoTimelineCard.tsx, ChamadoActionBar.tsx, StatusChangeModal.tsx)
-│   │   ├── Profile/ProfileScreen.tsx (+ components/ProfileUserCard.tsx, EditProfileModal.tsx)
+│   │   ├── Profile/ProfileScreen.tsx (+ components/ProfileUserCard.tsx, ProfileStatsCard.tsx, EditProfileModal.tsx)
 │   │   ├── ZelaBot/ZelaBotScreen.tsx (+ components/ZelaBotHistoryModal.tsx, ZelaBotInputBar.tsx, ZelaBotInsightsBanner.tsx, ZelaBotMessageBubble.tsx)
 │   │   └── SobreApp/SobreAppScreen.tsx (+ components/TeamMembersCard.tsx)
 │   ├── services/
@@ -153,14 +157,15 @@ Conforme regra do edital (*"Mínimo de 6 telas distintas — a tela sobre o app 
 1. **`WelcomeScreen` (`src/screens/Welcome/WelcomeScreen.tsx`):** Apresentação institucional da plataforma ZelaFix, alinhamento à ODS 11 da ONU e portas de entrada para Login ou Cadastro.
 2. **`LoginScreen` (`src/screens/Login/LoginScreen.tsx`):** Autenticação JWT de produção com validação Zod.
 3. **`RegisterScreen` (`src/screens/Register/RegisterScreen.tsx`):** Cadastro completo de cidadão (Nome, E-mail, Telefone, CEP/GPS, Rua, Número, Referência e Senha) validado com Zod.
-4. **`HomeScreen` (`src/screens/Home/HomeScreen.tsx`):** Painel executivo com Índice de Resolução, métricas inline, CTA de abertura rápida e distribuição por categoria.
-5. **`RadarBairroScreen` (`src/screens/RadarBairro/RadarBairroScreen.tsx`):** Feed colaborativo e ranking de urgência do bairro com busca textual, fila de triagem para **Gestor Público**, filtros por categoria/status e botão de apoio comunitário (`+1`).
+4. **`HomeScreen` (`src/screens/Home/HomeScreen.tsx`):** Painel executivo com Índice de Resolução no topo, atalhos por categoria, acesso ao ZelaBot IA e lista de ocorrências mais recentes.
+5. **`RadarBairroScreen` (`src/screens/RadarBairro/RadarBairroScreen.tsx`):** Feed colaborativo e ranking de urgência com busca textual, botão integrado para **Reportar Ocorrência**, seleção em modal (`SelectPickerModal`) por categoria/status/localização (todas as cidades por padrão, com opção por cidade, bairro ou estado) e apoio comunitário (`+1`).
 6. **`MeusChamadosScreen` (`src/screens/MeusChamados/MeusChamadosScreen.tsx`):** Gestão dos protocolos abertos pelo próprio cidadão filtrados por etapa de atendimento.
-7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura de relato com câmera/galeria, grid de categorias e autopreenchimento GPS.
-8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, parecer real da Triagem IA (quando presente), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor ou **Gestor Público**, apoio comunitário (`+1`) e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
+7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura de relato a partir do Radar com **foto obrigatória** (câmera/galeria), autopreenchimento GPS e classificação automática de categoria e gravidade pela **Spring AI** (`POST /chamados/triagem`).
+8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, parecer real da Triagem IA (gravidade, órgão e análise), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor ou **Gestor Público**, apoio comunitário (`+1`) e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
 9. **`EditarChamadoScreen` (`src/screens/EditarChamado/EditarChamadoScreen.tsx`):** Edição cadastral completa de relatos existentes com validação Zod.
-10. **`ProfileScreen` (`src/screens/Profile/ProfileScreen.tsx`):** Dados do usuário autenticado e papel (`Cidadão` / `Gestor Público`), modal de edição de perfil/senha (`useZodForm` + `BaseModal`), alternância de tema Claro/Escuro persistida e acesso à tela Sobre o App.
-11. **`SobreAppScreen` (`src/screens/SobreApp/SobreAppScreen.tsx`):** Exibe o **Hash de Commit de Referência** extraído dinamicamente do Git com compartilhamento nativo, integrantes da equipe FIAP com links diretos para GitHub/LinkedIn e stack tecnológica.
+10. **`ProfileScreen` (`src/screens/Profile/ProfileScreen.tsx`):** Dados do usuário autenticado, papel (`Cidadão` / `Gestor Público`), cartão de estatísticas pessoais (`ProfileStatsCard`), modal de edição de perfil/senha (`useZodForm` + `BaseModal`), alternância de tema Claro/Escuro persistida e acesso à tela Sobre o App.
+11. **`ZelaBotScreen` (`src/screens/ZelaBot/ZelaBotScreen.tsx`):** Assistente conversacional integrado ao botão central da barra de navegação, com histórico de sessões e insights preventivos por bairro.
+12. **`SobreAppScreen` (`src/screens/SobreApp/SobreAppScreen.tsx`):** Exibe o **Hash de Commit de Referência** extraído dinamicamente do Git com compartilhamento nativo, integrantes da equipe FIAP com links diretos para GitHub/LinkedIn e stack tecnológica.
 
 ---
 
@@ -179,7 +184,8 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `GET` | `/chamados/estatisticas` | Retorna métricas agregadas do painel executivo |
 | `GET` | `/chamados/{id}` | Detalhes completos do protocolo, triagem IA e histórico |
 | `GET` | `/chamados/{id}/foto` | Recupera a evidência fotográfica armazenada no Oracle BLOB |
-| `POST` | `/chamados` | Cria novo chamado com foto em Base64 e resolução de CEP |
+| `POST` | `/chamados/triagem` | Executa pré-análise síncrona com Spring AI para classificar categoria, gravidade e parecer |
+| `POST` | `/chamados` | Cria novo chamado com foto obrigatória em Base64 e validação ViaCEP no backend |
 | `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente |
 | `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`ABERTO`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
