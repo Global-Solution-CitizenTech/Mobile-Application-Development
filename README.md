@@ -36,6 +36,12 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 ---
 
+## 🔗 Vídeo de Demonstração (Global Solution 2)
+
+*(Link do YouTube será inserido após gravação)*
+
+---
+
 ## 3. Arquitetura de Engenharia Mobile (Padrão Sprint 4 + TanStack Query + Zod)
 
 O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile em React Native + TypeScript, estruturando componentes e telas em módulos desacoplados e preparando toda a camada de rede para integração imediata com o **Backend Java (Spring Boot)**:
@@ -43,7 +49,7 @@ O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile e
 - **Gerenciamento de Estado Assíncrono (`@tanstack/react-query` v5):** Cache inteligente, *lifecycle* nativo (`AppState` + `expo-network`), atualização otimista no apoio comunitário (`apoiarChamado`), *pull-to-refresh* e mutações invalidadas automaticamente via `queryKeys`.
 - **Segurança & Persistência (`expo-secure-store` + `@react-native-async-storage/async-storage`):** Tokens JWT armazenados de forma criptografada no Keychain/Keystore nativo via `SecureStore` (com fallback Web transparente) e preferências de tema reativas.
 - **Validação de Formulários com Schemas (`zod` v4 + `useZodForm`):** Hook genérico memoizado integrado a schemas declarativos (`LoginSchema`, `RegisterSchema`, `ProfileEditSchema`, `ChamadoFormSchema`, `StatusUpdateSchema`) com extração automática de erros por campo.
-- **Extração Dinâmica do Commit Hash (`app.config.js` + `expo-constants`):** O hash completo e curto do commit Git, branch e data são injetados automaticamente em tempo de build e exibidos na tela **Sobre o App**, atendendo integralmente à exigência de auditoria do edital FIAP.
+- **Extração Dinâmica do Commit Hash (`app.config.js` + `expo-constants`):** O hash completo e curto do commit Git, branch e data são injetados automaticamente em tempo de build e exibidos na tela **Sobre o App**.
 - **Camada HTTP Integrada ao Azure App Service (`src/services/`):** Suporte nativo ao formato paginado `Page<T>` do **Spring Data JPA**, interceptors `Bearer JWT` do **Spring Security**, normalização de erros do `@RestControllerAdvice` / Bean Validation (`src/utils/apiError.ts`) e *warmup* throttled em `/actuator/health` em `https://app-zelafix-561432.azurewebsites.net`.
 - **Câmera Nativa & GPS Automático (`expo-image-picker` + `expo-location`):** Captura real de evidências fotográficas (câmera/galeria em Base64) com preenchimento automático de CEP e endereço via Reverse Geocoding (`src/hooks/useLocalizacao.ts`) e resolução ViaCEP no backend Java.
 
@@ -150,9 +156,9 @@ Mobile-Application-Development/
 
 ---
 
-## 4. Mapeamento das 12 Telas (11 Telas Válidas + Sobre o App)
+## 4. Mapeamento das 12 Telas (11 Telas Funcionais + Sobre o App)
 
-Conforme regra do edital (*"Mínimo de 6 telas distintas — a tela sobre o app não contabiliza no total de telas"*), o aplicativo conta com **11 telas funcionais distintas** além da tela **Sobre o App**:
+O aplicativo conta com **11 telas funcionais distintas** além da tela **Sobre o App**:
 
 1. **`WelcomeScreen` (`src/screens/Welcome/WelcomeScreen.tsx`):** Apresentação institucional da plataforma ZelaFix, alinhamento à ODS 11 da ONU e portas de entrada para Login ou Cadastro.
 2. **`LoginScreen` (`src/screens/Login/LoginScreen.tsx`):** Autenticação JWT de produção com validação Zod.
@@ -201,7 +207,7 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 cd Mobile-Application-Development
 
 # 2. Instale as dependências
-npm install --legacy-peer-deps
+npm install
 
 # 3. Verifique a tipagem estrita do TypeScript e o ESLint
 npm run type-check
@@ -210,25 +216,3 @@ npm run lint
 # 4. Inicie o servidor de desenvolvimento Expo
 npx expo start
 ```
-
-### 📲 Instalação Direta via APK Standalone (Para Avaliação do Docente)
-
-Não é necessário clonar o repositório ou instalar ferramentas de desenvolvimento para avaliar o aplicativo. O binário Android já está compilado e distribuído na nuvem:
-
-1. **Download:** Baixe o arquivo diretamente em seu smartphone Android ou computador:
-   👉 [**Download direto do zelafix.apk (Build Oficial versionCode 2)**](https://expo.dev/artifacts/eas/xa4ydhW3fCizPf0dzYW37XI_ZX6z-DFuB2iTNRLluKw.apk)
-2. **Instalação no celular:** Abra o arquivo `.apk` baixado e toque em **Instalar** (permita a instalação de fontes desconhecidas caso seja solicitado pelo Android).
-3. **Instalação via ADB (emulador Android Studio):**
-   ```bash
-   adb install zelafix.apk
-   ```
-4. **APIs conectadas na nuvem:** O app já está pré-configurado com o backend Java no Azure App Service e o microsserviço ZelaBot IA no Render, sem necessidade de subir servidor local para avaliação.
-
----
-
-## 7. Declaração de Uso de Inteligência Artificial Generativa (Item 1.11 do Edital)
-
-Em conformidade com as diretrizes de ética e transparência acadêmica da **FIAP Global Solution 2026/2 (Seção 1.11)**:
-
-- **Ferramentas utilizadas:** Assistente de codificação baseado em LLM para apoio na refatoração arquitetural de componentes React Native, estruturação de schemas de validação com `zod` e padronização de contratos tipados TypeScript (`SpringPageResponse<T>`).
-- **Responsabilidade e Autoria Humana:** Todas as decisões de produto, definição do escopo funcional de zeladoria colaborativa, modelagem de domínio, regras de negócio, fluxos de navegação, identidade visual e revisão integral do código-fonte foram conduzidas, testadas e validadas pelos integrantes do grupo.
