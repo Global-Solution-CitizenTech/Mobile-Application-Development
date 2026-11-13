@@ -9,12 +9,6 @@ export interface HistoricoChamado {
   autorNome: string;
 }
 
-export interface TriagemIa {
-  prioridade: string;
-  orgao: string;
-  parecer: string;
-}
-
 export interface ChamadoResponse {
   idChamado: number;
   titulo: string;
@@ -22,6 +16,10 @@ export interface ChamadoResponse {
   dtAbertura: string;
   categoriaId: number;
   categoriaNome: string;
+  prioridadeId: number;
+  prioridadeNome: string;
+  orgaoId: number;
+  orgaoNome: string;
   usuarioId: number;
   usuarioNome: string;
   endereco: EnderecoResponse;
@@ -34,7 +32,11 @@ export interface ChamadoResponse {
 
 export interface Chamado extends Omit<ChamadoResponse, 'foto'> {
   fotoUrl?: string;
-  triagemIa?: TriagemIa;
+}
+
+export interface ChamadoCreateRequest {
+  endereco: EnderecoRequest;
+  fotoBase64: string;
 }
 
 export interface ChamadoRequest {
@@ -43,21 +45,6 @@ export interface ChamadoRequest {
   categoriaId: number;
   endereco: EnderecoRequest;
   fotoBase64?: string;
-}
-
-export interface ChamadoTriagemRequest {
-  titulo?: string;
-  descricao?: string;
-  bairro?: string;
-  fotoBase64: string;
-}
-
-export interface ChamadoTriagemPreview {
-  categoriaId: number;
-  categoriaNome: string;
-  prioridade: string;
-  orgaoResponsavel: string;
-  parecerIa: string;
 }
 
 export interface ChamadoStatusRequest {

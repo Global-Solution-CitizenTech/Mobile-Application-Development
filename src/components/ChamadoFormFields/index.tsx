@@ -8,10 +8,11 @@ import { maskCepInput } from '@/utils/formatters';
 import type { ChamadoFormData, FormErrors } from '@/utils/schemas';
 
 interface ChamadoFormFieldsProps {
-  titulo: string;
-  onChangeTitulo: (v: string) => void;
-  descricao: string;
-  onChangeDescricao: (v: string) => void;
+  titulo?: string;
+  onChangeTitulo?: (v: string) => void;
+  descricao?: string;
+  onChangeDescricao?: (v: string) => void;
+  hideDetails?: boolean;
   cep: string;
   onChangeCep: (v: string) => void;
   rua?: string;
@@ -28,10 +29,11 @@ interface ChamadoFormFieldsProps {
 }
 
 export const ChamadoFormFields = ({
-  titulo,
+  titulo = '',
   onChangeTitulo,
-  descricao,
+  descricao = '',
   onChangeDescricao,
+  hideDetails = false,
   cep,
   onChangeCep,
   rua,
@@ -51,26 +53,30 @@ export const ChamadoFormFields = ({
 
   return (
     <View style={styles.container}>
-      <Input
-        label="Título da Ocorrência *"
-        placeholder="Ex: Buraco fundo na faixa direita"
-        value={titulo}
-        onChangeText={onChangeTitulo}
-        maxLength={100}
-        error={errors.titulo}
-      />
+      {!hideDetails && (
+        <>
+          <Input
+            label="Título da Ocorrência *"
+            placeholder="Ex: Buraco fundo na faixa direita"
+            value={titulo}
+            onChangeText={onChangeTitulo}
+            maxLength={100}
+            error={errors.titulo}
+          />
 
-      <Input
-        label="Descrição Detalhada *"
-        placeholder="Descreva o problema, riscos próximos e há quanto tempo ocorre..."
-        value={descricao}
-        onChangeText={onChangeDescricao}
-        multiline
-        numberOfLines={4}
-        maxLength={1000}
-        style={styles.textArea}
-        error={errors.descricao}
-      />
+          <Input
+            label="Descrição Detalhada *"
+            placeholder="Descreva o problema, riscos próximos e há quanto tempo ocorre..."
+            value={descricao}
+            onChangeText={onChangeDescricao}
+            multiline
+            numberOfLines={4}
+            maxLength={1000}
+            style={styles.textArea}
+            error={errors.descricao}
+          />
+        </>
+      )}
 
       {onUsarGps && (
         <View style={styles.gpsSection}>

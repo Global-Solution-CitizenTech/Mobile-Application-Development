@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { type NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +12,7 @@ import type { AppTheme } from '@/theme/types';
 import { useChamadoForm } from '@/hooks/useChamadoForm';
 import type { AppStackParamList } from '@/navigation/types';
 import { PhotoEvidencePicker } from '@/screens/NovoChamado/components/PhotoEvidencePicker';
-import { spacing } from '@/theme';
+import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NovoChamado'>;
 
@@ -31,7 +31,7 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Header
         title="Reportar Ocorrência"
-        subtitle="Envie para a zeladoria municipal"
+        subtitle="Envie a foto e o local; nossa IA preenche o restante"
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -48,11 +48,21 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.aiHintBox}>
+          <Ionicons name="sparkles" size={16} color={theme.primary} />
+          <Text style={styles.aiHintText}>
+            Basta anexar a foto e informar o endereço. Título, descrição, categoria, prioridade e órgão responsável serão definidos automaticamente pela IA.
+          </Text>
+        </View>
+
+        <PhotoEvidencePicker
+          fotoBase64={form.values.fotoBase64}
+          onChangeFoto={(base64) => form.setFieldValue('fotoBase64', base64)}
+          error={form.errors.fotoBase64}
+        />
+
         <ChamadoFormFields
-          titulo={form.values.titulo}
-          onChangeTitulo={(v) => form.setFieldValue('titulo', v)}
-          descricao={form.values.descricao}
-          onChangeDescricao={(v) => form.setFieldValue('descricao', v)}
+          hideDetails
           cep={form.values.cep}
           onChangeCep={(v) => form.setFieldValue('cep', v)}
           rua={form.values.rua}
@@ -68,18 +78,12 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
           localizacaoResumo={localizacaoResumo}
         />
 
-        <PhotoEvidencePicker
-          fotoBase64={form.values.fotoBase64}
-          onChangeFoto={(base64) => form.setFieldValue('fotoBase64', base64)}
-          error={form.errors.fotoBase64}
-        />
-
         <View style={styles.submitWrapper}>
           <Button
-            title={form.analisandoIa ? 'Analisando com Spring AI...' : 'Enviar Ocorrência'}
+            title="Enviar Ocorrência"
             leftIcon={<Ionicons name="send-outline" size={18} color={theme.inverseText} />}
             size="lg"
-            loading={form.submitting || form.analisandoIa}
+            loading={form.submitting}
             onPress={() => {
               void form.submit((chamado) => setCreatedId(chamado.idChamado));
             }}
@@ -91,7 +95,7 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
         visible={Boolean(createdId)}
         type="success"
         title="Ocorrência Registrada!"
-        message={`Seu chamado foi enviado com sucesso.\n\nProtocolo #${createdId ?? ''}`}
+        message={`Protocolo #${createdId ?? ''} criado com sucesso. Nossa IA já está analisando a imagem para classificar a ocorrência.`}
         confirmText="Ver Chamado"
         cancelText="Início"
         onConfirm={() => {
@@ -120,5 +124,21 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.xs },
+    aiHintBox: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.xs + 2,
+      padding: spacing.sm + 4,
+      marginBottom: spacing.xs,
+      borderRadius: borderRadius.md,
+      backgroundColor: theme.primaryLight,
+    },
+    aiHintText: {
+      flex: 1,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.medium,
+      color: theme.primary,
+      lineHeight: 18,
+    },
     submitWrapper: { marginTop: spacing.sm },
   });

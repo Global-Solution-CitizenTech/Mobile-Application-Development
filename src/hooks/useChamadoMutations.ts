@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
 import type { ActionCallbacks, SpringPageResponse } from '@/types/api';
-import type { Chamado, ChamadoRequest, ChamadoStatusRequest } from '@/types/chamado';
+import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoStatusRequest } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
 
 const SUPPORT_ERROR_MESSAGE = 'Falha ao registrar apoio.';
@@ -29,7 +29,7 @@ export function useChamadoMutations() {
   }, [queryClient]);
 
   const createMutation = useMutation({
-    mutationFn: (payload: ChamadoRequest) => chamadoService.criar(payload),
+    mutationFn: (payload: ChamadoCreateRequest) => chamadoService.criar(payload),
     onSuccess: async (created) => {
       queryClient.setQueryData(queryKeys.chamados.detail(created.idChamado), created);
       await invalidateListsAndStats();
@@ -103,7 +103,7 @@ export function useChamadoMutations() {
   const { mutate: mutateDelete } = deleteMutation;
 
   const criarChamado = useCallback(
-    (payload: ChamadoRequest, callbacks?: ActionCallbacks<Chamado>) => {
+    (payload: ChamadoCreateRequest, callbacks?: ActionCallbacks<Chamado>) => {
       mutateCreate(payload, callbacks);
     },
     [mutateCreate]

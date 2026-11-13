@@ -38,6 +38,7 @@ export function useChamadoDetail(id?: number) {
       return chamadoService.buscarPorId(id);
     },
     enabled: Boolean(usuario) && hasValidId,
+    refetchInterval: (q) => (q.state.data?.prioridadeNome === 'PENDENTE' ? 3000 : false),
   });
 
   return {

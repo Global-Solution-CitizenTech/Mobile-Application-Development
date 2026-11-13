@@ -1,10 +1,8 @@
 import { buildApiAssetUrl } from '@/services/api';
-import type { Chamado, ChamadoRequest, ChamadoResponse, HistoricoChamado, TriagemIa } from '@/types/chamado';
+import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse } from '@/types/chamado';
 import type { EnderecoFormInput, EnderecoRequest } from '@/types/endereco';
 import { onlyDigits } from '@/utils/formatters';
-import type { ChamadoFormData } from '@/utils/schemas';
-
-const TRIAGEM_IA_REGEX = /^\[Triagem IA\s*-\s*([^|\]]+)\|\s*([^\]]+)\]\s*(.*)$/is;
+import type { ChamadoCreateFormData, ChamadoFormData } from '@/utils/schemas';
 
 export function stripDataUriPrefix(base64?: string): string | undefined {
   if (!base64) return undefined;
@@ -22,20 +20,6 @@ export function buildEnderecoRequest(input: EnderecoFormInput): EnderecoRequest 
   };
 }
 
-function parseTriagemIa(historico: HistoricoChamado[]): TriagemIa | undefined {
-  for (const item of historico) {
-    const match = item.observacao?.match(TRIAGEM_IA_REGEX);
-    if (match) {
-      return {
-        prioridade: match[1].trim(),
-        orgao: match[2].trim(),
-        parecer: match[3].trim(),
-      };
-    }
-  }
-  return undefined;
-}
-
 export function mapChamadoResponse(item: ChamadoResponse): Chamado {
   const historico = Array.isArray(item.historico) ? item.historico : [];
   return {
@@ -45,6 +29,10 @@ export function mapChamadoResponse(item: ChamadoResponse): Chamado {
     dtAbertura: item.dtAbertura,
     categoriaId: item.categoriaId,
     categoriaNome: item.categoriaNome,
+    prioridadeId: item.prioridadeId,
+    prioridadeNome: item.prioridadeNome,
+    orgaoId: item.orgaoId,
+    orgaoNome: item.orgaoNome,
     usuarioId: item.usuarioId,
     usuarioNome: item.usuarioNome,
     endereco: item.endereco,
@@ -53,12 +41,14 @@ export function mapChamadoResponse(item: ChamadoResponse): Chamado {
     totalVotos: item.totalVotos,
     apoiadoPorMim: item.apoiadoPorMim,
     historico,
-    triagemIa: parseTriagemIa(historico),
   };
 }
 
-export function getLatestParecer(chamado: Chamado): HistoricoChamado | undefined {
-  return chamado.historico.find((item) => !item.observacao?.startsWith('[Triagem IA'));
+export function toChamadoCreateRequest(form: ChamadoCreateFormData): ChamadoCreateRequest {
+  return {
+    endereco: buildEnderecoRequest(form),
+    fotoBase64: stripDataUriPrefix(form.fotoBase64) ?? '',
+  };
 }
 
 export function toChamadoRequest(form: ChamadoFormData): ChamadoRequest {

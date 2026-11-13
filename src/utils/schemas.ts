@@ -119,8 +119,8 @@ export const ChamadoFormSchema = z.object({
   fotoBase64: z.string().optional(),
 });
 
-export const ChamadoCreateSchema = ChamadoFormSchema.extend({
-  categoriaId: z.number().int().nonnegative().optional().default(0),
+export const ChamadoCreateSchema = z.object({
+  ...enderecoFields,
   fotoBase64: z.string().trim().min(1, 'Envie uma foto da ocorrência'),
 });
 
@@ -133,4 +133,5 @@ export type LoginFormData = z.infer<typeof LoginSchema>;
 export type RegisterFormData = z.infer<typeof RegisterSchema>;
 export type ProfileEditFormData = z.infer<typeof ProfileEditSchema>;
 export type ChamadoFormData = z.infer<typeof ChamadoFormSchema>;
+export type ChamadoCreateFormData = z.infer<typeof ChamadoCreateSchema>;
 export type StatusUpdateFormData = z.infer<typeof StatusUpdateSchema>;

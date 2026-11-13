@@ -2,14 +2,14 @@ import { useCallback, useMemo, useState } from 'react';
 import { useCategoriasChamado, useChamadoDetail } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useLocalizacao } from '@/hooks/useLocalizacao';
-import { chamadoService } from '@/services/chamadoService';
-import type { Chamado, ChamadoTriagemPreview } from '@/types/chamado';
+import type { Chamado } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { toChamadoRequest } from '@/utils/chamadoMappers';
+import { toChamadoCreateRequest, toChamadoRequest } from '@/utils/chamadoMappers';
 import { maskCepInput } from '@/utils/formatters';
 import {
   ChamadoCreateSchema,
   ChamadoFormSchema,
+  type ChamadoCreateFormData,
   type ChamadoFormData,
   extractFieldErrors,
   type FormErrors,
@@ -41,7 +41,6 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
   const [draft, setDraft] = useState<Partial<ChamadoFormData>>({});
   const [errors, setErrors] = useState<FormErrors<ChamadoFormData>>({});
   const [erroModal, setErroModal] = useState<string | null>(null);
-  const [analisandoIa, setAnalisandoIa] = useState(false);
 
   const values = useMemo<ChamadoFormData>(() => {
     const chamado = detailQuery.chamado;
@@ -93,17 +92,16 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
   }, [limparLocalizacao]);
 
   const submit = useCallback(
-    async (onSuccess: (chamado: Chamado, triagem?: ChamadoTriagemPreview) => void) => {
-      const result = (isEdit ? ChamadoFormSchema : ChamadoCreateSchema).safeParse(values);
-      if (!result.success) {
-        setErrors(extractFieldErrors<ChamadoFormData>(result.error));
-        return;
-      }
-
+    async (onSuccess: (chamado: Chamado) => void) => {
       setErrors({});
       setErroModal(null);
 
       if (isEdit && chamadoId) {
+        const result = ChamadoFormSchema.safeParse(values);
+        if (!result.success) {
+          setErrors(extractFieldErrors<ChamadoFormData>(result.error));
+          return;
+        }
         atualizarChamado(chamadoId, toChamadoRequest(result.data), {
           onSuccess: (updated) => onSuccess(updated),
           onError: (err) => setErroModal(getApiErrorMessage(err, 'Falha ao salvar alterações.')),
@@ -111,29 +109,28 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
         return;
       }
 
-      setAnalisandoIa(true);
-      try {
-        const triagem = await chamadoService.analisarTriagemIa({
-          titulo: result.data.titulo,
-          descricao: result.data.descricao,
-          bairro: ultimaLocalizacao?.bairro || undefined,
-          fotoBase64: result.data.fotoBase64!,
-        });
-        const payload = toChamadoRequest({ ...result.data, categoriaId: triagem.categoriaId });
-        criarChamado(payload, {
-          onSuccess: (created) => {
-            resetForm();
-            onSuccess(created, triagem);
-          },
-          onError: (err) => setErroModal(getApiErrorMessage(err, 'Erro ao registrar chamado.')),
-        });
-      } catch (err) {
-        setErroModal(getApiErrorMessage(err, 'Não foi possível classificar a ocorrência com a Spring AI.'));
-      } finally {
-        setAnalisandoIa(false);
+      const createInput: ChamadoCreateFormData = {
+        cep: values.cep,
+        rua: values.rua,
+        numero: values.numero,
+        referencia: values.referencia,
+        fotoBase64: values.fotoBase64 ?? '',
+      };
+      const result = ChamadoCreateSchema.safeParse(createInput);
+      if (!result.success) {
+        setErrors(extractFieldErrors<ChamadoCreateFormData>(result.error));
+        return;
       }
+
+      criarChamado(toChamadoCreateRequest(result.data), {
+        onSuccess: (created) => {
+          resetForm();
+          onSuccess(created);
+        },
+        onError: (err) => setErroModal(getApiErrorMessage(err, 'Erro ao registrar chamado.')),
+      });
     },
-    [atualizarChamado, chamadoId, criarChamado, isEdit, resetForm, ultimaLocalizacao, values]
+    [atualizarChamado, chamadoId, criarChamado, isEdit, resetForm, values]
   );
 
   const clearErroModal = useCallback(() => setErroModal(null), []);
@@ -147,7 +144,6 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
     loadingChamado: isEdit ? detailQuery.isLoading : false,
     loadError: isEdit ? detailQuery.error : null,
     submitting: isCreating || isUpdating,
-    analisandoIa,
     capturandoGps,
     erroGps,
     localizacaoPreview: ultimaLocalizacao,

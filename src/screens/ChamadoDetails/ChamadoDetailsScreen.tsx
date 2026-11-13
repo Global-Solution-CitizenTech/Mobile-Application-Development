@@ -10,7 +10,6 @@ import type { AppTheme } from '@/theme/types';
 import { useChamadoDetails } from '@/hooks/useChamadoDetails';
 import type { AppStackParamList } from '@/navigation/types';
 import { ChamadoActionBar } from '@/screens/ChamadoDetails/components/ChamadoActionBar';
-import { ChamadoIaTriageCard } from '@/screens/ChamadoDetails/components/ChamadoIaTriageCard';
 import { ChamadoLocationCard } from '@/screens/ChamadoDetails/components/ChamadoLocationCard';
 import { ChamadoSummaryCard } from '@/screens/ChamadoDetails/components/ChamadoSummaryCard';
 import { ChamadoTimelineCard } from '@/screens/ChamadoDetails/components/ChamadoTimelineCard';
@@ -64,7 +63,6 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
             onAskAi={() => navigation.navigate('MainTabs', { screen: 'ZelaBotTab', params: { chamadoId: chamado.idChamado } })}
           />
 
-          <ChamadoIaTriageCard triagem={chamado.triagemIa} />
           <ChamadoLocationCard endereco={chamado.endereco} />
           <ChamadoTimelineCard historico={chamado.historico} />
 

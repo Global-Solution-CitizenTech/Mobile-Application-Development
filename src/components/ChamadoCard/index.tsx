@@ -22,7 +22,7 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
   const styles = useThemedStyles(createStyles);
   const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
   const podeApoiar = Boolean(onApoiar) && canSupportChamado(chamado.status);
-  const triagem = chamado.triagemIa ? getPriorityVisuals(chamado.triagemIa.prioridade, theme) : null;
+  const priority = chamado.prioridadeNome !== 'PENDENTE' ? getPriorityVisuals(chamado.prioridadeNome, theme) : null;
   const showThumbnail = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
 
   return (
@@ -62,10 +62,10 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
       </View>
 
       <View style={styles.footerRow}>
-        {triagem ? (
-          <View style={[styles.priorityPill, { backgroundColor: triagem.bg }]}>
-            <Ionicons name="sparkles" size={11} color={triagem.color} />
-            <Text style={[styles.priorityText, { color: triagem.color }]}>IA: {triagem.label}</Text>
+        {priority ? (
+          <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
+            <Ionicons name="flag-outline" size={11} color={priority.color} />
+            <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
           </View>
         ) : (
           <View style={styles.authorPill}>
