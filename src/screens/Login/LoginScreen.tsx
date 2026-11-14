@@ -48,7 +48,7 @@ export const LoginScreen = ({ navigation }: Props) => {
             onEmailChange={(text) => setFieldValue('email', text)}
             onSenhaChange={(text) => setFieldValue('senha', text)}
             onSubmit={handleLogin}
-            onGoToRegister={() => navigation.navigate('Register')}
+            onGoToRegister={() => navigation.replace('Register')}
           />
         </View>
       </ScrollView>

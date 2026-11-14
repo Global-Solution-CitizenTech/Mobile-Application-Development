@@ -6,7 +6,7 @@ import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 export function useHomeData() {
   const { usuario } = useAuth();
   const statsQuery = useEstatisticasChamados();
-  const recentQuery = useChamadosList({ page: 0, size: 5, sort: 'dtAbertura,desc' });
+  const recentQuery = useChamadosList({ page: 0, size: 3, sort: 'dtAbertura,desc' });
   const categoriasQuery = useCategoriasChamado();
   const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
 

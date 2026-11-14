@@ -48,7 +48,7 @@ export const RadarLocationPrefSchema = z.object({
   valor: z.string().nullable(),
 });
 
-const STATUS_CHAMADO_VALUES = ['PENDENTE', 'ABERTO', 'EM_ANALISE', 'EM_EXECUCAO', 'CONCLUIDO', 'REJEITADO'] as const satisfies readonly StatusChamado[];
+const STATUS_CHAMADO_VALUES = ['PENDENTE', 'EM_ANALISE', 'EM_EXECUCAO', 'CONCLUIDO', 'REJEITADO'] as const satisfies readonly StatusChamado[];
 
 const DDDS_VALIDOS = new Set([
   '11', '12', '13', '14', '15', '16', '17', '18', '19',

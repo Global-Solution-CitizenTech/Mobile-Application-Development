@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import { getCategoryVisuals } from '@/theme/semanticConfig';
+import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
 
 interface CategoryBadgeProps {
   categoria: string;
@@ -19,7 +19,7 @@ export const CategoryBadge = ({ categoria, compact = false }: CategoryBadgeProps
     <View style={[styles.badge, { backgroundColor: bg }, compact && styles.compact]}>
       <Ionicons name={iconName} size={compact ? 12 : 14} color={color} />
       <Text style={[styles.text, { color }, compact && styles.textCompact]} numberOfLines={1}>
-        {categoria}
+        {getCategoryLabel(categoria)}
       </Text>
     </View>
   );

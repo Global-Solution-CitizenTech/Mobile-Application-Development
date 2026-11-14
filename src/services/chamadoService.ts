@@ -1,4 +1,5 @@
 import { api } from '@/services/api';
+import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
 import type { SpringPageResponse } from '@/types/api';
 import type { CategoriaResponse } from '@/types/categoria';
 import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados } from '@/types/chamado';
@@ -13,8 +14,11 @@ export const chamadoService = {
         categoria: filtros?.categoria || undefined,
         busca: filtros?.busca?.trim() || undefined,
         apenasMeus: filtros?.apenasMeus ?? undefined,
+        cidade: filtros?.cidade?.trim() || undefined,
+        bairro: filtros?.bairro?.trim() || undefined,
+        estado: filtros?.estado?.trim() || undefined,
         page: filtros?.page ?? 0,
-        size: filtros?.size ?? 50,
+        size: filtros?.size ?? 10,
         sort: filtros?.sort ?? 'dtAbertura,desc',
       },
     });
@@ -29,9 +33,8 @@ export const chamadoService = {
     return mapChamadoResponse(data);
   },
 
-  async criar(payload: ChamadoCreateRequest): Promise<Chamado> {
-    const { data } = await api.post<ChamadoResponse>('/chamados', payload);
-    return mapChamadoResponse(data);
+  async criar(payload: ChamadoCreateRequest): Promise<void> {
+    await api.post('/chamados', payload);
   },
 
   async atualizar(id: number, payload: ChamadoRequest): Promise<Chamado> {
@@ -59,7 +62,6 @@ export const chamadoService = {
   },
 
   async listarCategorias(): Promise<CategoriaResponse[]> {
-    const { data } = await api.get<CategoriaResponse[]>('/categorias');
-    return data;
+    return [...CATEGORIA_CATALOG];
   },
 };

@@ -14,7 +14,7 @@ export function useMeusChamadosData() {
   const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
 
   const contadores = useMemo(() => {
-    const abertos = chamados.filter((c) => c.status === 'PENDENTE' || c.status === 'ABERTO').length;
+    const abertos = chamados.filter((c) => c.status === 'PENDENTE').length;
     const emAndamento = chamados.filter((c) => c.status === 'EM_ANALISE' || c.status === 'EM_EXECUCAO').length;
     const concluidos = chamados.filter((c) => c.status === 'CONCLUIDO' || c.status === 'REJEITADO').length;
     return { total: chamados.length, abertos, emAndamento, concluidos };

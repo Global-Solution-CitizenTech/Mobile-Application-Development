@@ -5,6 +5,9 @@ export interface FiltroChamados {
   categoria?: string;
   busca?: string;
   apenasMeus?: boolean;
+  cidade?: string;
+  bairro?: string;
+  estado?: string;
   page?: number;
   size?: number;
   sort?: string;

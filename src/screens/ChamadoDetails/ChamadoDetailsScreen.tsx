@@ -15,6 +15,7 @@ import { ChamadoSummaryCard } from '@/screens/ChamadoDetails/components/ChamadoS
 import { ChamadoTimelineCard } from '@/screens/ChamadoDetails/components/ChamadoTimelineCard';
 import { StatusChangeModal } from '@/screens/ChamadoDetails/components/StatusChangeModal';
 import { spacing } from '@/theme';
+import { getCategoryLabel } from '@/theme/semanticConfig';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ChamadoDetails'>;
 
@@ -30,7 +31,7 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
     <View style={styles.container}>
       <Header
         title={chamado ? `Protocolo #${chamado.idChamado}` : 'Detalhes do Chamado'}
-        subtitle={chamado?.categoriaNome || 'Acompanhamento oficial'}
+        subtitle={chamado ? getCategoryLabel(chamado.categoriaNome) : 'Acompanhamento oficial'}
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -55,12 +56,12 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
               paddingRight: Math.max(insets.right, spacing.md),
             },
           ]}
-          refreshControl={<RefreshControl refreshing={details.isRefetching} onRefresh={() => { void details.refetch(); }} tintColor={theme.primary} />}
+          refreshControl={<RefreshControl refreshing={details.isRefreshing} onRefresh={() => { void details.handleRefresh(); }} tintColor={theme.primary} />}
           showsVerticalScrollIndicator={false}
         >
           <ChamadoSummaryCard
             chamado={chamado}
-            onAskAi={() => navigation.navigate('MainTabs', { screen: 'ZelaBotTab', params: { chamadoId: chamado.idChamado } })}
+            onAskAi={() => navigation.popTo('MainTabs', { screen: 'ZelaBotTab', params: { chamadoId: chamado.idChamado } })}
           />
 
           <ChamadoLocationCard endereco={chamado.endereco} />

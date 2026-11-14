@@ -9,18 +9,17 @@ import { MeusChamadosScreen } from '@/screens/MeusChamados/MeusChamadosScreen';
 import { ProfileScreen } from '@/screens/Profile/ProfileScreen';
 import { RadarBairroScreen } from '@/screens/RadarBairro/RadarBairroScreen';
 import { ZelaBotScreen } from '@/screens/ZelaBot/ZelaBotScreen';
-import { fontSize, fontWeight, shadows } from '@/theme';
+import { fontSize, fontWeight } from '@/theme';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
 const styles = StyleSheet.create({
   centerTabIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 34,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
   },
 });
 
@@ -77,11 +76,10 @@ export const TabNavigator = () => {
             <View
               style={[
                 styles.centerTabIcon,
-                shadows.md,
                 { backgroundColor: focused ? theme.primaryDark : theme.primary },
               ]}
             >
-              <Ionicons name="sparkles" size={22} color={theme.inverseText} />
+              <Ionicons name="sparkles" size={16} color={theme.inverseText} />
             </View>
           ),
         }}

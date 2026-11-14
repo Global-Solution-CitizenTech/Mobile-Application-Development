@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { useCategoriasChamado, useChamadoDetail } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useLocalizacao } from '@/hooks/useLocalizacao';
-import type { Chamado } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { toChamadoCreateRequest, toChamadoRequest } from '@/utils/chamadoMappers';
 import { maskCepInput } from '@/utils/formatters';
@@ -92,7 +91,7 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
   }, [limparLocalizacao]);
 
   const submit = useCallback(
-    async (onSuccess: (chamado: Chamado) => void) => {
+    async (onSuccess: () => void) => {
       setErrors({});
       setErroModal(null);
 
@@ -103,7 +102,7 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
           return;
         }
         atualizarChamado(chamadoId, toChamadoRequest(result.data), {
-          onSuccess: (updated) => onSuccess(updated),
+          onSuccess: () => onSuccess(),
           onError: (err) => setErroModal(getApiErrorMessage(err, 'Falha ao salvar alterações.')),
         });
         return;
@@ -123,9 +122,9 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
       }
 
       criarChamado(toChamadoCreateRequest(result.data), {
-        onSuccess: (created) => {
+        onSuccess: () => {
           resetForm();
-          onSuccess(created);
+          onSuccess();
         },
         onError: (err) => setErroModal(getApiErrorMessage(err, 'Erro ao registrar chamado.')),
       });

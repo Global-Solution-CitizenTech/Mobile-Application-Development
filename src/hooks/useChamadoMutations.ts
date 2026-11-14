@@ -30,9 +30,11 @@ export function useChamadoMutations() {
 
   const createMutation = useMutation({
     mutationFn: (payload: ChamadoCreateRequest) => chamadoService.criar(payload),
-    onSuccess: async (created) => {
-      queryClient.setQueryData(queryKeys.chamados.detail(created.idChamado), created);
+    onSuccess: async () => {
       await invalidateListsAndStats();
+      setTimeout(() => {
+        void invalidateListsAndStats();
+      }, 5000);
     },
   });
 
@@ -103,7 +105,7 @@ export function useChamadoMutations() {
   const { mutate: mutateDelete } = deleteMutation;
 
   const criarChamado = useCallback(
-    (payload: ChamadoCreateRequest, callbacks?: ActionCallbacks<Chamado>) => {
+    (payload: ChamadoCreateRequest, callbacks?: ActionCallbacks<void>) => {
       mutateCreate(payload, callbacks);
     },
     [mutateCreate]

@@ -28,7 +28,8 @@ export function canChangeChamadoStatus(usuario?: Usuario | null): boolean {
 }
 
 export function canDeleteChamado(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
-  return isAutorOuGestor(usuario, chamado);
+  if (!usuario || !chamado || !canAccessMobileApp(usuario)) return false;
+  return chamado.usuarioId === usuario.id;
 }
 
 export function canSupportChamado(status: StatusChamado): boolean {

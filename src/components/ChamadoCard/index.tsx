@@ -8,7 +8,7 @@ import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
 import type { Chamado } from '@/types/chamado';
-import { formatShortDate, getFirstName, getShortEndereco } from '@/utils/formatters';
+import { formatShortDate, getShortEndereco } from '@/utils/formatters';
 import { canSupportChamado } from '@/utils/permissions';
 
 interface ChamadoCardProps {
@@ -22,7 +22,7 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
   const styles = useThemedStyles(createStyles);
   const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
   const podeApoiar = Boolean(onApoiar) && canSupportChamado(chamado.status);
-  const priority = chamado.prioridadeNome !== 'PENDENTE' ? getPriorityVisuals(chamado.prioridadeNome, theme) : null;
+  const priority = getPriorityVisuals(chamado.prioridadeNome, theme);
   const showThumbnail = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
 
   return (
@@ -62,17 +62,10 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
       </View>
 
       <View style={styles.footerRow}>
-        {priority ? (
-          <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
-            <Ionicons name="flag-outline" size={11} color={priority.color} />
-            <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
-          </View>
-        ) : (
-          <View style={styles.authorPill}>
-            <Ionicons name="person-outline" size={12} color={theme.textMuted} />
-            <Text style={styles.authorText}>{getFirstName(chamado.usuarioNome)}</Text>
-          </View>
-        )}
+        <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
+          <Ionicons name="flag-outline" size={11} color={priority.color} />
+          <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
+        </View>
 
         <TouchableOpacity
           style={[styles.voteBtn, chamado.apoiadoPorMim && styles.voteBtnActive, !podeApoiar && styles.voteBtnDisabled]}
@@ -137,8 +130,6 @@ const createStyles = (theme: AppTheme) =>
       borderRadius: borderRadius.full,
     },
     priorityText: { fontSize: fontSize.tiny + 1, fontWeight: fontWeight.bold },
-    authorPill: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    authorText: { fontSize: fontSize.caption, color: theme.textMuted, fontWeight: fontWeight.medium },
     voteBtn: {
       flexDirection: 'row',
       alignItems: 'center',

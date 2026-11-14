@@ -14,6 +14,18 @@ export function useChamadoDetails(id: number) {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { refetch } = detailQuery;
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
 
   const chamado = detailQuery.chamado;
   const podeEditar = canEditChamado(usuario, chamado);
@@ -68,11 +80,12 @@ export function useChamadoDetails(id: number) {
   return {
     chamado,
     isLoading: detailQuery.isLoading,
-    isRefetching: detailQuery.isRefetching,
+    isRefreshing,
     fetchError: detailQuery.error,
     actionError,
     clearActionError,
-    refetch: detailQuery.refetch,
+    refetch,
+    handleRefresh,
     podeEditar,
     podeAlterarStatus,
     podeExcluir,

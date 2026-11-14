@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import { getCategoryVisuals } from '@/theme/semanticConfig';
+import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
 import type { CategoriaResponse } from '@/types/categoria';
 
 interface CategoryGridSelectorProps {
@@ -40,7 +40,7 @@ export const CategoryGridSelector = ({
                 <Ionicons name={iconName} size={18} color={selected ? theme.inverseText : color} />
               </View>
               <Text style={[styles.tileText, selected && styles.tileTextSelected]} numberOfLines={2}>
-                {cat.nome}
+                {getCategoryLabel(cat.nome)}
               </Text>
             </TouchableOpacity>
           );

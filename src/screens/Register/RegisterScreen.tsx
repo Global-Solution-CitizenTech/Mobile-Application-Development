@@ -48,7 +48,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
             onChangeTelefone={(text) => setFieldValue('telefone', maskPhoneInput(text))}
             onChangeCep={(text) => setFieldValue('cep', maskCepInput(text))}
             onSubmit={handleRegister}
-            onGoToLogin={() => navigation.navigate('Login')}
+            onGoToLogin={() => navigation.replace('Login')}
             submitting={submitting}
           />
         </View>

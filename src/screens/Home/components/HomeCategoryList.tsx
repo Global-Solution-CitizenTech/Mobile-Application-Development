@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import { getCategoryVisuals } from '@/theme/semanticConfig';
+import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
 import type { CategoriaResponse } from '@/types/categoria';
 
 interface HomeCategoryListProps {
@@ -29,7 +29,7 @@ export const HomeCategoryList = ({ categorias, onSelectCategoria }: HomeCategory
                 <Ionicons name={iconName} size={20} color={color} />
               </View>
               <Text style={styles.name} numberOfLines={2}>
-                {cat.nome}
+                {getCategoryLabel(cat.nome)}
               </Text>
             </TouchableOpacity>
           );

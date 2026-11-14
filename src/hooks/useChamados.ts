@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
@@ -24,6 +24,36 @@ export function useChamadosList(filtros: FiltroChamados = {}, enabled = true) {
   };
 }
 
+export function useInfiniteChamadosList(filtros: Omit<FiltroChamados, 'page'> = {}, enabled = true) {
+  const { usuario } = useAuth();
+
+  const query = useInfiniteQuery({
+    queryKey: queryKeys.chamados.infiniteList(filtros, usuario?.id),
+    queryFn: ({ pageParam }) => chamadoService.listar({ ...filtros, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      const next = lastPage.page.number + 1;
+      return next < lastPage.page.totalPages ? next : undefined;
+    },
+    enabled: enabled && Boolean(usuario),
+  });
+
+  const chamados = query.data?.pages.flatMap((page) => page.content) ?? [];
+  const totalElements = query.data?.pages[0]?.page.totalElements ?? 0;
+
+  return {
+    chamados,
+    totalElements,
+    hasNextPage: Boolean(query.hasNextPage),
+    isFetchingNextPage: query.isFetchingNextPage,
+    fetchNextPage: query.fetchNextPage,
+    isLoading: query.isLoading,
+    isRefetching: query.isRefetching && !query.isFetchingNextPage,
+    error: query.error ? getApiErrorMessage(query.error) : null,
+    refetch: query.refetch,
+  };
+}
+
 export function useChamadoDetail(id?: number) {
   const { usuario } = useAuth();
 
@@ -38,13 +68,11 @@ export function useChamadoDetail(id?: number) {
       return chamadoService.buscarPorId(id);
     },
     enabled: Boolean(usuario) && hasValidId,
-    refetchInterval: (q) => (q.state.data?.prioridadeNome === 'PENDENTE' ? 3000 : false),
   });
 
   return {
     chamado: query.data ?? null,
     isLoading: query.isLoading,
-    isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
     refetch: query.refetch,
   };

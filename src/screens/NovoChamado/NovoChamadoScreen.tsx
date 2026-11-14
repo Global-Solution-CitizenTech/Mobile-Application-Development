@@ -21,7 +21,7 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const form = useChamadoForm({ mode: 'create' });
-  const [createdId, setCreatedId] = useState<number | null>(null);
+  const [createdSuccess, setCreatedSuccess] = useState(false);
 
   const localizacaoResumo = form.localizacaoPreview
     ? [form.localizacaoPreview.bairro, form.localizacaoPreview.cidade].filter(Boolean).join(' • ') || 'Localização capturada'
@@ -85,27 +85,26 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
             size="lg"
             loading={form.submitting}
             onPress={() => {
-              void form.submit((chamado) => setCreatedId(chamado.idChamado));
+              void form.submit(() => setCreatedSuccess(true));
             }}
           />
         </View>
       </ScrollView>
 
       <FeedbackModal
-        visible={Boolean(createdId)}
+        visible={createdSuccess}
         type="success"
-        title="Ocorrência Registrada!"
-        message={`Protocolo #${createdId ?? ''} criado com sucesso. Nossa IA já está analisando a imagem para classificar a ocorrência.`}
-        confirmText="Ver Chamado"
+        title="Ocorrência em Triagem!"
+        message="Sua foto e endereço foram recebidos. Nossa IA está analisando a ocorrência e ela aparecerá na lista em instantes."
+        confirmText="Meus Chamados"
         cancelText="Início"
         onConfirm={() => {
-          const targetId = createdId;
-          setCreatedId(null);
-          if (targetId) navigation.replace('ChamadoDetails', { id: targetId });
+          setCreatedSuccess(false);
+          navigation.popTo('MainTabs', { screen: 'MeusChamadosTab' });
         }}
         onCancel={() => {
-          setCreatedId(null);
-          navigation.navigate('MainTabs', { screen: 'HomeTab' });
+          setCreatedSuccess(false);
+          navigation.popTo('MainTabs', { screen: 'HomeTab' });
         }}
       />
 

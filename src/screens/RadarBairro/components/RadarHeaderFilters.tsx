@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PickerTriggerButton, SelectPickerModal } from '@/components/SelectPickerModal';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import { STATUS_OPTIONS } from '@/theme/semanticConfig';
+import { getCategoryLabel, STATUS_OPTIONS } from '@/theme/semanticConfig';
 import type { AppTheme } from '@/theme/types';
 import type { CategoriaResponse } from '@/types/categoria';
 import type { LocationFilterLevel, RadarLocationFilter, RadarSortOption, SelectPickerOption, StatusFiltro } from '@/types/filters';
@@ -73,7 +73,7 @@ export const RadarHeaderFilters = ({
   const categoriaOptions = useMemo<SelectPickerOption<string>[]>(
     () => [
       { value: 'TODAS', label: 'Todas Categorias', subtitle: 'Exibir todos os tipos de ocorrência' },
-      ...categorias.map((c) => ({ value: c.nome, label: c.nome })),
+      ...categorias.map((c) => ({ value: c.nome, label: getCategoryLabel(c.nome) })),
     ],
     [categorias]
   );
@@ -198,7 +198,7 @@ export const RadarHeaderFilters = ({
         <View style={styles.filterBtnWrap}>
           <PickerTriggerButton
             icon="grid-outline"
-            valueLabel={categoriaFiltro === 'TODAS' ? 'Categoria' : categoriaFiltro}
+            valueLabel={categoriaFiltro === 'TODAS' ? 'Categoria' : getCategoryLabel(categoriaFiltro)}
             active={categoriaFiltro !== 'TODAS'}
             onPress={() => setOpenModal('categoria')}
           />

@@ -6,6 +6,8 @@ export const queryKeys = {
     lists: () => ['chamados', 'list'] as const,
     list: (filtros: FiltroChamados, usuarioId?: number | null) =>
       ['chamados', 'list', { filtros, usuarioId: usuarioId ?? null }] as const,
+    infiniteList: (filtros: FiltroChamados, usuarioId?: number | null) =>
+      ['chamados', 'list', 'infinite', { filtros, usuarioId: usuarioId ?? null }] as const,
     detail: (id?: number | null) => ['chamados', 'detail', id ?? null] as const,
     estatisticas: () => ['chamados', 'estatisticas'] as const,
     categorias: () => ['chamados', 'categorias'] as const,

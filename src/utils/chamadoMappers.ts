@@ -1,4 +1,5 @@
 import { buildApiAssetUrl } from '@/services/api';
+import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
 import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse } from '@/types/chamado';
 import type { EnderecoFormInput, EnderecoRequest } from '@/types/endereco';
 import { onlyDigits } from '@/utils/formatters';
@@ -36,7 +37,7 @@ export function mapChamadoResponse(item: ChamadoResponse): Chamado {
     usuarioId: item.usuarioId,
     usuarioNome: item.usuarioNome,
     endereco: item.endereco,
-    fotoUrl: buildApiAssetUrl(item.foto),
+    fotoUrl: item.foto ? buildApiAssetUrl(`${item.foto}?v=${encodeURIComponent(item.dtAbertura)}`) : undefined,
     status: item.status,
     totalVotos: item.totalVotos,
     apoiadoPorMim: item.apoiadoPorMim,
@@ -53,10 +54,11 @@ export function toChamadoCreateRequest(form: ChamadoCreateFormData): ChamadoCrea
 
 export function toChamadoRequest(form: ChamadoFormData): ChamadoRequest {
   const fotoBase64 = stripDataUriPrefix(form.fotoBase64);
+  const categoria = CATEGORIA_CATALOG.find((c) => c.id === form.categoriaId)?.nome ?? 'VIAS_E_PAVIMENTACAO';
   return {
     titulo: form.titulo.trim(),
     descricao: form.descricao.trim(),
-    categoriaId: form.categoriaId,
+    categoria,
     endereco: buildEnderecoRequest(form),
     ...(fotoBase64 ? { fotoBase64 } : {}),
   };

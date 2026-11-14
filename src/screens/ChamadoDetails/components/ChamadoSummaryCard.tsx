@@ -6,7 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import { getPriorityVisuals } from '@/theme/semanticConfig';
+import { getOrgaoLabel, getPriorityVisuals } from '@/theme/semanticConfig';
 import type { Chamado } from '@/types/chamado';
 import { formatDate } from '@/utils/formatters';
 
@@ -25,8 +25,7 @@ export const ChamadoSummaryCard = ({ chamado, onAskAi }: ChamadoSummaryCardProps
       ? parecer
       : null;
   const showPhoto = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
-  const awaitingAi = chamado.prioridadeNome === 'PENDENTE';
-  const priority = !awaitingAi ? getPriorityVisuals(chamado.prioridadeNome, theme) : null;
+  const priority = getPriorityVisuals(chamado.prioridadeNome, theme);
 
   return (
     <View style={styles.card}>
@@ -57,23 +56,16 @@ export const ChamadoSummaryCard = ({ chamado, onAskAi }: ChamadoSummaryCardProps
         <Text style={styles.description}>{chamado.descricao}</Text>
         <Text style={styles.author}>Solicitante: {chamado.usuarioNome}</Text>
 
-        {priority ? (
-          <View style={styles.triageMetaRow}>
-            <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
-              <Ionicons name="flag-outline" size={12} color={priority.color} />
-              <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
-            </View>
-            <View style={styles.orgaoRow}>
-              <Ionicons name="business-outline" size={14} color={theme.primary} />
-              <Text style={styles.orgaoText}>{chamado.orgaoNome}</Text>
-            </View>
+        <View style={styles.triageMetaRow}>
+          <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
+            <Ionicons name="flag-outline" size={12} color={priority.color} />
+            <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
           </View>
-        ) : (
-          <View style={styles.awaitingBox}>
-            <Ionicons name="sparkles" size={14} color={theme.primary} />
-            <Text style={styles.awaitingText}>Classificação técnica, prioridade e órgão em análise pela IA...</Text>
+          <View style={styles.orgaoRow}>
+            <Ionicons name="business-outline" size={14} color={theme.primary} />
+            <Text style={styles.orgaoText}>{getOrgaoLabel(chamado.orgaoNome)}</Text>
           </View>
-        )}
+        </View>
       </View>
 
       {parecerVisivel && (
@@ -134,16 +126,6 @@ const createStyles = (theme: AppTheme) =>
     priorityText: { fontSize: fontSize.tiny + 1, fontWeight: fontWeight.bold },
     orgaoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     orgaoText: { flex: 1, fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.text },
-    awaitingBox: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: spacing.xs,
-      padding: spacing.sm,
-      borderRadius: borderRadius.md,
-      backgroundColor: theme.cardSubtle,
-    },
-    awaitingText: { flex: 1, fontSize: fontSize.caption, color: theme.textMuted },
     parecerBox: {
       padding: spacing.sm + 4,
       borderRadius: borderRadius.md,

@@ -30,7 +30,7 @@ const lightTheme: AppTheme = {
   dangerText: '#B91C1C',
   dangerBorder: '#FECACA',
   warning: colors.feedback.warning,
-  warningBg: colors.status.aberto.bg,
+  warningBg: colors.status.pendente.bg,
   warningText: '#B45309',
   warningBorder: '#FDE68A',
   info: colors.feedback.info,

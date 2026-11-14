@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCategoriasChamado, useChamadosList } from '@/hooks/useChamados';
+import { useCategoriasChamado, useInfiniteChamadosList } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { LocationFilterLevel, RadarLocationFilter, RadarSortOption, StatusFiltro } from '@/types/filters';
@@ -45,13 +45,17 @@ export function useRadarData(initialCategoria?: string) {
     [routeCategoria]
   );
 
+  const locationValue = locationFilter.valor?.trim() || undefined;
+
   const { categorias } = useCategoriasChamado();
-  const listQuery = useChamadosList({
+  const listQuery = useInfiniteChamadosList({
     status: statusFiltro === 'TODOS' ? undefined : statusFiltro,
     categoria: categoriaFiltro === 'TODAS' ? undefined : categoriaFiltro,
     busca: buscaEfetiva || undefined,
-    page: 0,
-    size: 100,
+    cidade: locationFilter.nivel === 'CIDADE' ? locationValue : undefined,
+    bairro: locationFilter.nivel === 'BAIRRO' ? locationValue : undefined,
+    estado: locationFilter.nivel === 'ESTADO' ? locationValue : undefined,
+    size: 10,
     sort: 'dtAbertura,desc',
   });
   const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
@@ -66,24 +70,17 @@ export function useRadarData(initialCategoria?: string) {
   }, [listQuery.chamados, usuario?.endereco?.bairro, usuario?.endereco?.cidade, usuario?.endereco?.estado]);
 
   const chamadosFiltrados = useMemo(() => {
-    const target = locationFilter.valor?.trim().toLowerCase();
-    const lista = target
-      ? listQuery.chamados.filter((c) => {
-          const field =
-            locationFilter.nivel === 'CIDADE'
-              ? c.endereco.cidade
-              : locationFilter.nivel === 'BAIRRO'
-                ? c.endereco.bairro
-                : c.endereco.estado;
-          return field.trim().toLowerCase() === target;
-        })
-      : [...listQuery.chamados];
-
     if (sortBy === 'MAIS_APOIADOS') {
-      return [...lista].sort((a, b) => b.totalVotos - a.totalVotos);
+      return [...listQuery.chamados].sort((a, b) => b.totalVotos - a.totalVotos);
     }
-    return lista;
-  }, [listQuery.chamados, locationFilter.nivel, locationFilter.valor, sortBy]);
+    return listQuery.chamados;
+  }, [listQuery.chamados, sortBy]);
+
+  const loadMore = useCallback(() => {
+    if (listQuery.hasNextPage && !listQuery.isFetchingNextPage) {
+      void listQuery.fetchNextPage();
+    }
+  }, [listQuery]);
 
   const isUsingCustomLocation =
     locationFilter.nivel !== 'CIDADE' || locationFilter.valor !== null;
@@ -103,7 +100,7 @@ export function useRadarData(initialCategoria?: string) {
 
   return {
     chamados: chamadosFiltrados,
-    totalCount: chamadosFiltrados.length,
+    totalCount: listQuery.totalElements,
     categorias,
     statusFiltro,
     setStatusFiltro,
@@ -121,6 +118,9 @@ export function useRadarData(initialCategoria?: string) {
     limparFiltros,
     isLoading: listQuery.isLoading,
     isRefreshing: listQuery.isRefetching,
+    isFetchingNextPage: listQuery.isFetchingNextPage,
+    hasNextPage: listQuery.hasNextPage,
+    loadMore,
     error: listQuery.error,
     refetch: listQuery.refetch,
     apoiarChamado,

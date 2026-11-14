@@ -1,4 +1,4 @@
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
@@ -75,6 +75,15 @@ export const RadarBairroScreen = () => {
             radar.chamados.length === 0 && styles.emptyContainer,
           ]}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
+          onEndReached={radar.loadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            radar.isFetchingNextPage ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={theme.primary} />
+              </View>
+            ) : undefined
+          }
           refreshControl={
             <RefreshControl
               refreshing={radar.isRefreshing}
@@ -121,4 +130,5 @@ const createStyles = (theme: AppTheme) =>
     listContent: { paddingTop: spacing.md, paddingBottom: spacing.xxl },
     emptyContainer: { flexGrow: 1, justifyContent: 'center' },
     separator: { height: spacing.sm + 4 },
+    footerLoader: { paddingVertical: spacing.md, alignItems: 'center' },
   });

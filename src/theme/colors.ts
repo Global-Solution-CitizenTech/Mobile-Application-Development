@@ -37,7 +37,7 @@ export const colors = {
 
   // Cores de Status de Ocorrência (fundos semânticos)
   status: {
-    aberto: { bg: '#FEF3C7' },
+    pendente: { bg: '#FEF3C7' },
     emAndamento: { bg: '#EFF6FF' },
     resolvido: { bg: '#ECFDF5' },
   },

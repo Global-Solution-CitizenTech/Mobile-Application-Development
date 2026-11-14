@@ -42,7 +42,7 @@ export interface ChamadoCreateRequest {
 export interface ChamadoRequest {
   titulo: string;
   descricao: string;
-  categoriaId: number;
+  categoria: string;
   endereco: EnderecoRequest;
   fotoBase64?: string;
 }

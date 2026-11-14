@@ -192,7 +192,7 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `GET` | `/chamados/{id}/foto` | Recupera a evidência fotográfica armazenada no Oracle BLOB |
 | `POST` | `/chamados` | Cria novo chamado com foto obrigatória em Base64 + endereço (`ChamadoCreateRequest`) e dispara triagem assíncrona da IA |
 | `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente |
-| `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`PENDENTE`, `ABERTO`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
+| `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`PENDENTE`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
 | `DELETE` | `/chamados/{id}` | Remove chamado pelo ID |
 | `GET` | `/actuator/health` | Probe de saúde e aquecimento preventivo no Azure App Service |
