@@ -51,7 +51,7 @@ O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile e
 - **Validação de Formulários com Schemas (`zod` v4 + `useZodForm`):** Hook genérico memoizado integrado a schemas declarativos (`LoginSchema`, `RegisterSchema`, `ProfileEditSchema`, `ChamadoFormSchema`, `StatusUpdateSchema`) com extração automática de erros por campo.
 - **Extração Dinâmica do Commit Hash (`app.config.js` + `expo-constants`):** O hash completo e curto do commit Git, branch e data são injetados automaticamente em tempo de build e exibidos na tela **Sobre o App**.
 - **Camada HTTP Integrada ao Azure App Service (`src/services/`):** Suporte nativo ao formato paginado `Page<T>` do **Spring Data JPA**, interceptors `Bearer JWT` do **Spring Security**, normalização de erros do `@RestControllerAdvice` / Bean Validation (`src/utils/apiError.ts`) e *warmup* throttled em `/actuator/health` em `https://app-zelafix-561432.azurewebsites.net`.
-- **Câmera Nativa & GPS Automático (`expo-image-picker` + `expo-location`):** Captura real de evidências fotográficas (câmera/galeria em Base64) com preenchimento automático de CEP e endereço via Reverse Geocoding (`src/hooks/useLocalizacao.ts`) e resolução ViaCEP no backend Java.
+- **Câmera Nativa & GPS Automático (`expo-image-picker` + `expo-location`):** Captura real de evidências fotográficas (câmera/galeria enviadas via `multipart/form-data`) com preenchimento automático de CEP e endereço via Reverse Geocoding (`src/hooks/useLocalizacao.ts`) e resolução ViaCEP no backend Java.
 
 ```text
 Mobile-Application-Development/
@@ -166,7 +166,7 @@ O aplicativo conta com **11 telas funcionais distintas** além da tela **Sobre o
 4. **`HomeScreen` (`src/screens/Home/HomeScreen.tsx`):** Painel executivo com Índice de Resolução no topo, atalhos por categoria, acesso ao ZelaBot IA e lista de ocorrências mais recentes.
 5. **`RadarBairroScreen` (`src/screens/RadarBairro/RadarBairroScreen.tsx`):** Feed colaborativo e ranking de urgência com busca textual, botão integrado para **Reportar Ocorrência**, seleção em modal (`SelectPickerModal`) por categoria/status/localização (todas as cidades por padrão, com opção por cidade, bairro ou estado) e apoio comunitário (`+1`).
 6. **`MeusChamadosScreen` (`src/screens/MeusChamados/MeusChamadosScreen.tsx`):** Gestão dos protocolos abertos pelo próprio cidadão filtrados por etapa de atendimento.
-7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura simplificada de ocorrência a partir do Radar com **foto obrigatória** (câmera/galeria) e endereço via CEP/GPS; título, descrição, categoria, prioridade e órgão responsável são preenchidos automaticamente em segundo plano pela triagem assíncrona da **Spring AI** via RabbitMQ.
+7. **`NovoChamadoScreen` (`src/screens/NovoChamado/NovoChamadoScreen.tsx`):** Abertura simplificada de ocorrência a partir do Radar com **foto obrigatória** (câmera/galeria) e endereço via CEP/GPS; a requisição aguarda a triagem da **Spring AI** via RabbitMQ (`DeferredResult` na API) e já retorna o chamado classificado (ou rejeita na hora com feedback visual caso a imagem esteja fora do escopo urbano).
 8. **`ChamadoDetailsScreen` (`src/screens/ChamadoDetails/ChamadoDetailsScreen.tsx`):** Visualização completa do protocolo, dados preenchidos pela Triagem IA (título, descrição, categoria, prioridade e órgão responsável), localização, linha do tempo auditável, ações de **Editar/Excluir** para o Autor ou **Gestor Público**, apoio comunitário (`+1`) e painel de **Atualizar Status** exclusivo para o **Gestor Público**.
 9. **`EditarChamadoScreen` (`src/screens/EditarChamado/EditarChamadoScreen.tsx`):** Edição cadastral completa de relatos existentes com validação Zod.
 10. **`ProfileScreen` (`src/screens/Profile/ProfileScreen.tsx`):** Dados do usuário autenticado, papel (`Cidadão` / `Gestor Público`), cartão de estatísticas pessoais (`ProfileStatsCard`), modal de edição de perfil/senha (`useZodForm` + `BaseModal`), alternância de tema Claro/Escuro persistida e acesso à tela Sobre o App.
@@ -190,7 +190,7 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `GET` | `/chamados/estatisticas` | Retorna métricas agregadas do painel executivo |
 | `GET` | `/chamados/{id}` | Detalhes completos do protocolo, classificação IA e histórico |
 | `GET` | `/chamados/{id}/foto` | Recupera a evidência fotográfica armazenada no Oracle BLOB |
-| `POST` | `/chamados` | Cria novo chamado com foto obrigatória em Base64 + endereço (`ChamadoCreateRequest`) e dispara triagem assíncrona da IA |
+| `POST` | `/chamados` | Cria chamado via `multipart/form-data` (`cep`, `numero`, `referencia`, `rua`, `foto`) aguardando a triagem IA via `DeferredResult` (`201 Created` se válida ou erro se recusada) |
 | `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente |
 | `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`PENDENTE`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
