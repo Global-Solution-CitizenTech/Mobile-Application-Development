@@ -10,6 +10,7 @@ export const queryKeys = {
       ['chamados', 'list', 'infinite', { filtros, usuarioId: usuarioId ?? null }] as const,
     detail: (id?: number | null) => ['chamados', 'detail', id ?? null] as const,
     estatisticas: () => ['chamados', 'estatisticas'] as const,
+    recusa: (usuarioId?: number | null) => ['chamados', 'recusa', usuarioId ?? null] as const,
     categorias: () => ['chamados', 'categorias'] as const,
   },
   ai: {

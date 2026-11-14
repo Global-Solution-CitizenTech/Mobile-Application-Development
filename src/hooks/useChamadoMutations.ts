@@ -32,9 +32,12 @@ export function useChamadoMutations() {
     mutationFn: (payload: ChamadoCreateRequest) => chamadoService.criar(payload),
     onSuccess: async () => {
       await invalidateListsAndStats();
-      setTimeout(() => {
+      const refreshTriagem = () => {
         void invalidateListsAndStats();
-      }, 5000);
+        void queryClient.invalidateQueries({ queryKey: ['chamados', 'recusa'] });
+      };
+      setTimeout(refreshTriagem, 5000);
+      setTimeout(refreshTriagem, 10000);
     },
   });
 

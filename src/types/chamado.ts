@@ -60,3 +60,7 @@ export interface EstatisticasChamados {
   rejeitados: number;
   totalApoios: number;
 }
+
+export interface RecusaIaResponse {
+  motivo: string | null;
+}

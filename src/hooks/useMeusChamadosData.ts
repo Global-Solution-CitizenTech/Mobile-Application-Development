@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useChamadosList } from '@/hooks/useChamados';
+import { useCallback, useMemo, useState } from 'react';
+import { useChamadosList, useRecusaRecente } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import type { MeusChamadosTab } from '@/types/filters';
 
@@ -11,7 +11,12 @@ export function useMeusChamadosData() {
     size: 50,
     sort: 'dtAbertura,desc',
   });
+  const { motivo: recusaModal, clear: clearRecusaModal, refetch: refetchRecusa } = useRecusaRecente();
   const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([refetch(), refetchRecusa()]);
+  }, [refetch, refetchRecusa]);
 
   const contadores = useMemo(() => {
     const abertos = chamados.filter((c) => c.status === 'PENDENTE').length;
@@ -39,7 +44,10 @@ export function useMeusChamadosData() {
     isLoading,
     isRefreshing: isRefetching,
     error,
-    refetch,
+    refetch: refreshAll,
+    refetchRecusa,
+    recusaModal,
+    clearRecusaModal,
     apoiarChamado,
     supportError,
     clearSupportError,

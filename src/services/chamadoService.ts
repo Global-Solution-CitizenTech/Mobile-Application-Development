@@ -2,7 +2,7 @@ import { api } from '@/services/api';
 import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
 import type { SpringPageResponse } from '@/types/api';
 import type { CategoriaResponse } from '@/types/categoria';
-import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados } from '@/types/chamado';
+import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados, RecusaIaResponse } from '@/types/chamado';
 import type { FiltroChamados } from '@/types/filters';
 import { mapChamadoResponse } from '@/utils/chamadoMappers';
 
@@ -58,6 +58,11 @@ export const chamadoService = {
 
   async obterEstatisticas(): Promise<EstatisticasChamados> {
     const { data } = await api.get<EstatisticasChamados>('/chamados/estatisticas');
+    return data;
+  },
+
+  async obterRecusaRecente(): Promise<RecusaIaResponse> {
+    const { data } = await api.get<RecusaIaResponse>('/chamados/recusa-recente');
     return data;
   },
 

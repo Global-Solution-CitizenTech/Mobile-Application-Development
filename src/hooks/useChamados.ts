@@ -1,7 +1,9 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
+import type { RecusaIaResponse } from '@/types/chamado';
 import type { FiltroChamados } from '@/types/filters';
 import { getApiErrorMessage } from '@/utils/apiError';
 
@@ -104,6 +106,33 @@ export function useEstatisticasChamados() {
     isLoading: query.isLoading,
     isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
+    refetch: query.refetch,
+  };
+}
+
+export function useRecusaRecente() {
+  const { usuario } = useAuth();
+  const queryClient = useQueryClient();
+  const key = queryKeys.chamados.recusa(usuario?.id);
+
+  const query = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const res = await chamadoService.obterRecusaRecente();
+      if (res.motivo) return res;
+      return queryClient.getQueryData<RecusaIaResponse>(key) ?? res;
+    },
+    enabled: Boolean(usuario),
+    staleTime: 0,
+  });
+
+  const clear = useCallback(() => {
+    queryClient.setQueryData<RecusaIaResponse>(key, { motivo: null });
+  }, [key, queryClient]);
+
+  return {
+    motivo: query.data?.motivo ?? null,
+    clear,
     refetch: query.refetch,
   };
 }

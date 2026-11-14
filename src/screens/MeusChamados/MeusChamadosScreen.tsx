@@ -1,5 +1,6 @@
+import { useCallback } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
@@ -28,10 +29,19 @@ export const MeusChamadosScreen = () => {
     isRefreshing,
     error,
     refetch,
+    refetchRecusa,
+    recusaModal,
+    clearRecusaModal,
     apoiarChamado,
     supportError,
     clearSupportError,
   } = useMeusChamadosData();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetchRecusa();
+    }, [refetchRecusa])
+  );
 
   return (
     <View style={styles.container}>
@@ -90,6 +100,15 @@ export const MeusChamadosScreen = () => {
           }
         />
       )}
+
+      <FeedbackModal
+        visible={Boolean(recusaModal)}
+        type="warning"
+        title="Ocorrência Recusada pela IA"
+        message={recusaModal ?? ''}
+        confirmText="Entendi"
+        onConfirm={clearRecusaModal}
+      />
 
       <FeedbackModal
         visible={Boolean(supportError)}
