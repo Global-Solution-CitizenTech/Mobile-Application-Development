@@ -18,18 +18,18 @@ ZelaFix - Zeladoria Urbana Colaborativa & Alerta Cidadão
 https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
 
 4. COMMIT HASH DE REFERÊNCIA (AUDITORIA):
-aadd0280465f961ba5af44fad2da73be8909b2db
-(ID Curto: aadd028 — commit do APK versionCode 2 / EAS Build 469c1a42)
+58a2cfd476e7cd5a90217607546c44fc2d8472d3
+(ID Curto: 58a2cfd — commit do APK versionCode 6 / EAS Build 718280c9)
 
 5. LINK DO VÍDEO NO YOUTUBE (MÁXIMO 5 MINUTOS - PÚBLICO OU NÃO LISTADO):
 [INSERIR O LINK DO VÍDEO DO YOUTUBE AQUI APÓS GRAVAÇÃO]
 
 6. PUBLICAÇÃO DO APK (EAS BUILD):
 - App: ZelaFix Mobile (Android APK)
-- Build: EAS Build 469c1a42 (versionCode 2)
-- Commit do build: aadd028
-- Download direto: https://expo.dev/artifacts/eas/xa4ydhW3fCizPf0dzYW37XI_ZX6z-DFuB2iTNRLluKw.apk
-- Painel do build: https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/469c1a42-f085-4def-8bee-a5bfbf069410
-- Status: Disponível para download (link válido até 26/11/2026)
+- Build: EAS Build 718280c9 (versionCode 6)
+- Commit do build: 58a2cfd
+- Download direto: https://expo.dev/artifacts/eas/uxHWQSXdY-Man695Jcin1-LypU211GDfS9qtDiAbrBs.apk
+- Painel do build: https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/718280c9-0c57-4f26-8052-a433446ed163
+- Status: Disponível para download (link válido até 28/11/2026)
 
 ================================================================================

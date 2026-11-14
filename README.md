@@ -28,8 +28,8 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 | Recurso | URL |
 | :--- | :--- |
-| 📥 **Download direto do APK (Android Standalone)** | [**Baixar zelafix.apk (Build Oficial versionCode 5)**](https://expo.dev/artifacts/eas/PuWYv8T-qdP3Yzqdw5FoG6QHTolGAGtV2WFKPXriIYs.apk) |
-| 🏗️ **Painel de Compilação do EAS Build** | [Dashboard Expo EAS — Build `d5887ead` (versionCode 5)](https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/d5887ead-c39b-49e8-b8e1-0be270787fb6) |
+| 📥 **Download direto do APK (Android Standalone)** | [**Baixar zelafix.apk (Build Oficial versionCode 6)**](https://expo.dev/artifacts/eas/uxHWQSXdY-Man695Jcin1-LypU211GDfS9qtDiAbrBs.apk) |
+| 🏗️ **Painel de Compilação do EAS Build** | [Dashboard Expo EAS — Build `718280c9` (versionCode 6)](https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/718280c9-0c57-4f26-8052-a433446ed163) |
 | 💻 **Repositório GitHub Mobile** | [Global-Solution-CitizenTech/Mobile-Application-Development](https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development) |
 | ☕ **Backend Java (Spring Boot)** | [Global-Solution-CitizenTech/Java-Advanced](https://github.com/Global-Solution-CitizenTech/Java-Advanced) |
 | 🤖 **Microsserviço IA (FastAPI)** | [Global-Solution-CitizenTech/Disruptive-Architectures-IoT-IoB-IA](https://github.com/Global-Solution-CitizenTech/Disruptive-Architectures-IoT-IoB-IA) |
