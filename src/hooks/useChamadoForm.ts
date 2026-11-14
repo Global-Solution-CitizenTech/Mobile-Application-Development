@@ -1,7 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useCategoriasChamado, useChamadoDetail } from '@/hooks/useChamados';
+import { useState } from 'react';
+import { useFeedback } from '@/contexts/FeedbackContext';
+import { useChamadoDetail } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useLocalizacao } from '@/hooks/useLocalizacao';
+import { bindFieldHelpers } from '@/hooks/useZodForm';
+import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
+import type { Chamado, FotoUpload } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { toChamadoCreateRequest, toChamadoRequest } from '@/utils/chamadoMappers';
 import { maskCepInput } from '@/utils/formatters';
@@ -14,7 +18,9 @@ import {
   type FormErrors,
 } from '@/utils/schemas';
 
-const INITIAL_CHAMADO_FORM: ChamadoFormData = {
+type ChamadoFormState = ChamadoFormData & { foto?: FotoUpload };
+
+const INITIAL_CHAMADO_FORM: ChamadoFormState = {
   titulo: '',
   categoriaId: 0,
   descricao: '',
@@ -22,7 +28,7 @@ const INITIAL_CHAMADO_FORM: ChamadoFormData = {
   rua: '',
   numero: '',
   referencia: '',
-  fotoBase64: undefined,
+  foto: undefined,
 };
 
 type UseChamadoFormOptions =
@@ -30,37 +36,35 @@ type UseChamadoFormOptions =
   | { mode: 'edit'; chamadoId: number };
 
 export function useChamadoForm(options: UseChamadoFormOptions) {
+  const { showError } = useFeedback();
   const isEdit = options.mode === 'edit';
   const chamadoId = options.mode === 'edit' ? options.chamadoId : undefined;
-  const { categorias, isLoading: loadingCategorias } = useCategoriasChamado();
-  const detailQuery = useChamadoDetail(isEdit ? chamadoId : undefined);
+  const detailQuery = useChamadoDetail(chamadoId);
   const { criarChamado, atualizarChamado, isCreating, isUpdating } = useChamadoMutations();
-  const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao, limparLocalizacao } = useLocalizacao();
+  const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao, limparLocalizacao } =
+    useLocalizacao();
 
-  const [draft, setDraft] = useState<Partial<ChamadoFormData>>({});
-  const [errors, setErrors] = useState<FormErrors<ChamadoFormData>>({});
-  const [erroModal, setErroModal] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Partial<ChamadoFormState>>({});
+  const [errors, setErrors] = useState<FormErrors<ChamadoFormState>>({});
 
-  const values = useMemo<ChamadoFormData>(() => {
-    const chamado = detailQuery.chamado;
-    const base: ChamadoFormData =
-      isEdit && chamado
-        ? {
-            titulo: chamado.titulo,
-            categoriaId: chamado.categoriaId,
-            descricao: chamado.descricao,
-            cep: maskCepInput(chamado.endereco.cep),
-            rua: chamado.endereco.rua || '',
-            numero: chamado.endereco.numero || '',
-            referencia: chamado.endereco.referencia || '',
-            fotoBase64: undefined,
-          }
-        : INITIAL_CHAMADO_FORM;
+  const chamado = detailQuery.chamado;
+  const base: ChamadoFormState =
+    isEdit && chamado
+      ? {
+          titulo: chamado.titulo,
+          categoriaId: chamado.categoriaId,
+          descricao: chamado.descricao,
+          cep: maskCepInput(chamado.endereco.cep),
+          rua: chamado.endereco.rua || '',
+          numero: chamado.endereco.numero || '',
+          referencia: chamado.endereco.referencia || '',
+          foto: undefined,
+        }
+      : INITIAL_CHAMADO_FORM;
 
-    return { ...base, ...draft };
-  }, [detailQuery.chamado, draft, isEdit]);
+  const values: ChamadoFormState = { ...base, ...draft };
 
-  const setFieldValue = useCallback(<K extends keyof ChamadoFormData>(field: K, value: ChamadoFormData[K]) => {
+  const setFieldValue = <K extends keyof ChamadoFormState>(field: K, value: ChamadoFormState[K]) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       if (!prev[field]) return prev;
@@ -68,9 +72,11 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
       delete next[field];
       return next;
     });
-  }, []);
+  };
 
-  const handleUsarGps = useCallback(async () => {
+  const field = bindFieldHelpers(values, errors, setFieldValue);
+
+  const handleUsarGps = async () => {
     const loc = await capturarLocalizacao();
     if (!loc) return;
 
@@ -81,73 +87,65 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
       numero: loc.numero || prev.numero || 'S/N',
       referencia: loc.referencia || prev.referencia,
     }));
-  }, [capturarLocalizacao]);
+  };
 
-  const resetForm = useCallback(() => {
+  const resetForm = () => {
     setDraft({});
     setErrors({});
     limparLocalizacao();
-    setErroModal(null);
-  }, [limparLocalizacao]);
+  };
 
-  const submit = useCallback(
-    async (onSuccess: () => void) => {
-      setErrors({});
-      setErroModal(null);
+  const submit = (onSuccess: (chamado: Chamado) => void) => {
+    setErrors({});
 
-      if (isEdit && chamadoId) {
-        const result = ChamadoFormSchema.safeParse(values);
-        if (!result.success) {
-          setErrors(extractFieldErrors<ChamadoFormData>(result.error));
-          return;
-        }
-        atualizarChamado(chamadoId, toChamadoRequest(result.data), {
-          onSuccess: () => onSuccess(),
-          onError: (err) => setErroModal(getApiErrorMessage(err, 'Falha ao salvar alterações.')),
-        });
-        return;
-      }
-
-      const createInput: ChamadoCreateFormData = {
-        cep: values.cep,
-        rua: values.rua,
-        numero: values.numero,
-        referencia: values.referencia,
-        fotoBase64: values.fotoBase64 ?? '',
-      };
-      const result = ChamadoCreateSchema.safeParse(createInput);
+    if (isEdit && chamadoId) {
+      const result = ChamadoFormSchema.safeParse(values);
       if (!result.success) {
-        setErrors(extractFieldErrors<ChamadoCreateFormData>(result.error));
+        setErrors(extractFieldErrors<ChamadoFormData>(result.error));
         return;
       }
-
-      criarChamado(toChamadoCreateRequest(result.data), {
-        onSuccess: () => {
-          resetForm();
-          onSuccess();
-        },
-        onError: (err) => setErroModal(getApiErrorMessage(err, 'Erro ao registrar chamado.')),
+      atualizarChamado(chamadoId, toChamadoRequest(result.data), {
+        onSuccess,
+        onError: (err) =>
+          showError('Erro ao salvar', getApiErrorMessage(err, 'Falha ao salvar alterações.')),
       });
-    },
-    [atualizarChamado, chamadoId, criarChamado, isEdit, resetForm, values]
-  );
+      return;
+    }
 
-  const clearErroModal = useCallback(() => setErroModal(null), []);
+    const result = ChamadoCreateSchema.safeParse({
+      cep: values.cep,
+      rua: values.rua,
+      numero: values.numero,
+      referencia: values.referencia,
+      foto: values.foto,
+    });
+    if (!result.success) {
+      setErrors(extractFieldErrors<ChamadoCreateFormData>(result.error));
+      return;
+    }
+
+    criarChamado(toChamadoCreateRequest(result.data), {
+      onSuccess: (created) => {
+        resetForm();
+        onSuccess(created);
+      },
+      onError: (err) =>
+        showError('Erro ao enviar', getApiErrorMessage(err, 'Erro ao registrar chamado.')),
+    });
+  };
 
   return {
     values,
     errors,
     setFieldValue,
-    categorias,
-    loadingCategorias,
+    field,
+    categorias: CATEGORIA_CATALOG,
     loadingChamado: isEdit ? detailQuery.isLoading : false,
     loadError: isEdit ? detailQuery.error : null,
     submitting: isCreating || isUpdating,
     capturandoGps,
     erroGps,
     localizacaoPreview: ultimaLocalizacao,
-    erroModal,
-    clearErroModal,
     handleUsarGps,
     submit,
   };

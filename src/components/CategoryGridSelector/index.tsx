@@ -7,7 +7,7 @@ import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
 import type { CategoriaResponse } from '@/types/categoria';
 
 interface CategoryGridSelectorProps {
-  categorias: CategoriaResponse[];
+  categorias: readonly CategoriaResponse[];
   selectedCategoriaId: number;
   onSelectCategoriaId: (id: number) => void;
   error?: string;

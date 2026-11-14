@@ -26,9 +26,6 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
       [
         "expo-image-picker",
@@ -45,12 +42,16 @@
           "isAndroidBackgroundLocationEnabled": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {
         "projectId": "f330483f-855a-411e-a5eb-c544d5070ed5"
       }
+    },
+    "experiments": {
+      "reactCompiler": true
     },
     "owner": "enzookuizumis-team"
   }

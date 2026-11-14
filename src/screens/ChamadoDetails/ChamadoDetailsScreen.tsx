@@ -56,7 +56,7 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
               paddingRight: Math.max(insets.right, spacing.md),
             },
           ]}
-          refreshControl={<RefreshControl refreshing={details.isRefreshing} onRefresh={() => { void details.handleRefresh(); }} tintColor={theme.primary} />}
+          refreshControl={<RefreshControl refreshing={details.isRefreshing} onRefresh={() => { void details.refetch(); }} tintColor={theme.primary} />}
           showsVerticalScrollIndicator={false}
         >
           <ChamadoSummaryCard
@@ -102,14 +102,6 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
         confirmLoading={details.isDeleting}
         onConfirm={() => details.handleConfirmDelete(() => navigation.goBack())}
         onCancel={() => details.setDeleteModalVisible(false)}
-      />
-
-      <FeedbackModal
-        visible={Boolean(details.actionError)}
-        type="error"
-        title="Não foi possível concluir"
-        message={details.actionError ?? ''}
-        onConfirm={details.clearActionError}
       />
     </View>
   );

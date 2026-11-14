@@ -17,27 +17,30 @@ function normalizeAxiosError(axiosError: AxiosError<ApiErrorResponse>): ApiError
   const status = axiosError.response?.status ?? 0;
   const data = axiosError.response?.data;
 
-  // 1. Mensagens detalhadas de validação (Spring Boot Bean Validation @Valid)
+  // 1. Erros de validação do Spring Boot (GlobalExceptionHandler.ValidationErrorDetail)
   if (data?.erros && Array.isArray(data.erros) && data.erros.length > 0) {
     const validationMessage = data.erros
-      .map((e) => {
-        const campo = e.campo || e.field;
-        const msg = e.mensagem || e.message || 'valor inválido';
-        return campo ? `${campo}: ${msg}` : msg;
-      })
+      .map((e) => (e.campo ? `${e.campo}: ${e.mensagem}` : e.mensagem))
       .join('\n');
     return new ApiError(data.error ?? 'VALIDATION_ERROR', validationMessage, status);
   }
 
-  // 2. Mensagem explícita enviada pelo backend (@RestControllerAdvice)
-  const customMessage = data?.mensagem || data?.message;
-  if (typeof customMessage === 'string' && customMessage.trim().length > 0) {
-    return new ApiError(data?.error ?? 'API_ERROR', customMessage.trim(), status);
+  // 2. Mensagem explícita do Spring Boot (@RestControllerAdvice) ou FastAPI (detail)
+  const customMessage =
+    (typeof data?.message === 'string' && data.message.trim()) ||
+    (typeof data?.detail === 'string' && data.detail.trim()) ||
+    undefined;
+  if (customMessage) {
+    return new ApiError(data?.error ?? 'API_ERROR', customMessage, status);
   }
 
-  // 3. Status HTTP canônicos
+  // 3. Fallbacks por status HTTP canônicos
   if (status === 401) {
-    return new ApiError('UNAUTHORIZED', 'Sessão expirada ou credenciais inválidas. Faça login novamente.', 401);
+    return new ApiError(
+      'UNAUTHORIZED',
+      'Sessão expirada ou credenciais inválidas. Faça login novamente.',
+      401
+    );
   }
 
   if (status === 403) {
@@ -49,7 +52,11 @@ function normalizeAxiosError(axiosError: AxiosError<ApiErrorResponse>): ApiError
   }
 
   if (status === 429) {
-    return new ApiError('RATE_LIMITED', 'Muitas solicitações simultâneas. Aguarde alguns segundos e tente novamente.', 429);
+    return new ApiError(
+      'RATE_LIMITED',
+      'Muitas solicitações simultâneas. Aguarde alguns segundos e tente novamente.',
+      429
+    );
   }
 
   if (status === 502 || status === 503 || status === 504) {
@@ -61,7 +68,11 @@ function normalizeAxiosError(axiosError: AxiosError<ApiErrorResponse>): ApiError
   }
 
   if (status >= 500) {
-    return new ApiError('INTERNAL_SERVER_ERROR', 'Servidor temporariamente indisponível. Tente novamente mais tarde.', status);
+    return new ApiError(
+      'INTERNAL_SERVER_ERROR',
+      'Servidor temporariamente indisponível. Tente novamente mais tarde.',
+      status
+    );
   }
 
   if (
@@ -90,7 +101,6 @@ function normalizeAxiosError(axiosError: AxiosError<ApiErrorResponse>): ApiError
 /**
  * Normaliza qualquer erro (AxiosError, ApiError, Error nativo ou desconhecido)
  * em uma instância canônica de ApiError com código semântico, status HTTP e mensagem amigável.
- * Compatível com @RestControllerAdvice e Bean Validation do Spring Boot.
  */
 export function normalizeHttpError(error: unknown): ApiError {
   if (error instanceof ApiError) {

@@ -1,25 +1,33 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useFeedback } from '@/contexts/FeedbackContext';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
+import type { FotoUpload } from '@/types/chamado';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import { stripDataUriPrefix } from '@/utils/chamadoMappers';
 
 const MAX_IMAGE_BYTES = 7 * 1024 * 1024;
 
+const toFotoUpload = (asset: ImagePicker.ImagePickerAsset): FotoUpload => {
+  const type = asset.mimeType?.trim() || 'image/jpeg';
+  const ext = type.split('/')[1] || 'jpg';
+  const name = asset.fileName?.trim() || `ocorrencia.${ext === 'jpeg' ? 'jpg' : ext}`;
+  return { uri: asset.uri, name, type };
+};
+
 interface PhotoEvidencePickerProps {
-  fotoBase64?: string;
-  onChangeFoto: (base64?: string) => void;
+  foto?: FotoUpload;
+  onChangeFoto: (foto?: FotoUpload) => void;
   error?: string;
 }
 
-export const PhotoEvidencePicker = ({ fotoBase64, onChangeFoto, error }: PhotoEvidencePickerProps) => {
+export const PhotoEvidencePicker = ({ foto, onChangeFoto, error }: PhotoEvidencePickerProps) => {
   const { theme } = useTheme();
+  const { showError, showFeedback } = useFeedback();
   const styles = useThemedStyles(createStyles);
   const [processing, setProcessing] = useState<'camera' | 'library' | null>(null);
-  const [preview, setPreview] = useState<{ uri: string; base64: string } | null>(null);
 
   const handlePick = async (useCamera: boolean) => {
     setProcessing(useCamera ? 'camera' : 'library');
@@ -29,49 +37,48 @@ export const PhotoEvidencePicker = ({ fotoBase64, onChangeFoto, error }: PhotoEv
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!perm.granted) {
-        Alert.alert('Permissão necessária', 'Autorize o acesso à câmera ou galeria nas configurações do dispositivo.');
+        showFeedback({
+          type: 'warning',
+          title: 'Permissão necessária',
+          message: 'Autorize o acesso à câmera ou galeria nas configurações do dispositivo.',
+        });
         return;
       }
 
       const result = useCamera
-        ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7, base64: true, allowsEditing: true })
-        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, base64: true, allowsEditing: true });
+        ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true });
 
       if (result.canceled || !result.assets?.[0]) return;
       const asset = result.assets[0];
-      const base64 = stripDataUriPrefix(asset.base64 ?? undefined);
 
-      if (!base64) {
-        Alert.alert('Erro', 'Não foi possível ler os dados da imagem selecionada.');
+      if (!asset.uri) {
+        showError('Erro', 'Não foi possível ler os dados da imagem selecionada.');
         return;
       }
 
-      const sizeInBytes = asset.fileSize ?? Math.ceil((base64.length * 3) / 4);
-      if (sizeInBytes > MAX_IMAGE_BYTES) {
-        Alert.alert('Imagem muito grande', 'Escolha uma imagem com até 7 MB.');
+      if (asset.fileSize && asset.fileSize > MAX_IMAGE_BYTES) {
+        showFeedback({
+          type: 'warning',
+          title: 'Imagem muito grande',
+          message: 'Escolha uma imagem com até 7 MB.',
+        });
         return;
       }
 
-      setPreview({ uri: asset.uri, base64 });
-      onChangeFoto(base64);
+      onChangeFoto(toFotoUpload(asset));
     } catch {
-      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+      showError('Erro', 'Não foi possível selecionar a imagem.');
     } finally {
       setProcessing(null);
     }
   };
 
   const handleRemove = () => {
-    setPreview(null);
     onChangeFoto(undefined);
   };
 
-  const previewSource =
-    preview && preview.base64 === fotoBase64
-      ? preview.uri
-      : fotoBase64
-        ? `data:image/jpeg;base64,${fotoBase64}`
-        : null;
+  const previewSource = foto?.uri ?? null;
 
   return (
     <View style={styles.container}>

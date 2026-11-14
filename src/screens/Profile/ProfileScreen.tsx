@@ -32,10 +32,6 @@ export const ProfileScreen = () => {
     setLogoutModalVisible,
     saving,
     refreshing,
-    errorModal,
-    clearErrorModal,
-    successMessage,
-    clearSuccessMessage,
     openEditModal,
     handleRefreshProfile,
     handleSaveProfile,
@@ -129,9 +125,7 @@ export const ProfileScreen = () => {
       <EditProfileModal
         visible={editModalVisible}
         onClose={() => setEditModalVisible(false)}
-        values={form.values}
-        errors={form.errors}
-        onChangeField={form.setFieldValue}
+        field={form.field}
         onSave={handleSaveProfile}
         saving={saving}
       />
@@ -149,9 +143,6 @@ export const ProfileScreen = () => {
         }}
         onCancel={() => setLogoutModalVisible(false)}
       />
-
-      <FeedbackModal visible={Boolean(errorModal)} type="error" title="Ops!" message={errorModal ?? ''} onConfirm={clearErrorModal} />
-      <FeedbackModal visible={Boolean(successMessage)} type="success" title="Perfil Atualizado" message={successMessage ?? ''} onConfirm={clearSuccessMessage} />
     </ScrollView>
   );
 };

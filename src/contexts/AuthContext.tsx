@@ -1,4 +1,4 @@
-import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { queryClient } from '@/lib/queryClient';
 import { queryKeys } from '@/lib/queryKeys';
@@ -13,6 +13,18 @@ const ADMIN_MOBILE_BLOCKED_MESSAGE =
   'Contas administrativas (ADMIN) não possuem acesso ao aplicativo móvel. Utilize o painel administrativo.';
 
 const AuthContext = createContext<AuthContextData | null>(null);
+
+async function ensureMobileAccess(usuario: Usuario, token?: string): Promise<void> {
+  if (!canAccessMobileApp(usuario)) {
+    await storageService.clearSession().catch(() => undefined);
+    throw new ApiError('FORBIDDEN', ADMIN_MOBILE_BLOCKED_MESSAGE, 403);
+  }
+  if (token) {
+    await storageService.saveSession(token, usuario);
+  } else {
+    await storageService.saveUsuario(usuario);
+  }
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
@@ -52,9 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        if (storedUser) {
-          setUsuario(storedUser);
-        }
+        if (storedUser) setUsuario(storedUser);
 
         const freshUser = await authService.getMe();
         if (!active) return;
@@ -67,9 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch {
         if (!active) return;
         const stillHasToken = await storageService.getToken();
-        if (!stillHasToken) {
-          setUsuario(null);
-        }
+        if (!stillHasToken) setUsuario(null);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -81,30 +89,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [signOut]);
 
-  const signIn = useCallback(async (credentials: LoginCredentials) => {
+  const signIn = async (credentials: LoginCredentials) => {
     const response = await authService.login(credentials);
-    if (!canAccessMobileApp(response.user)) {
-      await storageService.clearSession().catch(() => undefined);
-      throw new ApiError('FORBIDDEN', ADMIN_MOBILE_BLOCKED_MESSAGE, 403);
-    }
-    await storageService.saveSession(response.token, response.user);
+    await ensureMobileAccess(response.user, response.token);
     setUsuario(response.user);
     await queryClient.invalidateQueries();
-  }, []);
+  };
 
-  const signUp = useCallback(async (data: UsuarioRequest) => {
+  const signUp = async (data: UsuarioRequest) => {
     await authService.register(data);
-    const loginResponse = await authService.login({ email: data.email, senha: data.senha });
-    if (!canAccessMobileApp(loginResponse.user)) {
-      await storageService.clearSession().catch(() => undefined);
-      throw new ApiError('FORBIDDEN', ADMIN_MOBILE_BLOCKED_MESSAGE, 403);
-    }
-    await storageService.saveSession(loginResponse.token, loginResponse.user);
-    setUsuario(loginResponse.user);
+    const response = await authService.login({ email: data.email, senha: data.senha });
+    await ensureMobileAccess(response.user, response.token);
+    setUsuario(response.user);
     await queryClient.invalidateQueries();
-  }, []);
+  };
 
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = async () => {
     const freshUser = await authService.getMe();
     if (!canAccessMobileApp(freshUser)) {
       await signOut();
@@ -112,35 +112,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     await storageService.saveUsuario(freshUser);
     setUsuario(freshUser);
-  }, [signOut]);
+  };
 
-  const updateProfile = useCallback(async (data: UsuarioRequest): Promise<Usuario> => {
+  const updateProfile = async (data: UsuarioRequest): Promise<Usuario> => {
     const { usuario: updated, novoToken } = await authService.updateProfile(data);
-    if (novoToken) {
-      await storageService.saveSession(novoToken, updated);
-    } else {
-      await storageService.saveUsuario(updated);
-    }
+    await ensureMobileAccess(updated, novoToken);
     setUsuario(updated);
     await queryClient.invalidateQueries({ queryKey: queryKeys.chamados.all });
     return updated;
-  }, []);
+  };
 
-  const value = useMemo<AuthContextData>(
-    () => ({
-      usuario,
-      isAuthenticated: Boolean(usuario),
-      isLoading,
-      signIn,
-      signUp,
-      signOut,
-      refreshProfile,
-      updateProfile,
-    }),
-    [isLoading, refreshProfile, signIn, signOut, signUp, updateProfile, usuario]
+  return (
+    <AuthContext.Provider
+      value={{
+        usuario,
+        isAuthenticated: Boolean(usuario),
+        isLoading,
+        signIn,
+        signUp,
+        signOut,
+        refreshProfile,
+        updateProfile,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export function useAuth(): AuthContextData {

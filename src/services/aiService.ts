@@ -22,15 +22,6 @@ aiClient.interceptors.response.use(
   (error: AxiosError<ApiErrorResponse>) => Promise.reject(normalizeHttpError(error))
 );
 
-function formatMessageTime(isoOrHHMM?: string): string {
-  if (!isoOrHHMM) {
-    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  }
-  const parsed = new Date(isoOrHHMM);
-  if (Number.isNaN(parsed.getTime())) return isoOrHHMM;
-  return parsed.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-}
-
 function toChamadoContextPayload(chamado?: Chamado | null): ChamadoContextPayload | undefined {
   if (!chamado) return undefined;
   return {
@@ -79,7 +70,7 @@ export const aiService = {
         id: `ai_${Date.now()}`,
         sender: 'assistant',
         text: data.resposta,
-        timestamp: formatMessageTime(),
+        timestamp: new Date().toISOString(),
         categoria: data.categoria,
         urgencia: data.urgencia,
         acoesRecomendadas: data.acoes_recomendadas ?? [],
@@ -114,7 +105,7 @@ export const aiService = {
       id: `sqlite_${m.id}`,
       sender: m.sender === 'user' ? 'user' : 'assistant',
       text: m.text,
-      timestamp: formatMessageTime(m.timestamp),
+      timestamp: m.timestamp ?? new Date().toISOString(),
     }));
   },
 

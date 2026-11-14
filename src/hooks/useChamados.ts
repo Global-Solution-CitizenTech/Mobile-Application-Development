@@ -1,24 +1,61 @@
-import { useCallback } from 'react';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
-import type { RecusaIaResponse } from '@/types/chamado';
+import type { Chamado } from '@/types/chamado';
 import type { FiltroChamados } from '@/types/filters';
 import { getApiErrorMessage } from '@/utils/apiError';
+
+const EMPTY_CHAMADOS: Chamado[] = [];
+
+export const chamadoQueries = {
+  list: (filtros: FiltroChamados, usuarioId?: number | null) =>
+    queryOptions({
+      queryKey: queryKeys.chamados.list(filtros, usuarioId),
+      queryFn: () => chamadoService.listar(filtros),
+    }),
+
+  infiniteList: (filtros: Omit<FiltroChamados, 'page'>, usuarioId?: number | null) =>
+    infiniteQueryOptions({
+      queryKey: queryKeys.chamados.infiniteList(filtros, usuarioId),
+      queryFn: ({ pageParam }) => chamadoService.listar({ ...filtros, page: pageParam }),
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        const next = lastPage.page.number + 1;
+        return next < lastPage.page.totalPages ? next : undefined;
+      },
+    }),
+
+  detail: (id?: number) => {
+    const hasValidId = typeof id === 'number' && id > 0;
+    return queryOptions({
+      queryKey: queryKeys.chamados.detail(id),
+      queryFn: () => {
+        if (!hasValidId) throw new Error('ID de chamado inválido.');
+        return chamadoService.buscarPorId(id);
+      },
+    });
+  },
+
+  estatisticas: () =>
+    queryOptions({
+      queryKey: queryKeys.chamados.estatisticas(),
+      queryFn: () => chamadoService.obterEstatisticas(),
+    }),
+};
 
 export function useChamadosList(filtros: FiltroChamados = {}, enabled = true) {
   const { usuario } = useAuth();
 
   const query = useQuery({
-    queryKey: queryKeys.chamados.list(filtros, usuario?.id),
-    queryFn: () => chamadoService.listar(filtros),
+    ...chamadoQueries.list(filtros, usuario?.id),
     enabled: enabled && Boolean(usuario),
   });
 
   return {
-    chamados: query.data?.content ?? [],
+    chamados: query.data?.content ?? EMPTY_CHAMADOS,
     pageInfo: query.data?.page ?? null,
+    totalElements: query.data?.page.totalElements ?? 0,
     isLoading: query.isLoading,
     isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
@@ -30,18 +67,13 @@ export function useInfiniteChamadosList(filtros: Omit<FiltroChamados, 'page'> = 
   const { usuario } = useAuth();
 
   const query = useInfiniteQuery({
-    queryKey: queryKeys.chamados.infiniteList(filtros, usuario?.id),
-    queryFn: ({ pageParam }) => chamadoService.listar({ ...filtros, page: pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => {
-      const next = lastPage.page.number + 1;
-      return next < lastPage.page.totalPages ? next : undefined;
-    },
+    ...chamadoQueries.infiniteList(filtros, usuario?.id),
     enabled: enabled && Boolean(usuario),
   });
 
-  const chamados = query.data?.pages.flatMap((page) => page.content) ?? [];
-  const totalElements = query.data?.pages[0]?.page.totalElements ?? 0;
+  const pages = query.data?.pages;
+  const chamados = pages ? pages.flatMap((page) => page.content) : EMPTY_CHAMADOS;
+  const totalElements = pages?.[0]?.page.totalElements ?? 0;
 
   return {
     chamados,
@@ -58,51 +90,15 @@ export function useInfiniteChamadosList(filtros: Omit<FiltroChamados, 'page'> = 
 
 export function useChamadoDetail(id?: number) {
   const { usuario } = useAuth();
-
   const hasValidId = typeof id === 'number' && id > 0;
 
   const query = useQuery({
-    queryKey: queryKeys.chamados.detail(id),
-    queryFn: () => {
-      if (!hasValidId) {
-        throw new Error('ID de chamado inválido.');
-      }
-      return chamadoService.buscarPorId(id);
-    },
+    ...chamadoQueries.detail(id),
     enabled: Boolean(usuario) && hasValidId,
   });
 
   return {
     chamado: query.data ?? null,
-    isLoading: query.isLoading,
-    error: query.error ? getApiErrorMessage(query.error) : null,
-    refetch: query.refetch,
-  };
-}
-
-export function useCategoriasChamado() {
-  const query = useQuery({
-    queryKey: queryKeys.chamados.categorias(),
-    queryFn: () => chamadoService.listarCategorias(),
-    staleTime: 1000 * 60 * 30,
-  });
-
-  return {
-    categorias: query.data ?? [],
-    isLoading: query.isLoading,
-    error: query.error ? getApiErrorMessage(query.error) : null,
-    refetch: query.refetch,
-  };
-}
-
-export function useEstatisticasChamados() {
-  const query = useQuery({
-    queryKey: queryKeys.chamados.estatisticas(),
-    queryFn: () => chamadoService.obterEstatisticas(),
-  });
-
-  return {
-    estatisticas: query.data ?? null,
     isLoading: query.isLoading,
     isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
@@ -110,29 +106,14 @@ export function useEstatisticasChamados() {
   };
 }
 
-export function useRecusaRecente() {
-  const { usuario } = useAuth();
-  const queryClient = useQueryClient();
-  const key = queryKeys.chamados.recusa(usuario?.id);
-
-  const query = useQuery({
-    queryKey: key,
-    queryFn: async () => {
-      const res = await chamadoService.obterRecusaRecente();
-      if (res.motivo) return res;
-      return queryClient.getQueryData<RecusaIaResponse>(key) ?? res;
-    },
-    enabled: Boolean(usuario),
-    staleTime: 0,
-  });
-
-  const clear = useCallback(() => {
-    queryClient.setQueryData<RecusaIaResponse>(key, { motivo: null });
-  }, [key, queryClient]);
+export function useEstatisticasChamados() {
+  const query = useQuery(chamadoQueries.estatisticas());
 
   return {
-    motivo: query.data?.motivo ?? null,
-    clear,
+    estatisticas: query.data ?? null,
+    isLoading: query.isLoading,
+    isRefetching: query.isRefetching,
+    error: query.error ? getApiErrorMessage(query.error) : null,
     refetch: query.refetch,
   };
 }

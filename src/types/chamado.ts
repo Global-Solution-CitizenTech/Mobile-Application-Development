@@ -34,9 +34,15 @@ export interface Chamado extends Omit<ChamadoResponse, 'foto'> {
   fotoUrl?: string;
 }
 
+export interface FotoUpload {
+  uri: string;
+  name: string;
+  type: string;
+}
+
 export interface ChamadoCreateRequest {
   endereco: EnderecoRequest;
-  fotoBase64: string;
+  foto: FotoUpload;
 }
 
 export interface ChamadoRequest {
@@ -44,7 +50,6 @@ export interface ChamadoRequest {
   descricao: string;
   categoria: string;
   endereco: EnderecoRequest;
-  fotoBase64?: string;
 }
 
 export interface ChamadoStatusRequest {
@@ -59,8 +64,4 @@ export interface EstatisticasChamados {
   resolvidos: number;
   rejeitados: number;
   totalApoios: number;
-}
-
-export interface RecusaIaResponse {
-  motivo: string | null;
 }

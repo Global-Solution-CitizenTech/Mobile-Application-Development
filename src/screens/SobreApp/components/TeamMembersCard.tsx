@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
@@ -15,9 +14,9 @@ export const TeamMembersCard = ({ integrantes }: TeamMembersCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
-  const openLink = useCallback((url: string) => {
+  const openLink = (url: string) => {
     void Linking.openURL(url).catch(() => undefined);
-  }, []);
+  };
 
   return (
     <View style={[styles.card, shadows.sm]}>

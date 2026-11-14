@@ -3,27 +3,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
-import type { FormErrors, RegisterFormData } from '@/utils/schemas';
+import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
+import type { RegisterFormData } from '@/utils/schemas';
 
 interface RegisterFormProps {
-  values: RegisterFormData;
-  errors: FormErrors<RegisterFormData>;
-  onChangeField: <K extends keyof RegisterFormData>(field: K, value: RegisterFormData[K]) => void;
-  onChangeTelefone: (text: string) => void;
-  onChangeCep: (text: string) => void;
+  field: <K extends StringFieldKeys<RegisterFormData>>(name: K) => BoundFieldProps;
   onSubmit: () => void;
   onGoToLogin: () => void;
   submitting: boolean;
 }
 
 export const RegisterForm = ({
-  values,
-  errors,
-  onChangeField,
-  onChangeTelefone,
-  onChangeCep,
+  field,
   onSubmit,
   onGoToLogin,
   submitting,
@@ -38,10 +32,8 @@ export const RegisterForm = ({
       <Input
         label="Nome Completo *"
         placeholder="Seu nome completo"
-        value={values.nome}
-        onChangeText={(text) => onChangeField('nome', text)}
+        {...field('nome')}
         maxLength={100}
-        error={errors.nome}
         leftIcon={<Ionicons name="person-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -51,10 +43,8 @@ export const RegisterForm = ({
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
-        value={values.email}
-        onChangeText={(text) => onChangeField('email', text)}
+        {...field('email')}
         maxLength={100}
-        error={errors.email}
         leftIcon={<Ionicons name="mail-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -62,10 +52,9 @@ export const RegisterForm = ({
         label="Telefone / WhatsApp com DDD *"
         placeholder="(11) 99999-9999"
         keyboardType="phone-pad"
-        value={values.telefone}
-        onChangeText={onChangeTelefone}
+        mask={maskPhoneInput}
+        {...field('telefone')}
         maxLength={15}
-        error={errors.telefone}
         leftIcon={<Ionicons name="call-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -78,20 +67,17 @@ export const RegisterForm = ({
             label="CEP *"
             placeholder="00000-000"
             keyboardType="number-pad"
-            value={values.cep}
-            onChangeText={onChangeCep}
+            mask={maskCepInput}
+            {...field('cep')}
             maxLength={9}
-            error={errors.cep}
           />
         </View>
         <View style={styles.numCol}>
           <Input
             label="Número *"
             placeholder="1100 ou S/N"
-            value={values.numero}
-            onChangeText={(text) => onChangeField('numero', text)}
+            {...field('numero')}
             maxLength={100}
-            error={errors.numero}
           />
         </View>
       </View>
@@ -99,20 +85,16 @@ export const RegisterForm = ({
       <Input
         label="Rua / Logradouro (Opcional)"
         placeholder="Av. Paulista"
-        value={values.rua ?? ''}
-        onChangeText={(text) => onChangeField('rua', text)}
+        {...field('rua')}
         maxLength={100}
-        error={errors.rua}
         leftIcon={<Ionicons name="location-outline" size={18} color={theme.textMuted} />}
       />
 
       <Input
         label="Ponto de Referência *"
         placeholder="Ex: Próx. à estação ou bloco B"
-        value={values.referencia}
-        onChangeText={(text) => onChangeField('referencia', text)}
+        {...field('referencia')}
         maxLength={50}
-        error={errors.referencia}
       />
 
       <View style={styles.sectionDivider} />
@@ -122,10 +104,8 @@ export const RegisterForm = ({
         label="Senha *"
         placeholder="Mínimo 6 caracteres"
         isPassword
-        value={values.senha}
-        onChangeText={(text) => onChangeField('senha', text)}
+        {...field('senha')}
         maxLength={60}
-        error={errors.senha}
         leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -133,10 +113,8 @@ export const RegisterForm = ({
         label="Confirmar Senha *"
         placeholder="Repita a senha"
         isPassword
-        value={values.confirmarSenha}
-        onChangeText={(text) => onChangeField('confirmarSenha', text)}
+        {...field('confirmarSenha')}
         maxLength={60}
-        error={errors.confirmarSenha}
         leftIcon={<Ionicons name="shield-checkmark-outline" size={18} color={theme.textMuted} />}
       />
 

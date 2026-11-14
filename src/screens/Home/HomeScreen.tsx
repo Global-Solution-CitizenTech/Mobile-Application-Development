@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
-import { FeedbackModal } from '@/components/FeedbackModal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useHomeData } from '@/hooks/useHomeData';
@@ -32,8 +31,6 @@ export const HomeScreen = () => {
     error,
     onRefresh,
     apoiarChamado,
-    supportError,
-    clearSupportError,
   } = useHomeData();
 
   return (
@@ -143,14 +140,6 @@ export const HomeScreen = () => {
           )}
         </>
       )}
-
-      <FeedbackModal
-        visible={Boolean(supportError)}
-        type="error"
-        title="Não foi possível apoiar"
-        message={supportError ?? ''}
-        onConfirm={clearSupportError}
-      />
     </ScrollView>
   );
 };

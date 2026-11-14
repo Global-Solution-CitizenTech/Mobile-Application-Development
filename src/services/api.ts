@@ -50,7 +50,7 @@ export function buildApiAssetUrl(path?: string | null): string | undefined {
 
 export const api: AxiosInstance = create({
   baseURL: env.apiUrl,
-  timeout: 40000, // 40s para tolerar cold starts no Azure App Service e upload de imagens Base64
+  timeout: 40000, // 40s para tolerar cold starts e upload de imagens
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -71,6 +71,9 @@ export function registerUnauthorizedHandler(callback: UnauthorizedCallback): () 
 
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    if (config.data instanceof FormData && config.headers) {
+      config.headers.setContentType('multipart/form-data');
+    }
     try {
       const token = await storageService.getToken();
       if (token && config.headers) {

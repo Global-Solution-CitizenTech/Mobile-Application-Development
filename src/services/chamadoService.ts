@@ -1,8 +1,6 @@
 import { api } from '@/services/api';
-import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
 import type { SpringPageResponse } from '@/types/api';
-import type { CategoriaResponse } from '@/types/categoria';
-import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados, RecusaIaResponse } from '@/types/chamado';
+import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados } from '@/types/chamado';
 import type { FiltroChamados } from '@/types/filters';
 import { mapChamadoResponse } from '@/utils/chamadoMappers';
 
@@ -33,8 +31,17 @@ export const chamadoService = {
     return mapChamadoResponse(data);
   },
 
-  async criar(payload: ChamadoCreateRequest): Promise<void> {
-    await api.post('/chamados', payload);
+  async criar(payload: ChamadoCreateRequest): Promise<Chamado> {
+    const formData = new FormData();
+    formData.append('cep', payload.endereco.cep);
+    formData.append('numero', payload.endereco.numero);
+    formData.append('referencia', payload.endereco.referencia);
+    if (payload.endereco.rua) {
+      formData.append('rua', payload.endereco.rua);
+    }
+    formData.append('foto', payload.foto as unknown as Blob);
+    const { data } = await api.post<ChamadoResponse>('/chamados', formData);
+    return mapChamadoResponse(data);
   },
 
   async atualizar(id: number, payload: ChamadoRequest): Promise<Chamado> {
@@ -59,14 +66,5 @@ export const chamadoService = {
   async obterEstatisticas(): Promise<EstatisticasChamados> {
     const { data } = await api.get<EstatisticasChamados>('/chamados/estatisticas');
     return data;
-  },
-
-  async obterRecusaRecente(): Promise<RecusaIaResponse> {
-    const { data } = await api.get<RecusaIaResponse>('/chamados/recusa-recente');
-    return data;
-  },
-
-  async listarCategorias(): Promise<CategoriaResponse[]> {
-    return [...CATEGORIA_CATALOG];
   },
 };

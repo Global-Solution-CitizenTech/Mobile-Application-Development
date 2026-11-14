@@ -1,4 +1,4 @@
-import { AppState, Platform } from 'react-native';
+import { AppState } from 'react-native';
 import type { AppStateStatus } from 'react-native';
 import { QueryClient, focusManager, onlineManager } from '@tanstack/react-query';
 import * as Network from 'expo-network';
@@ -16,9 +16,7 @@ function shouldRetry(failureCount: number, error: unknown, maxRetries: number): 
 
 export function bindReactNativeQueryLifecycle(): () => void {
   const appStateSub = AppState.addEventListener('change', (status: AppStateStatus) => {
-    if (Platform.OS !== 'web') {
-      focusManager.setFocused(status === 'active');
-    }
+    focusManager.setFocused(status === 'active');
   });
 
   onlineManager.setEventListener((setOnline) => {

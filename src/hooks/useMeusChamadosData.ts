@@ -1,55 +1,45 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useChamadosList, useRecusaRecente } from '@/hooks/useChamados';
+import { useState } from 'react';
+import { useChamadosList } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import type { MeusChamadosTab } from '@/types/filters';
+import { isStatusFinal } from '@/utils/permissions';
 
 export function useMeusChamadosData() {
   const [filterTab, setFilterTab] = useState<MeusChamadosTab>('TODOS');
-  const { chamados, isLoading, isRefetching, error, refetch } = useChamadosList({
-    apenasMeus: true,
-    page: 0,
-    size: 50,
-    sort: 'dtAbertura,desc',
-  });
-  const { motivo: recusaModal, clear: clearRecusaModal, refetch: refetchRecusa } = useRecusaRecente();
-  const { apoiarChamado, supportError, clearSupportError } = useChamadoMutations();
+  const { chamados, totalElements, pageInfo, isLoading, isRefetching, error, refetch } =
+    useChamadosList({
+      apenasMeus: true,
+      page: 0,
+      size: 50,
+      sort: 'dtAbertura,desc',
+    });
+  const { apoiarChamado } = useChamadoMutations();
 
-  const refreshAll = useCallback(async () => {
-    await Promise.all([refetch(), refetchRecusa()]);
-  }, [refetch, refetchRecusa]);
+  const totalChamados = pageInfo ? totalElements : chamados.length;
+  const contadores = {
+    total: totalChamados,
+    abertos: chamados.filter((c) => c.status === 'PENDENTE').length,
+    emAndamento: chamados.filter((c) => c.status === 'EM_ANALISE' || c.status === 'EM_EXECUCAO').length,
+    concluidos: chamados.filter((c) => isStatusFinal(c.status)).length,
+  };
 
-  const contadores = useMemo(() => {
-    const abertos = chamados.filter((c) => c.status === 'PENDENTE').length;
-    const emAndamento = chamados.filter((c) => c.status === 'EM_ANALISE' || c.status === 'EM_EXECUCAO').length;
-    const concluidos = chamados.filter((c) => c.status === 'CONCLUIDO' || c.status === 'REJEITADO').length;
-    return { total: chamados.length, abertos, emAndamento, concluidos };
-  }, [chamados]);
-
-  const chamadosFiltrados = useMemo(() => {
-    if (filterTab === 'ATIVOS') {
-      return chamados.filter((c) => c.status !== 'CONCLUIDO' && c.status !== 'REJEITADO');
-    }
-    if (filterTab === 'CONCLUIDOS') {
-      return chamados.filter((c) => c.status === 'CONCLUIDO' || c.status === 'REJEITADO');
-    }
-    return chamados;
-  }, [chamados, filterTab]);
+  const chamadosFiltrados =
+    filterTab === 'ATIVOS'
+      ? chamados.filter((c) => !isStatusFinal(c.status))
+      : filterTab === 'CONCLUIDOS'
+        ? chamados.filter((c) => isStatusFinal(c.status))
+        : chamados;
 
   return {
     chamados: chamadosFiltrados,
-    totalChamados: chamados.length,
+    totalChamados,
     contadores,
     filterTab,
     setFilterTab,
     isLoading,
     isRefreshing: isRefetching,
     error,
-    refetch: refreshAll,
-    refetchRecusa,
-    recusaModal,
-    clearRecusaModal,
+    refetch,
     apoiarChamado,
-    supportError,
-    clearSupportError,
   };
 }

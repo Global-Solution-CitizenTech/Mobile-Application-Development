@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from '@/components/BaseModal';
@@ -111,15 +111,14 @@ export function SelectPickerModal<T extends string = string>({
   const styles = useThemedStyles(createStyles);
   const [search, setSearch] = useState('');
 
-  const filteredOptions = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return options;
-    return options.filter(
-      (opt) =>
-        opt.label.toLowerCase().includes(query) ||
-        (opt.subtitle && opt.subtitle.toLowerCase().includes(query))
-    );
-  }, [options, search]);
+  const query = search.trim().toLowerCase();
+  const filteredOptions = !query
+    ? options
+    : options.filter(
+        (opt) =>
+          opt.label.toLowerCase().includes(query) ||
+          (opt.subtitle && opt.subtitle.toLowerCase().includes(query))
+      );
 
   const handleClose = () => {
     setSearch('');

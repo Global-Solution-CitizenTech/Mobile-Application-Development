@@ -1,5 +1,7 @@
 import { z } from 'zod';
+import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
 import type { StatusChamado } from '@/types/categoria';
+import type { FotoUpload } from '@/types/chamado';
 import { onlyDigits, splitPhoneDigits } from '@/utils/formatters';
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;
@@ -13,8 +15,8 @@ export function extractFieldErrors<T extends Record<string, unknown>>(error: z.Z
   const result: FormErrors<T> = {};
 
   for (const [key, messages] of Object.entries(fieldErrors)) {
-    const first = Array.isArray(messages) ? messages[0] : undefined;
-    if (typeof first === 'string' && first.length > 0) {
+    const first = messages?.[0];
+    if (first) {
       result[key as keyof T] = first;
     }
   }
@@ -26,7 +28,7 @@ export const StoredUsuarioSchema = z.object({
   id: z.number(),
   nome: z.string(),
   email: z.string(),
-  cargo: z.enum(['CIDADAO', 'GESTOR']),
+  cargo: z.enum(['CIDADAO', 'GESTOR', 'ADMIN']),
   ddd: z.string(),
   numeroTelefone: z.string(),
   endereco: z.object({
@@ -41,13 +43,7 @@ export const StoredUsuarioSchema = z.object({
   }),
 });
 
-export const RadarLocationPrefSchema = z.object({
-  userId: z.number(),
-  userCity: z.string(),
-  nivel: z.enum(['CIDADE', 'BAIRRO', 'ESTADO']),
-  valor: z.string().nullable(),
-});
-
+const VALID_CATEGORIA_IDS = new Set(CATEGORIA_CATALOG.map((c) => c.id));
 const STATUS_CHAMADO_VALUES = ['PENDENTE', 'EM_ANALISE', 'EM_EXECUCAO', 'CONCLUIDO', 'REJEITADO'] as const satisfies readonly StatusChamado[];
 
 const DDDS_VALIDOS = new Set([
@@ -113,15 +109,27 @@ export const ProfileEditSchema = z.object({
 
 export const ChamadoFormSchema = z.object({
   titulo: z.string().trim().min(5, 'Descreva o problema em pelo menos 5 caracteres').max(100, 'Máximo de 100 caracteres'),
-  categoriaId: z.number().int().positive('Selecione uma categoria'),
+  categoriaId: z
+    .number()
+    .int()
+    .refine((id) => VALID_CATEGORIA_IDS.has(id), 'Selecione uma categoria'),
   descricao: z.string().trim().min(15, 'Detalhe a ocorrência (mínimo 15 caracteres)').max(1000, 'Máximo de 1000 caracteres'),
   ...enderecoFields,
-  fotoBase64: z.string().optional(),
 });
 
 export const ChamadoCreateSchema = z.object({
   ...enderecoFields,
-  fotoBase64: z.string().trim().min(1, 'Envie uma foto da ocorrência'),
+  foto: z.custom<FotoUpload>(
+    (val) =>
+      Boolean(
+        val &&
+          typeof val === 'object' &&
+          'uri' in val &&
+          typeof val.uri === 'string' &&
+          val.uri.trim().length > 0
+      ),
+    { message: 'Envie uma foto da ocorrência' }
+  ),
 });
 
 export const StatusUpdateSchema = z.object({

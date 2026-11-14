@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeedback } from '@/contexts/FeedbackContext';
 import { useZodForm } from '@/hooks/useZodForm';
 import type { LoginCredentials } from '@/types/auth';
 import { getAuthErrorMessage } from '@/utils/apiError';
@@ -13,36 +13,25 @@ const INITIAL_LOGIN: LoginFormData = {
 
 export function useLoginForm() {
   const { signIn } = useAuth();
+  const { showError } = useFeedback();
   const form = useZodForm(LoginSchema, INITIAL_LOGIN);
-  const { validate } = form;
-  const [modalError, setModalError] = useState<string | null>(null);
 
   const loginMutation = useMutation({
     mutationFn: (credentials: LoginCredentials) => signIn(credentials),
     onError: (error) => {
-      setModalError(getAuthErrorMessage(error));
+      showError('Não foi possível entrar', getAuthErrorMessage(error));
     },
   });
 
-  const { mutate: executeLogin, isPending } = loginMutation;
-
-  const dismissError = useCallback(() => {
-    setModalError(null);
-  }, []);
-
-  const handleLogin = useCallback(() => {
-    const parsed = validate();
+  const handleLogin = () => {
+    const parsed = form.validate();
     if (!parsed) return;
-
-    setModalError(null);
-    executeLogin(parsed);
-  }, [executeLogin, validate]);
+    loginMutation.mutate(parsed);
+  };
 
   return {
     ...form,
-    submitting: isPending,
-    modalError,
-    dismissError,
+    submitting: loginMutation.isPending,
     handleLogin,
   };
 }

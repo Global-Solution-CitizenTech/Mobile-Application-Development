@@ -26,11 +26,6 @@ export interface RadarLocationFilter {
   valor: string | null;
 }
 
-export interface RadarLocationPreference extends RadarLocationFilter {
-  userId: number;
-  userCity: string;
-}
-
 export interface SelectPickerOption<T extends string = string> {
   value: T;
   label: string;

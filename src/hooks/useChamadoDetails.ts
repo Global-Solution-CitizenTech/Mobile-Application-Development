@@ -1,31 +1,26 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeedback } from '@/contexts/FeedbackContext';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useChamadoDetail } from '@/hooks/useChamados';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { canChangeChamadoStatus, canDeleteChamado, canEditChamado, canSupportChamado } from '@/utils/permissions';
+import {
+  canChangeChamadoStatus,
+  canDeleteChamado,
+  canEditChamado,
+  canSupportChamado,
+} from '@/utils/permissions';
 import type { StatusUpdateFormData } from '@/utils/schemas';
 
 export function useChamadoDetails(id: number) {
   const { usuario } = useAuth();
+  const { showError } = useFeedback();
   const detailQuery = useChamadoDetail(id);
-  const { apoiarChamado, alterarStatus, excluirChamado, isSupporting, isChangingStatus, isDeleting } = useChamadoMutations();
+  const { apoiarChamado, alterarStatus, excluirChamado, isSupporting, isChangingStatus, isDeleting } =
+    useChamadoMutations();
 
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const { refetch } = detailQuery;
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
 
   const chamado = detailQuery.chamado;
   const podeEditar = canEditChamado(usuario, chamado);
@@ -33,59 +28,44 @@ export function useChamadoDetails(id: number) {
   const podeExcluir = canDeleteChamado(usuario, chamado);
   const podeApoiar = chamado ? canSupportChamado(chamado.status) : false;
 
-  const handleApoiar = useCallback(() => {
+  const handleApoiar = () => {
     if (!chamado || !podeApoiar) return;
-    setActionError(null);
-    apoiarChamado(chamado.idChamado, {
-      onError: (err) => setActionError(getApiErrorMessage(err, 'Falha ao registrar apoio.')),
+    apoiarChamado(chamado.idChamado);
+  };
+
+  const handleAlterarStatus = (formData: StatusUpdateFormData) => {
+    if (!chamado) return;
+    alterarStatus(
+      chamado.idChamado,
+      { status: formData.status, observacao: formData.observacao.trim() },
+      {
+        onSuccess: () => setStatusModalVisible(false),
+        onError: (err) =>
+          showError('Não foi possível concluir', getApiErrorMessage(err, 'Falha ao atualizar status.')),
+      }
+    );
+  };
+
+  const handleConfirmDelete = (onDeleted: () => void) => {
+    if (!chamado) return;
+    excluirChamado(chamado.idChamado, {
+      onSuccess: () => {
+        setDeleteModalVisible(false);
+        onDeleted();
+      },
+      onError: (err) => {
+        setDeleteModalVisible(false);
+        showError('Não foi possível concluir', getApiErrorMessage(err, 'Falha ao excluir chamado.'));
+      },
     });
-  }, [apoiarChamado, chamado, podeApoiar]);
-
-  const handleAlterarStatus = useCallback(
-    (formData: StatusUpdateFormData) => {
-      if (!chamado) return;
-      setActionError(null);
-      alterarStatus(
-        chamado.idChamado,
-        { status: formData.status, observacao: formData.observacao.trim() },
-        {
-          onSuccess: () => setStatusModalVisible(false),
-          onError: (err) => setActionError(getApiErrorMessage(err, 'Falha ao atualizar status.')),
-        }
-      );
-    },
-    [alterarStatus, chamado]
-  );
-
-  const handleConfirmDelete = useCallback(
-    (onDeleted: () => void) => {
-      if (!chamado) return;
-      setActionError(null);
-      excluirChamado(chamado.idChamado, {
-        onSuccess: () => {
-          setDeleteModalVisible(false);
-          onDeleted();
-        },
-        onError: (err) => {
-          setDeleteModalVisible(false);
-          setActionError(getApiErrorMessage(err, 'Falha ao excluir chamado.'));
-        },
-      });
-    },
-    [chamado, excluirChamado]
-  );
-
-  const clearActionError = useCallback(() => setActionError(null), []);
+  };
 
   return {
     chamado,
     isLoading: detailQuery.isLoading,
-    isRefreshing,
+    isRefreshing: detailQuery.isRefetching,
     fetchError: detailQuery.error,
-    actionError,
-    clearActionError,
-    refetch,
-    handleRefresh,
+    refetch: detailQuery.refetch,
     podeEditar,
     podeAlterarStatus,
     podeExcluir,

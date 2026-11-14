@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
@@ -27,20 +27,16 @@ export const StatusChangeModal = ({
   submitting,
 }: StatusChangeModalProps) => {
   const styles = useThemedStyles(createStyles);
-  const initialValues = useMemo(
-    () => ({ status: currentStatus, observacao: '' }),
-    [currentStatus]
-  );
   const { values, errors, setFieldValue, validate, reset } = useZodForm(
     StatusUpdateSchema,
-    initialValues
+    { status: currentStatus, observacao: '' }
   );
 
   useEffect(() => {
     if (visible) {
-      reset(initialValues);
+      reset({ status: currentStatus, observacao: '' });
     }
-  }, [initialValues, reset, visible]);
+  }, [currentStatus, reset, visible]);
 
   const handleConfirm = () => {
     const parsed = validate();

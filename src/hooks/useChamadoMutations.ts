@@ -1,48 +1,33 @@
-import { useCallback, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useFeedback } from '@/contexts/FeedbackContext';
+import { type ChamadoListCache, patchApoioInCache, toggleApoioOtimista } from '@/lib/chamadoCache';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
-import type { ActionCallbacks, SpringPageResponse } from '@/types/api';
+import type { ActionCallbacks } from '@/types/api';
 import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoStatusRequest } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
 
-const SUPPORT_ERROR_MESSAGE = 'Falha ao registrar apoio.';
-
-function toggleApoioOtimista(chamado: Chamado): Chamado {
-  const apoiado = !chamado.apoiadoPorMim;
-  return {
-    ...chamado,
-    apoiadoPorMim: apoiado,
-    totalVotos: Math.max(0, chamado.totalVotos + (apoiado ? 1 : -1)),
-  };
-}
-
 export function useChamadoMutations() {
   const queryClient = useQueryClient();
-  const [supportError, setSupportError] = useState<string | null>(null);
+  const { showError } = useFeedback();
 
-  const invalidateListsAndStats = useCallback(async () => {
-    await Promise.all([
+  const invalidateListsAndStats = () =>
+    Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.chamados.lists() }),
       queryClient.invalidateQueries({ queryKey: queryKeys.chamados.estatisticas() }),
     ]);
-  }, [queryClient]);
 
   const createMutation = useMutation({
     mutationFn: (payload: ChamadoCreateRequest) => chamadoService.criar(payload),
-    onSuccess: async () => {
+    onSuccess: async (created) => {
+      queryClient.setQueryData(queryKeys.chamados.detail(created.idChamado), created);
       await invalidateListsAndStats();
-      const refreshTriagem = () => {
-        void invalidateListsAndStats();
-        void queryClient.invalidateQueries({ queryKey: ['chamados', 'recusa'] });
-      };
-      setTimeout(refreshTriagem, 5000);
-      setTimeout(refreshTriagem, 10000);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: ChamadoRequest }) => chamadoService.atualizar(id, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: ChamadoRequest }) =>
+      chamadoService.atualizar(id, payload),
     onSuccess: async (updated) => {
       queryClient.setQueryData(queryKeys.chamados.detail(updated.idChamado), updated);
       await invalidateListsAndStats();
@@ -53,17 +38,16 @@ export function useChamadoMutations() {
     mutationFn: (id: number) => chamadoService.apoiar(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.chamados.all });
-      const previousLists = queryClient.getQueriesData<SpringPageResponse<Chamado>>({ queryKey: queryKeys.chamados.lists() });
+      const previousLists = queryClient.getQueriesData<ChamadoListCache>({
+        queryKey: queryKeys.chamados.lists(),
+      });
       const detailKey = queryKeys.chamados.detail(id);
       const previousDetail = queryClient.getQueryData<Chamado>(detailKey);
 
-      queryClient.setQueriesData<SpringPageResponse<Chamado>>({ queryKey: queryKeys.chamados.lists() }, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          content: old.content.map((item) => (item.idChamado === id ? toggleApoioOtimista(item) : item)),
-        };
-      });
+      queryClient.setQueriesData<ChamadoListCache>(
+        { queryKey: queryKeys.chamados.lists() },
+        (old) => patchApoioInCache(old, id)
+      );
 
       if (previousDetail) {
         queryClient.setQueryData<Chamado>(detailKey, toggleApoioOtimista(previousDetail));
@@ -71,11 +55,12 @@ export function useChamadoMutations() {
 
       return { previousLists, previousDetail };
     },
-    onError: (_error, id, context) => {
+    onError: (error, id, context) => {
       context?.previousLists.forEach(([key, data]) => queryClient.setQueryData(key, data));
       if (context?.previousDetail) {
         queryClient.setQueryData(queryKeys.chamados.detail(id), context.previousDetail);
       }
+      showError('Não foi possível apoiar', getApiErrorMessage(error, 'Falha ao registrar apoio.'));
     },
     onSettled: async (_data, _error, id) => {
       await Promise.all([
@@ -86,7 +71,8 @@ export function useChamadoMutations() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: ChamadoStatusRequest }) => chamadoService.alterarStatus(id, payload),
+    mutationFn: ({ id, payload }: { id: number; payload: ChamadoStatusRequest }) =>
+      chamadoService.alterarStatus(id, payload),
     onSuccess: async (updated) => {
       queryClient.setQueryData(queryKeys.chamados.detail(updated.idChamado), updated);
       await invalidateListsAndStats();
@@ -101,68 +87,21 @@ export function useChamadoMutations() {
     },
   });
 
-  const { mutate: mutateCreate } = createMutation;
-  const { mutate: mutateUpdate } = updateMutation;
-  const { mutate: mutateSupport } = apoiarMutation;
-  const { mutate: mutateStatus } = statusMutation;
-  const { mutate: mutateDelete } = deleteMutation;
-
-  const criarChamado = useCallback(
-    (payload: ChamadoCreateRequest, callbacks?: ActionCallbacks<void>) => {
-      mutateCreate(payload, callbacks);
-    },
-    [mutateCreate]
-  );
-
-  const atualizarChamado = useCallback(
-    (id: number, payload: ChamadoRequest, callbacks?: ActionCallbacks<Chamado>) => {
-      mutateUpdate({ id, payload }, callbacks);
-    },
-    [mutateUpdate]
-  );
-
-  const apoiarChamado = useCallback(
-    (id: number, callbacks?: ActionCallbacks<Chamado>) => {
-      setSupportError(null);
-      mutateSupport(id, {
-        onSuccess: callbacks?.onSuccess,
-        onError: (error) => {
-          setSupportError(getApiErrorMessage(error, SUPPORT_ERROR_MESSAGE));
-          callbacks?.onError?.(error);
-        },
-      });
-    },
-    [mutateSupport]
-  );
-
-  const alterarStatus = useCallback(
-    (id: number, payload: ChamadoStatusRequest, callbacks?: ActionCallbacks<Chamado>) => {
-      mutateStatus({ id, payload }, callbacks);
-    },
-    [mutateStatus]
-  );
-
-  const excluirChamado = useCallback(
-    (id: number, callbacks?: ActionCallbacks<void>) => {
-      mutateDelete(id, callbacks);
-    },
-    [mutateDelete]
-  );
-
-  const clearSupportError = useCallback(() => setSupportError(null), []);
-
   return {
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isSupporting: apoiarMutation.isPending,
     isChangingStatus: statusMutation.isPending,
     isDeleting: deleteMutation.isPending,
-    supportError,
-    clearSupportError,
-    criarChamado,
-    atualizarChamado,
-    apoiarChamado,
-    alterarStatus,
-    excluirChamado,
+    criarChamado: (payload: ChamadoCreateRequest, callbacks?: ActionCallbacks<Chamado>) =>
+      createMutation.mutate(payload, callbacks),
+    atualizarChamado: (id: number, payload: ChamadoRequest, callbacks?: ActionCallbacks<Chamado>) =>
+      updateMutation.mutate({ id, payload }, callbacks),
+    apoiarChamado: (id: number, callbacks?: ActionCallbacks<Chamado>) =>
+      apoiarMutation.mutate(id, callbacks),
+    alterarStatus: (id: number, payload: ChamadoStatusRequest, callbacks?: ActionCallbacks<Chamado>) =>
+      statusMutation.mutate({ id, payload }, callbacks),
+    excluirChamado: (id: number, callbacks?: ActionCallbacks<void>) =>
+      deleteMutation.mutate(id, callbacks),
   };
 }

@@ -1,4 +1,4 @@
-export interface SpringPageInfo {
+interface SpringPageInfo {
   size: number;
   number: number;
   totalElements: number;
@@ -10,11 +10,9 @@ export interface SpringPageResponse<T> {
   page: SpringPageInfo;
 }
 
-export interface ApiFieldError {
-  campo?: string;
-  mensagem?: string;
-  field?: string;
-  message?: string;
+interface ApiFieldError {
+  campo: string;
+  mensagem: string;
 }
 
 export interface ApiErrorResponse {
@@ -22,7 +20,7 @@ export interface ApiErrorResponse {
   status?: number;
   error?: string;
   message?: string;
-  mensagem?: string;
+  detail?: string;
   path?: string;
   erros?: ApiFieldError[];
 }

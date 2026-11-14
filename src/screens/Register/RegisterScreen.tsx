@@ -2,21 +2,19 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { type NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthHeader } from '@/components/AuthHeader';
-import { FeedbackModal } from '@/components/FeedbackModal';
 import { useThemedStyles } from '@/contexts/ThemeContext';
 import { useRegisterForm } from '@/hooks/useRegisterForm';
 import type { AuthStackParamList } from '@/navigation/types';
 import { RegisterForm } from '@/screens/Register/components/RegisterForm';
 import { spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
-import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen = ({ navigation }: Props) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const { values, errors, setFieldValue, submitting, modalError, dismissError, handleRegister } = useRegisterForm();
+  const { field, submitting, handleRegister } = useRegisterForm();
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -42,25 +40,13 @@ export const RegisterScreen = ({ navigation }: Props) => {
           />
 
           <RegisterForm
-            values={values}
-            errors={errors}
-            onChangeField={setFieldValue}
-            onChangeTelefone={(text) => setFieldValue('telefone', maskPhoneInput(text))}
-            onChangeCep={(text) => setFieldValue('cep', maskCepInput(text))}
+            field={field}
             onSubmit={handleRegister}
             onGoToLogin={() => navigation.replace('Login')}
             submitting={submitting}
           />
         </View>
       </ScrollView>
-
-      <FeedbackModal
-        visible={Boolean(modalError)}
-        type="error"
-        title="Não foi possível cadastrar"
-        message={modalError ?? ''}
-        onConfirm={dismissError}
-      />
     </KeyboardAvoidingView>
   );
 };

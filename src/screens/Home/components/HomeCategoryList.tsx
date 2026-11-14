@@ -7,7 +7,7 @@ import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
 import type { CategoriaResponse } from '@/types/categoria';
 
 interface HomeCategoryListProps {
-  categorias: CategoriaResponse[];
+  categorias: readonly CategoriaResponse[];
   onSelectCategoria: (categoriaNome: string) => void;
 }
 

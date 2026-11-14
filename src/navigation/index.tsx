@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Image, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,22 +12,20 @@ export const NavigationRouter = () => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
-  const navigationTheme = useMemo(() => {
-    const base = theme.isDark ? DarkTheme : DefaultTheme;
-    return {
-      ...base,
-      dark: theme.isDark,
-      colors: {
-        ...base.colors,
-        primary: theme.primary,
-        background: theme.background,
-        card: theme.surface,
-        text: theme.text,
-        border: theme.border,
-        notification: theme.primary,
-      },
-    };
-  }, [theme]);
+  const base = theme.isDark ? DarkTheme : DefaultTheme;
+  const navigationTheme = {
+    ...base,
+    dark: theme.isDark,
+    colors: {
+      ...base.colors,
+      primary: theme.primary,
+      background: theme.background,
+      card: theme.surface,
+      text: theme.text,
+      border: theme.border,
+      notification: theme.primary,
+    },
+  };
 
   if (isLoading) {
     return (

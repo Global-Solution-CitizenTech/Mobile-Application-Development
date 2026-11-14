@@ -2,7 +2,6 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { type NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthHeader } from '@/components/AuthHeader';
-import { FeedbackModal } from '@/components/FeedbackModal';
 import { useThemedStyles } from '@/contexts/ThemeContext';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import type { AuthStackParamList } from '@/navigation/types';
@@ -15,7 +14,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export const LoginScreen = ({ navigation }: Props) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const { values, errors, setFieldValue, submitting, modalError, dismissError, handleLogin } = useLoginForm();
+  const { field, submitting, handleLogin } = useLoginForm();
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -40,26 +39,13 @@ export const LoginScreen = ({ navigation }: Props) => {
           />
 
           <LoginForm
-            email={values.email}
-            senha={values.senha}
-            emailError={errors.email ?? null}
-            senhaError={errors.senha ?? null}
+            field={field}
             isLoading={submitting}
-            onEmailChange={(text) => setFieldValue('email', text)}
-            onSenhaChange={(text) => setFieldValue('senha', text)}
             onSubmit={handleLogin}
             onGoToRegister={() => navigation.replace('Register')}
           />
         </View>
       </ScrollView>
-
-      <FeedbackModal
-        visible={Boolean(modalError)}
-        type="error"
-        title="Não foi possível entrar"
-        message={modalError ?? ''}
-        onConfirm={dismissError}
-      />
     </KeyboardAvoidingView>
   );
 };

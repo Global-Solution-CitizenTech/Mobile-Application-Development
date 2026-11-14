@@ -13,6 +13,7 @@ export interface InputProps extends TextInputProps {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   isPassword?: boolean;
+  mask?: (text: string) => string;
   containerStyle?: StyleProp<ViewStyle>;
   inputContainerStyle?: StyleProp<ViewStyle>;
 }
@@ -24,9 +25,11 @@ export const Input = ({
   leftIcon,
   rightIcon,
   isPassword = false,
+  mask,
   containerStyle,
   inputContainerStyle,
   secureTextEntry,
+  onChangeText,
   onFocus,
   onBlur,
   style,
@@ -57,6 +60,7 @@ export const Input = ({
           style={[styles.textInput, style]}
           placeholderTextColor={theme.textMuted}
           secureTextEntry={isSecured}
+          onChangeText={onChangeText ? (text) => onChangeText(mask ? mask(text) : text) : undefined}
           onFocus={(e) => {
             setIsFocused(true);
             onFocus?.(e);

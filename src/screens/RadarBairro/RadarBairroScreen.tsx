@@ -3,7 +3,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
-import { FeedbackModal } from '@/components/FeedbackModal';
+import { ChamadoListSeparator } from '@/components/ListSeparator';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useRadarData } from '@/hooks/useRadarData';
@@ -19,7 +19,9 @@ export const RadarBairroScreen = () => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
 
-  const radar = useRadarData(route.params?.categoria);
+  const radar = useRadarData(route.params?.categoria, (categoria) =>
+    navigation.setParams({ categoria })
+  );
 
   return (
     <View style={styles.container}>
@@ -74,7 +76,7 @@ export const RadarBairroScreen = () => {
             },
             radar.chamados.length === 0 && styles.emptyContainer,
           ]}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={ChamadoListSeparator}
           onEndReached={radar.loadMore}
           onEndReachedThreshold={0.4}
           ListFooterComponent={
@@ -112,14 +114,6 @@ export const RadarBairroScreen = () => {
           }
         />
       )}
-
-      <FeedbackModal
-        visible={Boolean(radar.supportError)}
-        type="error"
-        title="Não foi possível apoiar"
-        message={radar.supportError ?? ''}
-        onConfirm={radar.clearSupportError}
-      />
     </View>
   );
 };
@@ -129,6 +123,5 @@ const createStyles = (theme: AppTheme) =>
     container: { flex: 1, backgroundColor: theme.background },
     listContent: { paddingTop: spacing.md, paddingBottom: spacing.xxl },
     emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-    separator: { height: spacing.sm + 4 },
     footerLoader: { paddingVertical: spacing.md, alignItems: 'center' },
   });

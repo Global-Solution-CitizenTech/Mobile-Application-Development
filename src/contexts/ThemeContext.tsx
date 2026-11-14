@@ -1,10 +1,10 @@
-import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
+import { createContext, use, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { Appearance } from 'react-native';
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '@/theme/colors';
-import type { AppTheme, ThemeContextData, ThemeMode } from '@/theme/types';
+import type { AppTheme, ThemeContextData } from '@/theme/types';
 
 const lightTheme: AppTheme = {
   isDark: false,
@@ -99,55 +99,40 @@ const THEME_STORAGE_KEY = '@zelafix:theme_mode';
 const ThemeContext = createContext<ThemeContextData | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('light');
+  const [isDark, setIsDark] = useState(() => Appearance.getColorScheme() === 'dark');
 
   useEffect(() => {
+    let active = true;
     async function carregarTemaSalvo() {
       try {
         const salvo = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (salvo === 'light' || salvo === 'dark' || salvo === 'system') {
-          setThemeModeState(salvo);
+        if (!active) return;
+        if (salvo === 'dark' || salvo === 'light') {
+          setIsDark(salvo === 'dark');
         }
       } catch {
-        // Preferência local indisponível: mantém o tema padrão.
+        // Preferência local indisponível: mantém o tema do sistema.
       }
     }
     void carregarTemaSalvo();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const setThemeMode = useCallback(async (mode: ThemeMode) => {
-    setThemeModeState(mode);
-    try {
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
-    } catch {
-      // Persistência é opcional; o tema continua aplicado na sessão.
-    }
-  }, []);
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    void AsyncStorage.setItem(THEME_STORAGE_KEY, nextDark ? 'dark' : 'light').catch(() => undefined);
+  };
 
-  const isDark = useMemo(() => {
-    if (themeMode === 'system') {
-      return systemColorScheme === 'dark';
-    }
-    return themeMode === 'dark';
-  }, [themeMode, systemColorScheme]);
+  const theme = isDark ? darkTheme : lightTheme;
 
-  const toggleTheme = useCallback(() => {
-    void setThemeMode(isDark ? 'light' : 'dark');
-  }, [isDark, setThemeMode]);
-
-  const theme = useMemo(() => (isDark ? darkTheme : lightTheme), [isDark]);
-
-  const value = useMemo<ThemeContextData>(
-    () => ({
-      isDark,
-      theme,
-      toggleTheme,
-    }),
-    [isDark, theme, toggleTheme]
+  return (
+    <ThemeContext.Provider value={{ isDark, theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
   );
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextData {
@@ -160,13 +145,7 @@ export function useTheme(): ThemeContextData {
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
-/**
- * Recebe preferencialmente uma função `createStyles` declarada fora do componente
- * para aproveitar a memoização sem recriação a cada render.
- */
-export function useThemedStyles<T extends NamedStyles<T>>(
-  factory: (theme: AppTheme) => T
-): T {
+export function useThemedStyles<T extends NamedStyles<T>>(factory: (theme: AppTheme) => T): T {
   const { theme } = useTheme();
-  return useMemo(() => factory(theme), [theme, factory]);
+  return factory(theme);
 }

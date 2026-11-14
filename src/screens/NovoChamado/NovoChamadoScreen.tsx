@@ -12,6 +12,7 @@ import type { AppTheme } from '@/theme/types';
 import { useChamadoForm } from '@/hooks/useChamadoForm';
 import type { AppStackParamList } from '@/navigation/types';
 import { PhotoEvidencePicker } from '@/screens/NovoChamado/components/PhotoEvidencePicker';
+import type { Chamado } from '@/types/chamado';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NovoChamado'>;
@@ -21,17 +22,17 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const form = useChamadoForm({ mode: 'create' });
-  const [createdSuccess, setCreatedSuccess] = useState(false);
+  const [createdChamado, setCreatedChamado] = useState<Chamado | null>(null);
 
   const localizacaoResumo = form.localizacaoPreview
     ? [form.localizacaoPreview.bairro, form.localizacaoPreview.cidade].filter(Boolean).join(' • ') || 'Localização capturada'
     : null;
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Header
         title="Reportar Ocorrência"
-        subtitle="Envie a foto e o local; nossa IA preenche o restante"
+        subtitle="Envie a foto e o local para análise automática da IA"
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -51,28 +52,22 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
         <View style={styles.aiHintBox}>
           <Ionicons name="sparkles" size={16} color={theme.primary} />
           <Text style={styles.aiHintText}>
-            Basta anexar a foto e informar o endereço. Título, descrição, categoria, prioridade e órgão responsável serão definidos automaticamente pela IA.
+            Anexe a foto e informe o endereço. Nossa IA valida a imagem e define título, descrição, categoria, prioridade e órgão responsável.
           </Text>
         </View>
 
         <PhotoEvidencePicker
-          fotoBase64={form.values.fotoBase64}
-          onChangeFoto={(base64) => form.setFieldValue('fotoBase64', base64)}
-          error={form.errors.fotoBase64}
+          foto={form.values.foto}
+          onChangeFoto={(foto) => form.setFieldValue('foto', foto)}
+          error={form.errors.foto}
         />
 
         <ChamadoFormFields
           hideDetails
-          cep={form.values.cep}
-          onChangeCep={(v) => form.setFieldValue('cep', v)}
-          rua={form.values.rua}
-          onChangeRua={(v) => form.setFieldValue('rua', v)}
-          numero={form.values.numero}
-          onChangeNumero={(v) => form.setFieldValue('numero', v)}
-          referencia={form.values.referencia}
-          onChangeReferencia={(v) => form.setFieldValue('referencia', v)}
-          errors={form.errors}
-          onUsarGps={form.handleUsarGps}
+          field={form.field}
+          onUsarGps={() => {
+            void form.handleUsarGps();
+          }}
           capturandoGps={form.capturandoGps}
           erroGps={form.erroGps}
           localizacaoResumo={localizacaoResumo}
@@ -84,36 +79,33 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
             leftIcon={<Ionicons name="send-outline" size={18} color={theme.inverseText} />}
             size="lg"
             loading={form.submitting}
-            onPress={() => {
-              void form.submit(() => setCreatedSuccess(true));
-            }}
+            onPress={() => form.submit((chamado) => setCreatedChamado(chamado))}
           />
         </View>
       </ScrollView>
 
       <FeedbackModal
-        visible={createdSuccess}
+        visible={Boolean(createdChamado)}
         type="success"
-        title="Ocorrência em Triagem!"
-        message="Sua foto e endereço foram recebidos. Nossa IA está analisando a ocorrência e ela aparecerá na lista em instantes."
-        confirmText="Meus Chamados"
-        cancelText="Início"
+        title="Chamado Criado!"
+        message={
+          createdChamado
+            ? `"${createdChamado.titulo}" foi classificado pela IA e registrado com sucesso.`
+            : ''
+        }
+        confirmText="Ver Chamado"
+        cancelText="Meus Chamados"
         onConfirm={() => {
-          setCreatedSuccess(false);
-          navigation.popTo('MainTabs', { screen: 'MeusChamadosTab' });
+          const targetId = createdChamado?.idChamado;
+          setCreatedChamado(null);
+          if (targetId) {
+            navigation.replace('ChamadoDetails', { id: targetId });
+          }
         }}
         onCancel={() => {
-          setCreatedSuccess(false);
-          navigation.popTo('MainTabs', { screen: 'HomeTab' });
+          setCreatedChamado(null);
+          navigation.popTo('MainTabs', { screen: 'MeusChamadosTab' });
         }}
-      />
-
-      <FeedbackModal
-        visible={Boolean(form.erroModal)}
-        type="error"
-        title="Erro ao enviar"
-        message={form.erroModal ?? ''}
-        onConfirm={form.clearErroModal}
       />
     </KeyboardAvoidingView>
   );

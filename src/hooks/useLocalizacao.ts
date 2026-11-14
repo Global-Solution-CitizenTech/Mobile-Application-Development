@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import * as Location from 'expo-location';
 import type { LocalizacaoCapturada } from '@/types/endereco';
 import { onlyDigits } from '@/utils/formatters';
@@ -8,7 +8,7 @@ export function useLocalizacao() {
   const [erroGps, setErroGps] = useState<string | null>(null);
   const [ultimaLocalizacao, setUltimaLocalizacao] = useState<LocalizacaoCapturada | null>(null);
 
-  const capturarLocalizacao = useCallback(async (): Promise<LocalizacaoCapturada | null> => {
+  const capturarLocalizacao = async (): Promise<LocalizacaoCapturada | null> => {
     setCapturandoGps(true);
     setErroGps(null);
 
@@ -44,12 +44,12 @@ export function useLocalizacao() {
     } finally {
       setCapturandoGps(false);
     }
-  }, []);
+  };
 
-  const limparLocalizacao = useCallback(() => {
+  const limparLocalizacao = () => {
     setUltimaLocalizacao(null);
     setErroGps(null);
-  }, []);
+  };
 
   return {
     capturandoGps,

@@ -1,10 +1,10 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FeedbackModal } from '@/components/FeedbackModal';
 import { Header } from '@/components/Header';
+import { MessageListSeparator } from '@/components/ListSeparator';
 import { PickerTriggerButton, SelectPickerModal } from '@/components/SelectPickerModal';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useZelaBot } from '@/hooks/useZelaBot';
@@ -30,23 +30,20 @@ export const ZelaBotScreen = () => {
 
   const bot = useZelaBot(route.params?.chamadoId);
 
-  const contextOptions = useMemo<SelectPickerOption<string>[]>(
-    () => [
-      {
-        value: GERAL_CONTEXT_KEY,
-        label: 'Consulta Geral',
-        subtitle: 'Dúvidas sobre prazos, decretos e direitos municipais',
-      },
-      ...bot.chamadosDisponiveis.map((chamado) => ({
-        value: String(chamado.idChamado),
-        label: `#${chamado.idChamado} · ${chamado.titulo}`,
-        subtitle: [chamado.categoriaNome, chamado.endereco.bairro, chamado.endereco.cidade]
-          .filter(Boolean)
-          .join(' • '),
-      })),
-    ],
-    [bot.chamadosDisponiveis]
-  );
+  const contextOptions: SelectPickerOption<string>[] = [
+    {
+      value: GERAL_CONTEXT_KEY,
+      label: 'Consulta Geral',
+      subtitle: 'Dúvidas sobre prazos, decretos e direitos municipais',
+    },
+    ...bot.chamadosDisponiveis.map((chamado) => ({
+      value: String(chamado.idChamado),
+      label: `#${chamado.idChamado} · ${chamado.titulo}`,
+      subtitle: [chamado.categoriaNome, chamado.endereco.bairro, chamado.endereco.cidade]
+        .filter(Boolean)
+        .join(' • '),
+    })),
+  ];
 
   const currentContextLabel = bot.selectedChamado
     ? `#${bot.selectedChamado.idChamado} · ${bot.selectedChamado.titulo}`
@@ -55,7 +52,7 @@ export const ZelaBotScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <Header
         title="ZelaBot IA"
@@ -126,7 +123,7 @@ export const ZelaBotScreen = () => {
           },
           bot.messages.length === 0 && styles.chatContentEmpty,
         ]}
-        ItemSeparatorComponent={() => <View style={styles.msgSeparator} />}
+        ItemSeparatorComponent={MessageListSeparator}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => {
@@ -189,14 +186,6 @@ export const ZelaBotScreen = () => {
         onDeleteSession={bot.removerSessao}
         onNewChat={bot.novaConversa}
       />
-
-      <FeedbackModal
-        visible={Boolean(bot.sessionError)}
-        type="error"
-        title="Erro na conversa"
-        message={bot.sessionError ?? ''}
-        onConfirm={bot.clearSessionError}
-      />
     </KeyboardAvoidingView>
   );
 };
@@ -235,9 +224,6 @@ const createStyles = (theme: AppTheme) =>
     chatContentEmpty: {
       flexGrow: 1,
       justifyContent: 'center',
-    },
-    msgSeparator: {
-      height: spacing.xs,
     },
     emptyHero: {
       alignItems: 'center',

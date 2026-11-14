@@ -9,6 +9,7 @@ import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getOrgaoLabel, getPriorityVisuals } from '@/theme/semanticConfig';
 import type { Chamado } from '@/types/chamado';
 import { formatDate } from '@/utils/formatters';
+import { isStatusFinal } from '@/utils/permissions';
 
 interface ChamadoSummaryCardProps {
   chamado: Chamado;
@@ -21,9 +22,7 @@ export const ChamadoSummaryCard = ({ chamado, onAskAi }: ChamadoSummaryCardProps
   const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
   const parecer = chamado.historico[0];
   const parecerVisivel =
-    parecer?.observacao && (chamado.status === 'CONCLUIDO' || chamado.status === 'REJEITADO')
-      ? parecer
-      : null;
+    parecer?.observacao && isStatusFinal(chamado.status) ? parecer : null;
   const showPhoto = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
   const priority = getPriorityVisuals(chamado.prioridadeNome, theme);
 

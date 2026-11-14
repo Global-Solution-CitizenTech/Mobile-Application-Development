@@ -3,29 +3,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
+import type { LoginFormData } from '@/utils/schemas';
 
 interface LoginFormProps {
-  email: string;
-  senha: string;
-  emailError: string | null;
-  senhaError: string | null;
+  field: <K extends StringFieldKeys<LoginFormData>>(name: K) => BoundFieldProps;
   isLoading: boolean;
-  onEmailChange: (text: string) => void;
-  onSenhaChange: (text: string) => void;
   onSubmit: () => void;
   onGoToRegister: () => void;
 }
 
 export const LoginForm = ({
-  email,
-  senha,
-  emailError,
-  senhaError,
+  field,
   isLoading,
-  onEmailChange,
-  onSenhaChange,
   onSubmit,
   onGoToRegister,
 }: LoginFormProps) => {
@@ -43,22 +35,18 @@ export const LoginForm = ({
         <Input
           label="E-mail"
           placeholder="exemplo@zelafix.com.br"
-          value={email}
-          onChangeText={onEmailChange}
+          {...field('email')}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          error={emailError}
           leftIcon={<Ionicons name="mail-outline" size={18} color={theme.textMuted} />}
         />
 
         <Input
           label="Senha"
           placeholder="Digite sua senha"
-          value={senha}
-          onChangeText={onSenhaChange}
+          {...field('senha')}
           isPassword
-          error={senhaError}
           leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.textMuted} />}
         />
       </View>

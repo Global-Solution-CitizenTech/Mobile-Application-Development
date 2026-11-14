@@ -2,16 +2,15 @@ import { StyleSheet, View } from 'react-native';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
+import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { spacing } from '@/theme';
 import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
-import type { FormErrors, ProfileEditFormData } from '@/utils/schemas';
+import type { ProfileEditFormData } from '@/utils/schemas';
 
 interface EditProfileModalProps {
   visible: boolean;
   onClose: () => void;
-  values: ProfileEditFormData;
-  errors: FormErrors<ProfileEditFormData>;
-  onChangeField: <K extends keyof ProfileEditFormData>(field: K, value: ProfileEditFormData[K]) => void;
+  field: <K extends StringFieldKeys<ProfileEditFormData>>(name: K) => BoundFieldProps;
   onSave: () => void;
   saving: boolean;
 }
@@ -19,9 +18,7 @@ interface EditProfileModalProps {
 export const EditProfileModal = ({
   visible,
   onClose,
-  values,
-  errors,
-  onChangeField,
+  field,
   onSave,
   saving,
 }: EditProfileModalProps) => (
@@ -35,29 +32,24 @@ export const EditProfileModal = ({
     <View style={styles.form}>
       <Input
         label="Nome Completo *"
-        value={values.nome}
-        onChangeText={(text) => onChangeField('nome', text)}
+        {...field('nome')}
         maxLength={100}
-        error={errors.nome}
       />
 
       <Input
         label="E-mail *"
         keyboardType="email-address"
         autoCapitalize="none"
-        value={values.email}
-        onChangeText={(text) => onChangeField('email', text)}
+        {...field('email')}
         maxLength={100}
-        error={errors.email}
       />
 
       <Input
         label="Telefone com DDD *"
         keyboardType="phone-pad"
-        value={values.telefone}
-        onChangeText={(text) => onChangeField('telefone', maskPhoneInput(text))}
+        mask={maskPhoneInput}
+        {...field('telefone')}
         maxLength={15}
-        error={errors.telefone}
       />
 
       <View style={styles.row}>
@@ -65,47 +57,38 @@ export const EditProfileModal = ({
           <Input
             label="CEP *"
             keyboardType="number-pad"
-            value={values.cep}
-            onChangeText={(text) => onChangeField('cep', maskCepInput(text))}
+            mask={maskCepInput}
+            {...field('cep')}
             maxLength={9}
-            error={errors.cep}
           />
         </View>
         <View style={styles.flexNum}>
           <Input
             label="Número *"
-            value={values.numero}
-            onChangeText={(text) => onChangeField('numero', text)}
+            {...field('numero')}
             maxLength={100}
-            error={errors.numero}
           />
         </View>
       </View>
 
       <Input
         label="Rua / Logradouro (Opcional)"
-        value={values.rua ?? ''}
-        onChangeText={(text) => onChangeField('rua', text)}
+        {...field('rua')}
         maxLength={100}
-        error={errors.rua}
       />
 
       <Input
         label="Ponto de Referência *"
-        value={values.referencia}
-        onChangeText={(text) => onChangeField('referencia', text)}
+        {...field('referencia')}
         maxLength={50}
-        error={errors.referencia}
       />
 
       <Input
         label="Senha Atual ou Nova Senha *"
         placeholder="Necessária para confirmar alteração (mín. 6 caracteres)"
         isPassword
-        value={values.senha}
-        onChangeText={(text) => onChangeField('senha', text)}
+        {...field('senha')}
         maxLength={60}
-        error={errors.senha}
       />
 
       <View style={styles.actions}>

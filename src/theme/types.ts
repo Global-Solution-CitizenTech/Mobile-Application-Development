@@ -1,8 +1,6 @@
 import type { ComponentProps } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
-
 export type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export interface VisualBadgeConfig {

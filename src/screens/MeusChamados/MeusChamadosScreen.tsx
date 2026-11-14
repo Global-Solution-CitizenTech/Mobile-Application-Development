@@ -1,10 +1,9 @@
-import { useCallback } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
-import { FeedbackModal } from '@/components/FeedbackModal';
+import { ChamadoListSeparator } from '@/components/ListSeparator';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
@@ -29,19 +28,8 @@ export const MeusChamadosScreen = () => {
     isRefreshing,
     error,
     refetch,
-    refetchRecusa,
-    recusaModal,
-    clearRecusaModal,
     apoiarChamado,
-    supportError,
-    clearSupportError,
   } = useMeusChamadosData();
-
-  useFocusEffect(
-    useCallback(() => {
-      void refetchRecusa();
-    }, [refetchRecusa])
-  );
 
   return (
     <View style={styles.container}>
@@ -83,7 +71,7 @@ export const MeusChamadosScreen = () => {
             },
             chamados.length === 0 && styles.emptyContainer,
           ]}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={ChamadoListSeparator}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => { void refetch(); }} tintColor={theme.primary} />}
           ListEmptyComponent={
             <EmptyState
@@ -100,23 +88,6 @@ export const MeusChamadosScreen = () => {
           }
         />
       )}
-
-      <FeedbackModal
-        visible={Boolean(recusaModal)}
-        type="warning"
-        title="Ocorrência Recusada pela IA"
-        message={recusaModal ?? ''}
-        confirmText="Entendi"
-        onConfirm={clearRecusaModal}
-      />
-
-      <FeedbackModal
-        visible={Boolean(supportError)}
-        type="error"
-        title="Não foi possível apoiar"
-        message={supportError ?? ''}
-        onConfirm={clearSupportError}
-      />
     </View>
   );
 };
@@ -126,5 +97,4 @@ const createStyles = (theme: AppTheme) =>
     container: { flex: 1, backgroundColor: theme.background },
     listContent: { padding: spacing.md, paddingBottom: spacing.xxl },
     emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-    separator: { height: spacing.sm + 4 },
   });

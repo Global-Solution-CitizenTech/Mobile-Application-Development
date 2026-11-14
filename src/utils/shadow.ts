@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { colors } from '@/theme/colors';
 
@@ -9,20 +8,13 @@ interface ShadowOptions {
 }
 
 function createShadow({ offsetY, blur, opacity }: ShadowOptions): ViewStyle {
-  return (
-    Platform.select<ViewStyle>({
-      web: {
-        boxShadow: `0px ${offsetY}px ${blur}px rgba(15, 23, 42, ${opacity})`,
-      },
-      default: {
-        shadowColor: colors.secondary[900],
-        shadowOffset: { width: 0, height: offsetY },
-        shadowOpacity: opacity,
-        shadowRadius: blur,
-        elevation: Math.max(1, Math.round(blur / 2)),
-      },
-    }) ?? {}
-  );
+  return {
+    shadowColor: colors.secondary[900],
+    shadowOffset: { width: 0, height: offsetY },
+    shadowOpacity: opacity,
+    shadowRadius: blur,
+    elevation: Math.max(1, Math.round(blur / 2)),
+  };
 }
 
 export const shadows = {

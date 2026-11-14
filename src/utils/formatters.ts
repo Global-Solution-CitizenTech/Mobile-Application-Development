@@ -4,10 +4,21 @@ export function onlyDigits(value?: string | null): string {
   return (value ?? '').replace(/\D/g, '');
 }
 
-export function formatDate(isoDate?: string | null): string {
-  if (!isoDate) return '--';
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return '--';
+function parseApiDate(value?: string | null): Date | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  // Normaliza timestamps UTC retornados pelo SQLite (YYYY-MM-DD HH:MM:SS) para ISO UTC.
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(trimmed)
+    ? `${trimmed.replace(' ', 'T')}Z`
+    : trimmed;
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function formatDate(dateValue?: string | null): string {
+  const date = parseApiDate(dateValue);
+  if (!date) return '--';
   return date.toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -17,11 +28,16 @@ export function formatDate(isoDate?: string | null): string {
   });
 }
 
-export function formatShortDate(isoDate?: string | null): string {
-  if (!isoDate) return '--';
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return '--';
+export function formatShortDate(dateValue?: string | null): string {
+  const date = parseApiDate(dateValue);
+  if (!date) return '--';
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+export function formatMessageTime(dateValue?: string | null): string {
+  const date = parseApiDate(dateValue);
+  if (!date) return '--:--';
+  return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatCep(cep?: string | null): string {
@@ -63,9 +79,11 @@ export function maskPhoneInput(text: string): string {
 
 export function getInitials(name?: string | null): string {
   const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return 'ZF';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  const first = parts[0];
+  if (!first) return 'ZF';
+  const last = parts[parts.length - 1] ?? first;
+  if (parts.length === 1) return first.slice(0, 2).toUpperCase();
+  return `${first[0] ?? ''}${last[0] ?? ''}`.toUpperCase();
 }
 
 export function getFirstName(name?: string | null): string {

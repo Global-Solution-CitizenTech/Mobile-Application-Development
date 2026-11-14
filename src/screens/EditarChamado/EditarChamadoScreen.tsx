@@ -25,7 +25,7 @@ export const EditarChamadoScreen = ({ navigation, route }: Props) => {
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Header title={`Editar Chamado #${id}`} subtitle="Atualize título, descrição ou endereço" showBack onBack={() => navigation.goBack()} />
 
       {form.loadingChamado ? (
@@ -53,20 +53,10 @@ export const EditarChamadoScreen = ({ navigation, route }: Props) => {
           />
 
           <ChamadoFormFields
-            titulo={form.values.titulo}
-            onChangeTitulo={(v) => form.setFieldValue('titulo', v)}
-            descricao={form.values.descricao}
-            onChangeDescricao={(v) => form.setFieldValue('descricao', v)}
-            cep={form.values.cep}
-            onChangeCep={(v) => form.setFieldValue('cep', v)}
-            rua={form.values.rua}
-            onChangeRua={(v) => form.setFieldValue('rua', v)}
-            numero={form.values.numero}
-            onChangeNumero={(v) => form.setFieldValue('numero', v)}
-            referencia={form.values.referencia}
-            onChangeReferencia={(v) => form.setFieldValue('referencia', v)}
-            errors={form.errors}
-            onUsarGps={form.handleUsarGps}
+            field={form.field}
+            onUsarGps={() => {
+              void form.handleUsarGps();
+            }}
             capturandoGps={form.capturandoGps}
             erroGps={form.erroGps}
           />
@@ -76,9 +66,7 @@ export const EditarChamadoScreen = ({ navigation, route }: Props) => {
             <Button
               title="Salvar Alterações"
               loading={form.submitting}
-              onPress={() => {
-                void form.submit(() => setSavedSuccess(true));
-              }}
+              onPress={() => form.submit(() => setSavedSuccess(true))}
               style={styles.btn}
             />
           </View>
@@ -94,14 +82,6 @@ export const EditarChamadoScreen = ({ navigation, route }: Props) => {
           setSavedSuccess(false);
           navigation.goBack();
         }}
-      />
-
-      <FeedbackModal
-        visible={Boolean(form.erroModal)}
-        type="error"
-        title="Erro ao salvar"
-        message={form.erroModal ?? ''}
-        onConfirm={form.clearErroModal}
       />
     </KeyboardAvoidingView>
   );

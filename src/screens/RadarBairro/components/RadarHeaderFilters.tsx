@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import type { LocationFilterLevel, RadarLocationFilter, RadarSortOption, SelectP
 interface RadarHeaderFiltersProps {
   busca: string;
   onChangeBusca: (text: string) => void;
-  categorias: CategoriaResponse[];
+  categorias: readonly CategoriaResponse[];
   categoriaFiltro: string;
   onChangeCategoria: (categoria: string) => void;
   statusFiltro: StatusFiltro;
@@ -70,50 +70,42 @@ export const RadarHeaderFilters = ({
   const [openModal, setOpenModal] = useState<ActiveModal>(null);
   const [modalLocationTab, setModalLocationTab] = useState<LocationFilterLevel>(locationFilter.nivel);
 
-  const categoriaOptions = useMemo<SelectPickerOption<string>[]>(
-    () => [
-      { value: 'TODAS', label: 'Todas Categorias', subtitle: 'Exibir todos os tipos de ocorrência' },
-      ...categorias.map((c) => ({ value: c.nome, label: getCategoryLabel(c.nome) })),
-    ],
-    [categorias]
-  );
+  const categoriaOptions: SelectPickerOption<string>[] = [
+    { value: 'TODAS', label: 'Todas Categorias', subtitle: 'Exibir todos os tipos de ocorrência' },
+    ...categorias.map((c) => ({ value: c.nome, label: getCategoryLabel(c.nome) })),
+  ];
 
-  const statusLabel = useMemo(() => {
-    if (statusFiltro === 'TODOS') return 'Status';
-    return STATUS_OPTIONS.find((s) => s.value === statusFiltro)?.label ?? statusFiltro;
-  }, [statusFiltro]);
+  const statusLabel =
+    statusFiltro === 'TODOS'
+      ? 'Status'
+      : STATUS_OPTIONS.find((s) => s.value === statusFiltro)?.label ?? statusFiltro;
 
-  const locationLabel = useMemo(() => {
-    if (!locationFilter.valor) {
-      return locationFilter.nivel === 'CIDADE'
-        ? 'Todas cidades'
-        : locationFilter.nivel === 'BAIRRO'
-          ? 'Todos bairros'
-          : 'Todos estados';
-    }
-    return locationFilter.valor;
-  }, [locationFilter.nivel, locationFilter.valor]);
+  const locationLabel = locationFilter.valor
+    ? locationFilter.valor
+    : locationFilter.nivel === 'CIDADE'
+      ? 'Todas cidades'
+      : locationFilter.nivel === 'BAIRRO'
+        ? 'Todos bairros'
+        : 'Todos estados';
 
-  const activeLocationOptions = useMemo<SelectPickerOption<string>[]>(() => {
-    const nivelLabel =
-      modalLocationTab === 'CIDADE'
-        ? 'Todas as cidades'
-        : modalLocationTab === 'BAIRRO'
-          ? 'Todos os bairros'
-          : 'Todos os estados';
+  const nivelLabel =
+    modalLocationTab === 'CIDADE'
+      ? 'Todas as cidades'
+      : modalLocationTab === 'BAIRRO'
+        ? 'Todos os bairros'
+        : 'Todos os estados';
 
-    return [
-      { value: ALL_LOCATIONS_KEY, label: nivelLabel, subtitle: 'Remover filtro geográfico' },
-      ...locationOptions[modalLocationTab].map((nome) => ({
-        value: nome,
-        label: nome,
-        subtitle:
-          modalLocationTab === 'CIDADE' && userCity && nome.toLowerCase() === userCity.toLowerCase()
-            ? 'Cidade do seu cadastro'
-            : undefined,
-      })),
-    ];
-  }, [locationOptions, modalLocationTab, userCity]);
+  const activeLocationOptions: SelectPickerOption<string>[] = [
+    { value: ALL_LOCATIONS_KEY, label: nivelLabel, subtitle: 'Remover filtro geográfico' },
+    ...locationOptions[modalLocationTab].map((nome) => ({
+      value: nome,
+      label: nome,
+      subtitle:
+        modalLocationTab === 'CIDADE' && userCity && nome.toLowerCase() === userCity.toLowerCase()
+          ? 'Cidade do seu cadastro'
+          : undefined,
+    })),
+  ];
 
   const openLocationModal = () => {
     setModalLocationTab(locationFilter.nivel);

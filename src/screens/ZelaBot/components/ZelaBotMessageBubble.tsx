@@ -5,6 +5,7 @@ import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
 import type { AiMessage } from '@/types/ai';
+import { formatMessageTime } from '@/utils/formatters';
 
 interface ZelaBotMessageBubbleProps {
   message: AiMessage;
@@ -65,7 +66,7 @@ export const ZelaBotMessageBubble = ({ message }: ZelaBotMessageBubbleProps) => 
           </View>
         )}
 
-        <Text style={[styles.time, isUser ? styles.timeUser : styles.timeAi]}>{message.timestamp}</Text>
+        <Text style={[styles.time, isUser ? styles.timeUser : styles.timeAi]}>{formatMessageTime(message.timestamp)}</Text>
       </View>
     </View>
   );

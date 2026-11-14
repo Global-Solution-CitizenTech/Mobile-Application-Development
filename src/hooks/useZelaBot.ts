@@ -1,15 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFeedback } from '@/contexts/FeedbackContext';
 import { useChamadoDetail, useChamadosList } from '@/hooks/useChamados';
 import { queryKeys } from '@/lib/queryKeys';
 import { aiService } from '@/services/aiService';
-import type { AiChatSession, AiMessage } from '@/types/ai';
+import type { AiChatSession, AiInsightItem, AiMessage } from '@/types/ai';
 import { getApiErrorMessage } from '@/utils/apiError';
 
 function gerarSessionId(): string {
   return `zf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
+
+const EMPTY_INSIGHTS: AiInsightItem[] = [];
+const EMPTY_SESSIONS: AiChatSession[] = [];
 
 const SUGESTOES_GERAIS = [
   'Qual o prazo para tapar um buraco na rua?',
@@ -26,17 +30,23 @@ const SUGESTOES_CHAMADO = [
 
 export function useZelaBot(initialChamadoId?: number) {
   const { usuario } = useAuth();
+  const { showError } = useFeedback();
   const queryClient = useQueryClient();
 
   const seedId = initialChamadoId ?? null;
   const [manualSelection, setManualSelection] = useState<{ seed: number | null; id: number | null } | null>(null);
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [sessionId, setSessionId] = useState<string>(gerarSessionId);
+  const activeSessionRef = useRef(sessionId);
   const [inputText, setInputText] = useState('');
   const [historyModalVisible, setHistoryModalVisible] = useState(false);
-  const [sessionError, setSessionError] = useState<string | null>(null);
 
   const selectedChamadoId = manualSelection?.seed === seedId ? manualSelection.id : seedId;
+
+  const activateSession = (nextSessionId: string) => {
+    activeSessionRef.current = nextSessionId;
+    setSessionId(nextSessionId);
+  };
 
   useEffect(() => {
     void aiService.warmup();
@@ -45,13 +55,11 @@ export function useZelaBot(initialChamadoId?: number) {
   const recentChamadosQuery = useChamadosList({ page: 0, size: 12, sort: 'dtAbertura,desc' });
   const detailQuery = useChamadoDetail(selectedChamadoId ?? undefined);
 
-  const selectedChamado = useMemo(() => {
-    if (!selectedChamadoId) return null;
-    if (detailQuery.chamado && detailQuery.chamado.idChamado === selectedChamadoId) {
-      return detailQuery.chamado;
-    }
-    return recentChamadosQuery.chamados.find((c) => c.idChamado === selectedChamadoId) ?? null;
-  }, [detailQuery.chamado, recentChamadosQuery.chamados, selectedChamadoId]);
+  const selectedChamado = !selectedChamadoId
+    ? null
+    : detailQuery.chamado?.idChamado === selectedChamadoId
+      ? detailQuery.chamado
+      : recentChamadosQuery.chamados.find((c) => c.idChamado === selectedChamadoId) ?? null;
 
   const bairroAtivo = selectedChamado?.endereco?.bairro || usuario?.endereco?.bairro || undefined;
 
@@ -77,18 +85,20 @@ export function useZelaBot(initialChamadoId?: number) {
         historico: vars.historico,
         sessionId: vars.sessionId,
       }),
-    onSuccess: (res) => {
-      setSessionId(res.sessionId);
+    onSuccess: (res, vars) => {
+      if (vars.sessionId !== activeSessionRef.current) return;
+      activateSession(res.sessionId);
       setMessages((prev) => [...prev, res.message]);
     },
-    onError: () => {
+    onError: (_err, vars) => {
+      if (vars.sessionId !== activeSessionRef.current) return;
       setMessages((prev) => [
         ...prev,
         {
           id: `err_${Date.now()}`,
           sender: 'assistant',
           text: 'Não consegui falar com o ZelaBot agora. O serviço de IA pode estar acordando no servidor — tente enviar novamente em alguns segundos.',
-          timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          timestamp: new Date().toISOString(),
           isError: true,
         },
       ]);
@@ -98,13 +108,12 @@ export function useZelaBot(initialChamadoId?: number) {
   const loadSessionMutation = useMutation({
     mutationFn: (id: string) => aiService.carregarHistorico(id),
     onSuccess: (loadedMessages, id) => {
-      setSessionError(null);
-      setSessionId(id);
+      activateSession(id);
       setMessages(loadedMessages);
       setHistoryModalVisible(false);
     },
     onError: (error) => {
-      setSessionError(getApiErrorMessage(error, 'Não foi possível carregar a conversa selecionada.'));
+      showError('Erro na conversa', getApiErrorMessage(error, 'Não foi possível carregar a conversa selecionada.'));
     },
   });
 
@@ -113,73 +122,62 @@ export function useZelaBot(initialChamadoId?: number) {
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.ai.sessions() });
       const previous = queryClient.getQueryData<AiChatSession[]>(queryKeys.ai.sessions());
-      queryClient.setQueryData<AiChatSession[]>(queryKeys.ai.sessions(), (curr) => curr?.filter((s) => s.sessionId !== id) ?? []);
+      queryClient.setQueryData<AiChatSession[]>(
+        queryKeys.ai.sessions(),
+        (curr) => curr?.filter((s) => s.sessionId !== id) ?? []
+      );
       return { previous };
     },
     onError: (error, _id, ctx) => {
       if (ctx?.previous) {
         queryClient.setQueryData(queryKeys.ai.sessions(), ctx.previous);
       }
-      setSessionError(getApiErrorMessage(error, 'Não foi possível excluir a conversa.'));
+      showError('Erro na conversa', getApiErrorMessage(error, 'Não foi possível excluir a conversa.'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.ai.sessions() });
     },
   });
 
-  const novaConversa = useCallback(() => {
+  const novaConversa = () => {
     setMessages([]);
-    setSessionError(null);
-    setSessionId(gerarSessionId());
-  }, []);
+    activateSession(gerarSessionId());
+  };
 
-  const clearSessionError = useCallback(() => setSessionError(null), []);
+  const selecionarChamadoContexto = (id: number | null) => {
+    if (id === selectedChamadoId) return;
+    setManualSelection({ seed: seedId, id });
+    novaConversa();
+  };
 
-  const selecionarChamadoContexto = useCallback(
-    (id: number | null) => {
-      if (id === selectedChamadoId) return;
-      setManualSelection({ seed: seedId, id });
-      novaConversa();
-    },
-    [novaConversa, seedId, selectedChamadoId]
-  );
+  const enviarPergunta = (textoCustom?: string) => {
+    const texto = (textoCustom ?? inputText).trim();
+    if (!texto || sendMutation.isPending) return;
 
-  const enviarPergunta = useCallback(
-    (textoCustom?: string) => {
-      const texto = (textoCustom ?? inputText).trim();
-      if (!texto || sendMutation.isPending) return;
+    const userMsg: AiMessage = {
+      id: `usr_${Date.now()}`,
+      sender: 'user',
+      text: texto,
+      timestamp: new Date().toISOString(),
+    };
 
-      const userMsg: AiMessage = {
-        id: `usr_${Date.now()}`,
-        sender: 'user',
-        text: texto,
-        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      };
+    const historicoAtual = messages;
+    const currentSession = activeSessionRef.current;
+    setMessages((prev) => [...prev, userMsg]);
+    if (!textoCustom) setInputText('');
 
-      const historicoAtual = messages;
-      setMessages((prev) => [...prev, userMsg]);
-      if (!textoCustom) setInputText('');
+    sendMutation.mutate({ pergunta: texto, historico: historicoAtual, sessionId: currentSession });
+  };
 
-      sendMutation.mutate({ pergunta: texto, historico: historicoAtual, sessionId });
-    },
-    [inputText, messages, sendMutation, sessionId]
-  );
+  const removerSessao = (id: string) => {
+    deleteSessionMutation.mutate(id, {
+      onSuccess: () => {
+        if (id === activeSessionRef.current) novaConversa();
+      },
+    });
+  };
 
-  const removerSessao = useCallback(
-    (id: string) => {
-      deleteSessionMutation.mutate(id, {
-        onSuccess: () => {
-          if (id === sessionId) novaConversa();
-        },
-      });
-    },
-    [deleteSessionMutation, novaConversa, sessionId]
-  );
-
-  const abrirSessao = useCallback(
-    (id: string) => loadSessionMutation.mutate(id),
-    [loadSessionMutation]
-  );
+  const abrirSessao = (id: string) => loadSessionMutation.mutate(id);
 
   return {
     messages,
@@ -195,18 +193,16 @@ export function useZelaBot(initialChamadoId?: number) {
     selecionarChamadoContexto,
     sugestoesRapidas: selectedChamado ? SUGESTOES_CHAMADO : SUGESTOES_GERAIS,
     bairroAtivo,
-    insights: insightsQuery.data?.insights ?? [],
+    insights: insightsQuery.data?.insights ?? EMPTY_INSIGHTS,
     loadingInsights: insightsQuery.isLoading,
     historyModalVisible,
     setHistoryModalVisible,
-    sessoes: sessionsQuery.data ?? [],
+    sessoes: sessionsQuery.data ?? EMPTY_SESSIONS,
     loadingSessoes: sessionsQuery.isLoading,
     sessionsError: sessionsQuery.error
       ? getApiErrorMessage(sessionsQuery.error, 'Não foi possível carregar o histórico de conversas.')
       : null,
     loadingSessionId: loadSessionMutation.isPending ? loadSessionMutation.variables ?? null : null,
-    sessionError,
-    clearSessionError,
     abrirSessao,
     removerSessao,
   };

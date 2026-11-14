@@ -32,6 +32,10 @@ export function canDeleteChamado(usuario?: Usuario | null, chamado?: Chamado | n
   return chamado.usuarioId === usuario.id;
 }
 
+export function isStatusFinal(status: StatusChamado): boolean {
+  return status === 'CONCLUIDO' || status === 'REJEITADO';
+}
+
 export function canSupportChamado(status: StatusChamado): boolean {
-  return status !== 'CONCLUIDO' && status !== 'REJEITADO';
+  return !isStatusFinal(status);
 }

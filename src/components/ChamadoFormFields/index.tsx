@@ -2,26 +2,15 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
+import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import type { AppTheme } from '@/theme/types';
 import { maskCepInput } from '@/utils/formatters';
-import type { ChamadoFormData, FormErrors } from '@/utils/schemas';
+import type { ChamadoFormData } from '@/utils/schemas';
 
 interface ChamadoFormFieldsProps {
-  titulo?: string;
-  onChangeTitulo?: (v: string) => void;
-  descricao?: string;
-  onChangeDescricao?: (v: string) => void;
+  field: <K extends StringFieldKeys<ChamadoFormData>>(name: K) => BoundFieldProps;
   hideDetails?: boolean;
-  cep: string;
-  onChangeCep: (v: string) => void;
-  rua?: string;
-  onChangeRua: (v: string) => void;
-  numero: string;
-  onChangeNumero: (v: string) => void;
-  referencia: string;
-  onChangeReferencia: (v: string) => void;
-  errors: FormErrors<ChamadoFormData>;
   onUsarGps?: () => void;
   capturandoGps?: boolean;
   erroGps?: string | null;
@@ -29,20 +18,8 @@ interface ChamadoFormFieldsProps {
 }
 
 export const ChamadoFormFields = ({
-  titulo = '',
-  onChangeTitulo,
-  descricao = '',
-  onChangeDescricao,
+  field,
   hideDetails = false,
-  cep,
-  onChangeCep,
-  rua,
-  onChangeRua,
-  numero,
-  onChangeNumero,
-  referencia,
-  onChangeReferencia,
-  errors,
   onUsarGps,
   capturandoGps,
   erroGps,
@@ -58,22 +35,18 @@ export const ChamadoFormFields = ({
           <Input
             label="Título da Ocorrência *"
             placeholder="Ex: Buraco fundo na faixa direita"
-            value={titulo}
-            onChangeText={onChangeTitulo}
             maxLength={100}
-            error={errors.titulo}
+            {...field('titulo')}
           />
 
           <Input
             label="Descrição Detalhada *"
             placeholder="Descreva o problema, riscos próximos e há quanto tempo ocorre..."
-            value={descricao}
-            onChangeText={onChangeDescricao}
             multiline
             numberOfLines={4}
             maxLength={1000}
             style={styles.textArea}
-            error={errors.descricao}
+            {...field('descricao')}
           />
         </>
       )}
@@ -101,20 +74,17 @@ export const ChamadoFormFields = ({
             label="CEP *"
             placeholder="00000-000"
             keyboardType="number-pad"
-            value={cep}
-            onChangeText={(text) => onChangeCep(maskCepInput(text))}
+            mask={maskCepInput}
             maxLength={9}
-            error={errors.cep}
+            {...field('cep')}
           />
         </View>
         <View style={styles.flexNum}>
           <Input
             label="Número *"
             placeholder="Ex: 1100 ou S/N"
-            value={numero}
-            onChangeText={onChangeNumero}
             maxLength={100}
-            error={errors.numero}
+            {...field('numero')}
           />
         </View>
       </View>
@@ -122,19 +92,15 @@ export const ChamadoFormFields = ({
       <Input
         label="Rua / Logradouro (Opcional)"
         placeholder="Av. Paulista"
-        value={rua ?? ''}
-        onChangeText={onChangeRua}
         maxLength={100}
-        error={errors.rua}
+        {...field('rua')}
       />
 
       <Input
         label="Ponto de Referência *"
         placeholder="Ex: Em frente à entrada do metrô"
-        value={referencia}
-        onChangeText={onChangeReferencia}
         maxLength={50}
-        error={errors.referencia}
+        {...field('referencia')}
       />
     </View>
   );
