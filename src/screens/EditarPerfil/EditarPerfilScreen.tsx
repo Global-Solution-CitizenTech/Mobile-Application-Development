@@ -14,9 +14,10 @@ import { buildUsuarioRequest } from '@/services/authService';
 import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { UsuarioRequest } from '@/types/auth';
+import type { ProfileEditFormData } from '@/types/form';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
-import { ProfileEditSchema, type ProfileEditFormData } from '@/utils/schemas';
+import { ProfileEditSchema } from '@/utils/schemas';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'EditarPerfil'>;
 

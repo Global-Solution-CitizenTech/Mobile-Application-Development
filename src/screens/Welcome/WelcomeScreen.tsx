@@ -4,20 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme, IoniconName } from '@/theme/types';
+import type { AppTheme } from '@/theme/types';
 import { Button } from '@/components/Button';
 import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
 import type { AuthStackParamList } from '@/navigation/types';
+import type { PilarItem } from '@/types/ui';
 
 type WelcomeNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 
-interface Pilar {
-  icon: IoniconName;
-  titulo: string;
-  descricao: string;
-}
-
-const PILARES: Pilar[] = [
+const PILARES: PilarItem[] = [
   {
     icon: 'camera-outline',
     titulo: 'Relato Fotográfico Rápido',

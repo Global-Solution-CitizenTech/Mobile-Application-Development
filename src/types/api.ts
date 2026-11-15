@@ -29,3 +29,5 @@ export interface ActionCallbacks<TData = void> {
   onSuccess?: (data: TData) => void;
   onError?: (error: unknown) => void;
 }
+
+export type UnauthorizedCallback = () => void;

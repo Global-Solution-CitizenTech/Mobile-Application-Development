@@ -2,11 +2,9 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { StyleProp, TextStyle, TouchableOpacityProps, ViewStyle } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+import type { AppTheme } from '@/theme/types';
+import type { ButtonSize, ButtonVariant } from '@/types/ui';
 
 export interface ButtonProps extends TouchableOpacityProps {
   title: string;

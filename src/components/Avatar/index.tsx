@@ -1,9 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { borderRadius, fontWeight } from '@/theme';
+import type { AvatarSize } from '@/types/ui';
 import { getInitials } from '@/utils/formatters';
-
-export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
 
 interface AvatarProps {
   nome?: string | null;

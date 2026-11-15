@@ -3,10 +3,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
-import type { LoginFormData } from '@/utils/schemas';
+import type { BoundFieldProps, LoginFormData, StringFieldKeys } from '@/types/form';
 
 interface LoginFormProps {
   field: <K extends StringFieldKeys<LoginFormData>>(name: K) => BoundFieldProps;

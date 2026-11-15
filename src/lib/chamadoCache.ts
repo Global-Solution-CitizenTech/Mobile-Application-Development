@@ -1,10 +1,4 @@
-import type { InfiniteData } from '@tanstack/react-query';
-import type { SpringPageResponse } from '@/types/api';
-import type { Chamado } from '@/types/chamado';
-
-export type ChamadoListCache =
-  | SpringPageResponse<Chamado>
-  | InfiniteData<SpringPageResponse<Chamado>>;
+import type { Chamado, ChamadoListCache } from '@/types/chamado';
 
 export function toggleApoioOtimista(chamado: Chamado): Chamado {
   const apoiado = !chamado.apoiadoPorMim;

@@ -2,12 +2,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
-import type { ButtonVariant } from '@/components/Button';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme, IoniconName } from '@/theme/types';
 import { spacing, fontSize, fontWeight } from '@/theme';
-
-export type FeedbackType = 'success' | 'error' | 'warning' | 'info';
+import type { AppTheme, IoniconName } from '@/theme/types';
+import type { FeedbackType } from '@/types/feedback';
+import type { ButtonVariant } from '@/types/ui';
 
 interface FeedbackModalProps {
   visible: boolean;

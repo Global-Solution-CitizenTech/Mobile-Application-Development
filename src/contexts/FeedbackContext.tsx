@@ -1,20 +1,7 @@
 import { createContext, use, useState } from 'react';
 import type { ReactNode } from 'react';
-import { FeedbackModal, type FeedbackType } from '@/components/FeedbackModal';
-
-export interface FeedbackOptions {
-  type?: FeedbackType;
-  title: string;
-  message: string;
-  confirmText?: string;
-  onConfirm?: () => void;
-}
-
-interface FeedbackContextData {
-  showFeedback: (options: FeedbackOptions) => void;
-  showError: (title: string, message: string) => void;
-  showSuccess: (title: string, message: string, onConfirm?: () => void) => void;
-}
+import { FeedbackModal } from '@/components/FeedbackModal';
+import type { FeedbackContextData, FeedbackOptions } from '@/types/feedback';
 
 const FeedbackContext = createContext<FeedbackContextData | null>(null);
 

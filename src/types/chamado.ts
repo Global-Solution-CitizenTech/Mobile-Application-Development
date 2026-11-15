@@ -1,5 +1,8 @@
+import type { InfiniteData } from '@tanstack/react-query';
+import type { SpringPageResponse } from '@/types/api';
 import type { StatusChamado } from '@/types/categoria';
 import type { EnderecoRequest, EnderecoResponse } from '@/types/endereco';
+import type { ChamadoFormData } from '@/types/form';
 
 export interface HistoricoChamado {
   id: number;
@@ -65,3 +68,14 @@ export interface EstatisticasChamados {
   rejeitados: number;
   totalApoios: number;
 }
+
+export type ChamadoFormState = ChamadoFormData & { foto?: FotoUpload };
+
+export type UseChamadoFormOptions =
+  | { mode: 'create' }
+  | { mode: 'edit'; chamadoId: number };
+
+export type ChamadoListCache =
+  | SpringPageResponse<Chamado>
+  | InfiniteData<SpringPageResponse<Chamado>>
+  | undefined;

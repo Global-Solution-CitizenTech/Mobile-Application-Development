@@ -8,7 +8,7 @@ import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getCategoryLabel, STATUS_OPTIONS } from '@/theme/semanticConfig';
 import type { AppTheme } from '@/theme/types';
 import type { CategoriaResponse } from '@/types/categoria';
-import type { LocationFilterLevel, RadarLocationFilter, RadarSortOption, SelectPickerOption, StatusFiltro } from '@/types/filters';
+import type { LocationFilterLevel, RadarActiveModal, RadarLocationFilter, RadarSortOption, SelectPickerOption, StatusFiltro } from '@/types/filters';
 
 interface RadarHeaderFiltersProps {
   busca: string;
@@ -43,8 +43,6 @@ const STATUS_FILTER_OPTIONS: SelectPickerOption<StatusFiltro>[] = [
   ...STATUS_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label })),
 ];
 
-type ActiveModal = 'categoria' | 'status' | 'localizacao' | null;
-
 export const RadarHeaderFilters = ({
   busca,
   onChangeBusca,
@@ -67,7 +65,7 @@ export const RadarHeaderFilters = ({
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const [openModal, setOpenModal] = useState<ActiveModal>(null);
+  const [openModal, setOpenModal] = useState<RadarActiveModal>(null);
   const [modalLocationTab, setModalLocationTab] = useState<LocationFilterLevel>(locationFilter.nivel);
 
   const categoriaOptions: SelectPickerOption<string>[] = [

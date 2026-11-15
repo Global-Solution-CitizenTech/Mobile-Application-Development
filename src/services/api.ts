@@ -8,7 +8,7 @@ import { AxiosError, create } from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { env } from '@/config/env';
 import { storageService } from '@/services/storageService';
-import type { ApiErrorResponse } from '@/types/api';
+import type { ApiErrorResponse, UnauthorizedCallback } from '@/types/api';
 import { normalizeHttpError } from '@/utils/apiError';
 
 export function createThrottledPing(
@@ -43,14 +43,13 @@ export { buildApiAssetUrl } from '@/utils/chamadoMappers';
 
 export const api: AxiosInstance = create({
   baseURL: env.apiUrl,
-  timeout: 40000, // 40s para tolerar cold starts e upload de imagens
+  timeout: 65000, // 65s para cobrir o timeout assíncrono do Spring Boot (60s) e cold starts
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
 });
 
-type UnauthorizedCallback = () => void;
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
 
 export function registerUnauthorizedHandler(callback: UnauthorizedCallback): () => void {
@@ -65,7 +64,11 @@ export function registerUnauthorizedHandler(callback: UnauthorizedCallback): () 
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     if (config.data instanceof FormData && config.headers) {
-      config.headers.setContentType('multipart/form-data');
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else {
+        delete config.headers['Content-Type'];
+      }
     }
     try {
       const token = await storageService.getToken();

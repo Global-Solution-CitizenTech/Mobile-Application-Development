@@ -2,11 +2,10 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
+import type { BoundFieldProps, ChamadoFormData, StringFieldKeys } from '@/types/form';
 import { maskCepInput } from '@/utils/formatters';
-import type { ChamadoFormData } from '@/utils/schemas';
 
 interface ChamadoFormFieldsProps {
   field: <K extends StringFieldKeys<ChamadoFormData>>(name: K) => BoundFieldProps;

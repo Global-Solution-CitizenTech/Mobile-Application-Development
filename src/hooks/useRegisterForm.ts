@@ -5,9 +5,10 @@ import { useLocalizacao } from '@/hooks/useLocalizacao';
 import { useZodForm } from '@/hooks/useZodForm';
 import { buildUsuarioRequest } from '@/services/authService';
 import type { UsuarioRequest } from '@/types/auth';
+import type { RegisterFormData } from '@/types/form';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { maskCepInput } from '@/utils/formatters';
-import { RegisterSchema, type RegisterFormData } from '@/utils/schemas';
+import { RegisterSchema } from '@/utils/schemas';
 
 const INITIAL_REGISTER: RegisterFormData = {
   nome: '',

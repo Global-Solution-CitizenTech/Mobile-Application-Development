@@ -3,11 +3,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { BoundFieldProps, StringFieldKeys } from '@/hooks/useZodForm';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
+import type { BoundFieldProps, RegisterFormData, StringFieldKeys } from '@/types/form';
 import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
-import type { RegisterFormData } from '@/utils/schemas';
 
 interface RegisterFormProps {
   field: <K extends StringFieldKeys<RegisterFormData>>(name: K) => BoundFieldProps;

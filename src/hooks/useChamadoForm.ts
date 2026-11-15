@@ -5,13 +5,12 @@ import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useLocalizacao } from '@/hooks/useLocalizacao';
 import { bindFieldHelpers } from '@/hooks/useZodForm';
 import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
-import type { Chamado, FotoUpload } from '@/types/chamado';
+import type { Chamado, ChamadoFormState, UseChamadoFormOptions } from '@/types/chamado';
+import type { ChamadoCreateFormData, ChamadoFormData, FormErrors } from '@/types/form';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { toChamadoCreateRequest, toChamadoRequest } from '@/utils/chamadoMappers';
 import { maskCepInput } from '@/utils/formatters';
-import { ChamadoCreateSchema, ChamadoFormSchema, type ChamadoCreateFormData, type ChamadoFormData, extractFieldErrors, type FormErrors } from '@/utils/schemas';
-
-type ChamadoFormState = ChamadoFormData & { foto?: FotoUpload };
+import { ChamadoCreateSchema, ChamadoFormSchema, extractFieldErrors } from '@/utils/schemas';
 
 const INITIAL_CHAMADO_FORM: ChamadoFormState = {
   titulo: '',
@@ -23,10 +22,6 @@ const INITIAL_CHAMADO_FORM: ChamadoFormState = {
   referencia: '',
   foto: undefined,
 };
-
-type UseChamadoFormOptions =
-  | { mode: 'create' }
-  | { mode: 'edit'; chamadoId: number };
 
 export function useChamadoForm(options: UseChamadoFormOptions) {
   const { showError } = useFeedback();

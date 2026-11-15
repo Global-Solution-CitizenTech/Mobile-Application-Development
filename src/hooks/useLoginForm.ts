@@ -3,8 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFeedback } from '@/contexts/FeedbackContext';
 import { useZodForm } from '@/hooks/useZodForm';
 import type { LoginCredentials } from '@/types/auth';
+import type { LoginFormData } from '@/types/form';
 import { getAuthErrorMessage } from '@/utils/apiError';
-import { LoginSchema, type LoginFormData } from '@/utils/schemas';
+import { LoginSchema } from '@/utils/schemas';
 
 const INITIAL_LOGIN: LoginFormData = {
   email: '',

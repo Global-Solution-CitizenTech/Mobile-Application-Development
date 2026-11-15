@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFeedback } from '@/contexts/FeedbackContext';
-import { type ChamadoListCache, patchApoioInCache, toggleApoioOtimista } from '@/lib/chamadoCache';
+import { patchApoioInCache, toggleApoioOtimista } from '@/lib/chamadoCache';
 import { queryKeys } from '@/lib/queryKeys';
 import { chamadoService } from '@/services/chamadoService';
 import type { ActionCallbacks } from '@/types/api';
-import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoStatusRequest } from '@/types/chamado';
+import type { Chamado, ChamadoCreateRequest, ChamadoListCache, ChamadoRequest, ChamadoStatusRequest } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
 
 export function useChamadoMutations() {

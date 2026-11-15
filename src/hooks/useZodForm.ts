@@ -1,16 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { extractFieldErrors, type FormErrors } from '@/utils/schemas';
-
-export type StringFieldKeys<T> = {
-  [K in keyof T]-?: T[K] extends string | undefined ? K : never;
-}[keyof T];
-
-export interface BoundFieldProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  error?: string;
-}
+import type { BoundFieldProps, FormErrors, StringFieldKeys } from '@/types/form';
+import { extractFieldErrors } from '@/utils/schemas';
 
 export function bindFieldHelpers<T extends Record<string, unknown>>(
   values: T,

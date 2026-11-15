@@ -31,3 +31,5 @@ export interface SelectPickerOption<T extends string = string> {
   label: string;
   subtitle?: string;
 }
+
+export type RadarActiveModal = 'categoria' | 'status' | 'localizacao' | null;

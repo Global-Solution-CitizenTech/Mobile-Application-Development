@@ -3,7 +3,7 @@ import { CATEGORIA_CATALOG } from '../theme/semanticConfig.ts';
 import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse } from '../types/chamado.ts';
 import type { EnderecoFormInput, EnderecoRequest } from '../types/endereco.ts';
 import { onlyDigits } from './formatters.ts';
-import type { ChamadoCreateFormData, ChamadoFormData } from './schemas.ts';
+import type { ChamadoCreateFormData, ChamadoFormData } from '../types/form.ts';
 
 export function buildApiAssetUrl(path?: string | null, baseUrl: string = env.apiUrl): string | undefined {
   if (!path || path.trim() === '') return undefined;
