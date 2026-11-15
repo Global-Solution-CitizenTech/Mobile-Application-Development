@@ -4,12 +4,7 @@ import { useFeedback } from '@/contexts/FeedbackContext';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useChamadoDetail } from '@/hooks/useChamados';
 import { getApiErrorMessage } from '@/utils/apiError';
-import {
-  canChangeChamadoStatus,
-  canDeleteChamado,
-  canEditChamado,
-  canSupportChamado,
-} from '@/utils/permissions';
+import { canChangeChamadoStatus, canDeleteChamado, canEditChamado, canSupportChamado } from '@/utils/permissions';
 import type { StatusUpdateFormData } from '@/utils/schemas';
 
 export function useChamadoDetails(id: number) {

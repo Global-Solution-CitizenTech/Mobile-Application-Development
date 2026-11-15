@@ -5,6 +5,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noUncheckedIndexedAccess": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -16,7 +18,6 @@
     "jest.config.js",
     "android",
     "ios",
-    ".expo-verify-dist",
-    "tests/**/*.test.ts"
+    ".expo-verify-dist"
   ]
 }

@@ -1,9 +1,18 @@
-import { buildApiAssetUrl } from '@/services/api';
-import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
-import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse } from '@/types/chamado';
-import type { EnderecoFormInput, EnderecoRequest } from '@/types/endereco';
-import { onlyDigits } from '@/utils/formatters';
-import type { ChamadoCreateFormData, ChamadoFormData } from '@/utils/schemas';
+import { env } from '../config/env.ts';
+import { CATEGORIA_CATALOG } from '../theme/semanticConfig.ts';
+import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse } from '../types/chamado.ts';
+import type { EnderecoFormInput, EnderecoRequest } from '../types/endereco.ts';
+import { onlyDigits } from './formatters.ts';
+import type { ChamadoCreateFormData, ChamadoFormData } from './schemas.ts';
+
+export function buildApiAssetUrl(path?: string | null, baseUrl: string = env.apiUrl): string | undefined {
+  if (!path || path.trim() === '') return undefined;
+  const trimmed = path.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const base = baseUrl.replace(/\/+$/, '');
+  const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${base}${normalizedPath}`;
+}
 
 export function buildEnderecoRequest(input: EnderecoFormInput): EnderecoRequest {
   const rua = input.rua?.trim().slice(0, 100);

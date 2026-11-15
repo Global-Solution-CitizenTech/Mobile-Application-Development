@@ -39,14 +39,7 @@ export function createThrottledPing(
   };
 }
 
-export function buildApiAssetUrl(path?: string | null): string | undefined {
-  if (!path || path.trim() === '') return undefined;
-  const trimmed = path.trim();
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  const base = (api.defaults.baseURL || env.apiUrl).replace(/\/+$/, '');
-  const normalizedPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-  return `${base}${normalizedPath}`;
-}
+export { buildApiAssetUrl } from '@/utils/chamadoMappers';
 
 export const api: AxiosInstance = create({
   baseURL: env.apiUrl,

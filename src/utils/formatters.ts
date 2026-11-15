@@ -63,8 +63,9 @@ export function formatTelefone(ddd?: string | null, numero?: string | null): str
   const d = onlyDigits(ddd).slice(0, 2);
   const n = onlyDigits(numero).slice(0, 9);
   if (!d && !n) return 'Não informado';
-  if (n.length === 9) return `(${d}) ${n.slice(0, 5)}-${n.slice(5)}`;
-  if (n.length === 8) return `(${d}) ${n.slice(0, 4)}-${n.slice(4)}`;
+  const prefix = d ? `(${d}) ` : '';
+  if (n.length === 9) return `${prefix}${n.slice(0, 5)}-${n.slice(5)}`;
+  if (n.length === 8) return `${prefix}${n.slice(0, 4)}-${n.slice(4)}`;
   return d ? `(${d}) ${n}` : n;
 }
 

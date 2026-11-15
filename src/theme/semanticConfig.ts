@@ -69,18 +69,28 @@ export function getCategoryVisuals(categoriaNome: string, theme: AppTheme): { ic
   return { iconName: entry.iconName, ...palette };
 }
 
+const PRIORITY_LABELS: Record<string, string> = {
+  URGENTE: 'Urgente',
+  ALTA: 'Alta',
+  MEDIA: 'Média',
+  MÉDIA: 'Média',
+  BAIXA: 'Baixa',
+};
+
+export function getPriorityLabel(prioridade: string): string {
+  return PRIORITY_LABELS[prioridade.trim().toUpperCase()] ?? prioridade;
+}
+
 export function getPriorityVisuals(prioridade: string, theme: AppTheme): { label: string; color: string; bg: string } {
   const norm = prioridade.trim().toUpperCase();
-  if (norm === 'URGENTE') {
-    return { label: prioridade, color: theme.dangerText, bg: theme.dangerBg };
-  }
-  if (norm === 'ALTA') {
-    return { label: prioridade, color: theme.warningText, bg: theme.warningBg };
-  }
-  if (norm === 'MEDIA') {
-    return { label: prioridade, color: theme.infoText, bg: theme.infoBg };
-  }
-  return { label: prioridade, color: theme.primary, bg: theme.primaryLight };
+  const label = getPriorityLabel(prioridade);
+  const palette = {
+    URGENTE: { color: theme.dangerText, bg: theme.dangerBg },
+    ALTA: { color: theme.warningText, bg: theme.warningBg },
+    MEDIA: { color: theme.infoText, bg: theme.infoBg },
+    MÉDIA: { color: theme.infoText, bg: theme.infoBg },
+  }[norm] ?? { color: theme.primary, bg: theme.primaryLight };
+  return { label, ...palette };
 }
 
 const ORGAO_LABELS: Record<string, string> = {
@@ -94,4 +104,12 @@ const ORGAO_LABELS: Record<string, string> = {
 
 export function getOrgaoLabel(orgao: string): string {
   return ORGAO_LABELS[orgao.trim().toUpperCase()] ?? orgao;
+}
+
+export function formatTimelineObservation(obs?: string | null): string {
+  if (!obs) return '';
+  return obs
+    .replace(/(Prioridade:\s*)([A-Z_À-Ú]+)/gi, (_, prefix, p) => `${prefix}${getPriorityLabel(p)}`)
+    .replace(/(Categoria:\s*)([A-Z_]+)/gi, (_, prefix, c) => `${prefix}${getCategoryLabel(c)}`)
+    .replace(/(Órgão:\s*)([A-Z_]+)/gi, (_, prefix, o) => `${prefix}${getOrgaoLabel(o)}`);
 }

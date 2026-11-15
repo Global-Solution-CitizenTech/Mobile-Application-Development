@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { getCategoryLabel, getOrgaoLabel, getPriorityVisuals } from '../src/theme/semanticConfig.ts';
+import { formatTimelineObservation, getCategoryLabel, getOrgaoLabel, getPriorityVisuals } from '../src/theme/semanticConfig.ts';
 import type { AppTheme } from '../src/theme/types.ts';
 import { formatDate, formatMessageTime, getInitials } from '../src/utils/formatters.ts';
 import { canSupportChamado, isStatusFinal } from '../src/utils/permissions.ts';
@@ -44,8 +44,30 @@ describe('core utils', () => {
     assert.equal(getCategoryLabel('ILUMINACAO_PUBLICA'), 'Iluminação Pública');
     assert.equal(getOrgaoLabel('CET_TRANSITO'), 'Companhia de Engenharia de Tráfego (CET)');
     assert.equal(getPriorityVisuals('URGENTE', MOCK_THEME).color, '#danger');
+    assert.equal(getPriorityVisuals('URGENTE', MOCK_THEME).label, 'Urgente');
     assert.equal(getPriorityVisuals('alta', MOCK_THEME).color, '#warning');
+    assert.equal(getPriorityVisuals('alta', MOCK_THEME).label, 'Alta');
     assert.equal(getPriorityVisuals('media', MOCK_THEME).color, '#info');
+    assert.equal(getPriorityVisuals('media', MOCK_THEME).label, 'Média');
     assert.equal(getPriorityVisuals('baixa', MOCK_THEME).color, '#primary');
+    assert.equal(getPriorityVisuals('baixa', MOCK_THEME).label, 'Baixa');
+  });
+
+  it('formats raw technical observation tokens into localized friendly text', () => {
+    const rawObs = 'Triagem automática por IA concluída. Prioridade: ALTA. Categoria: VIAS_E_PAVIMENTACAO. Órgão: SECRETARIA_OBRAS.';
+    const formatted = formatTimelineObservation(rawObs);
+    assert.equal(
+      formatted,
+      'Triagem automática por IA concluída. Prioridade: Alta. Categoria: Vias e Pavimentação. Órgão: Secretaria Municipal de Infraestrutura Urbana e Obras.'
+    );
+
+    const contingencyObs = 'Triagem concluída. Prioridade: MEDIA. Categoria: VIAS_E_PAVIMENTACAO. Órgão: SUBPREFEITURA.';
+    assert.equal(
+      formatTimelineObservation(contingencyObs),
+      'Triagem concluída. Prioridade: Média. Categoria: Vias e Pavimentação. Órgão: Subprefeitura Regional.'
+    );
+
+    const openingObs = 'Chamado registrado pelo cidadão Enzo Okuizumi via ZelaFix Mobile.';
+    assert.equal(formatTimelineObservation(openingObs), openingObs);
   });
 });

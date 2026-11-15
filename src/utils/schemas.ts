@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
-import type { StatusChamado } from '@/types/categoria';
-import type { FotoUpload } from '@/types/chamado';
-import { onlyDigits, splitPhoneDigits } from '@/utils/formatters';
+import { CATEGORIA_CATALOG } from '../theme/semanticConfig.ts';
+import type { StatusChamado } from '../types/categoria.ts';
+import type { FotoUpload } from '../types/chamado.ts';
+import { onlyDigits, splitPhoneDigits } from './formatters.ts';
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;
 

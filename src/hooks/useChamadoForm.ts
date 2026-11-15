@@ -9,14 +9,7 @@ import type { Chamado, FotoUpload } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { toChamadoCreateRequest, toChamadoRequest } from '@/utils/chamadoMappers';
 import { maskCepInput } from '@/utils/formatters';
-import {
-  ChamadoCreateSchema,
-  ChamadoFormSchema,
-  type ChamadoCreateFormData,
-  type ChamadoFormData,
-  extractFieldErrors,
-  type FormErrors,
-} from '@/utils/schemas';
+import { ChamadoCreateSchema, ChamadoFormSchema, type ChamadoCreateFormData, type ChamadoFormData, extractFieldErrors, type FormErrors } from '@/utils/schemas';
 
 type ChamadoFormState = ChamadoFormData & { foto?: FotoUpload };
 

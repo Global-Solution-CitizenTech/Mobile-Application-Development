@@ -2,12 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import type { ApiErrorResponse } from '../src/types/api.ts';
-import {
-  ApiError,
-  getApiErrorMessage,
-  getAuthErrorMessage,
-  normalizeHttpError,
-} from '../src/utils/apiError.ts';
+import { ApiError, getApiErrorMessage, getAuthErrorMessage, normalizeHttpError } from '../src/utils/apiError.ts';
 
 function makeAxiosError(params: {
   status?: number;

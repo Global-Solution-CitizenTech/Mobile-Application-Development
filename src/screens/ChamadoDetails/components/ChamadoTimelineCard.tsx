@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import { getStatusVisuals } from '@/theme/semanticConfig';
+import { formatTimelineObservation, getStatusVisuals } from '@/theme/semanticConfig';
 import type { HistoricoChamado } from '@/types/chamado';
 import { formatDate } from '@/utils/formatters';
 
@@ -37,7 +37,7 @@ export const ChamadoTimelineCard = ({ historico }: ChamadoTimelineCardProps) => 
                     <Text style={[styles.statusLabel, { color: visuals.text }]}>{visuals.label}</Text>
                     <Text style={styles.date}>{formatDate(item.data)}</Text>
                   </View>
-                  {item.observacao ? <Text style={styles.obs}>{item.observacao}</Text> : null}
+                  {item.observacao ? <Text style={styles.obs}>{formatTimelineObservation(item.observacao)}</Text> : null}
                   {item.autorNome ? <Text style={styles.autor}>Por {item.autorNome}</Text> : null}
                 </View>
               </View>
