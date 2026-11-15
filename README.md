@@ -50,7 +50,7 @@ O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile e
 - **Segurança & Persistência (`expo-secure-store` + `@react-native-async-storage/async-storage`):** Tokens JWT armazenados de forma criptografada no Keychain/Keystore nativo via `SecureStore` (com fallback Web transparente) e preferências de tema reativas.
 - **Validação de Formulários com Schemas (`zod` v4 + `useZodForm`):** Hook genérico memoizado integrado a schemas declarativos (`LoginSchema`, `RegisterSchema`, `ProfileEditSchema`, `ChamadoFormSchema`, `StatusUpdateSchema`) com extração automática de erros por campo.
 - **Extração Dinâmica do Commit Hash (`app.config.js` + `expo-constants`):** O hash completo e curto do commit Git, branch e data são injetados automaticamente em tempo de build e exibidos na tela **Sobre o App**.
-- **Camada HTTP Integrada ao Azure App Service (`src/services/`):** Suporte nativo ao formato paginado `Page<T>` do **Spring Data JPA**, interceptors `Bearer JWT` do **Spring Security**, normalização de erros do `@RestControllerAdvice` / Bean Validation (`src/utils/apiError.ts`) e *warmup* throttled em `/actuator/health` em `https://app-zelafix-561432.azurewebsites.net`.
+- **Camada HTTP Integrada ao Azure App Service (`src/services/`):** Suporte nativo ao formato paginado `Page<T>` do **Spring Data JPA**, interceptors `Bearer JWT` do **Spring Security**, normalização de erros do `@RestControllerAdvice` / Bean Validation (`src/utils/apiError.ts`) e *warmup* throttled em `/actuator/health` em `https://app-zelafix.azurewebsites.net`.
 - **Câmera Nativa & GPS Automático (`expo-image-picker` + `expo-location`):** Captura real de evidências fotográficas (câmera/galeria enviadas via `multipart/form-data`) com preenchimento automático de CEP e endereço via Reverse Geocoding (`src/hooks/useLocalizacao.ts`) e resolução ViaCEP no backend Java.
 
 ```text
@@ -177,7 +177,7 @@ O aplicativo conta com **11 telas funcionais distintas** além da tela **Sobre o
 
 ## 5. Contratos REST Integrados ao Backend Java (Azure)
 
-A camada `src/services/` está conectada ao backend Java Spring Boot em `https://app-zelafix-561432.azurewebsites.net` via `src/config/env.ts`:
+A camada `src/services/` está conectada ao backend Java Spring Boot em `https://app-zelafix.azurewebsites.net` via `src/config/env.ts`:
 
 | Método | Endpoint Java Spring Boot | Descrição |
 | :---: | :--- | :--- |
