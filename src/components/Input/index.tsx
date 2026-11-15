@@ -117,9 +117,9 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.isDark ? theme.inputBg : theme.surface,
       borderWidth: 1.2,
       borderColor: theme.border,
-      borderRadius: borderRadius.md,
-      paddingHorizontal: 12,
-      minHeight: 48,
+      borderRadius: borderRadius.lg,
+      paddingHorizontal: 14,
+      minHeight: 50,
     },
     inputFocused: {
       borderColor: theme.primary,

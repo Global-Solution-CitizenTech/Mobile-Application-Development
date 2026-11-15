@@ -63,7 +63,7 @@ const createStyles = (theme: AppTheme) =>
       marginTop: spacing.xs,
       marginBottom: spacing.xs,
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.md,
+      borderRadius: borderRadius.card,
       borderWidth: 1,
       borderColor: theme.border,
       overflow: 'hidden',

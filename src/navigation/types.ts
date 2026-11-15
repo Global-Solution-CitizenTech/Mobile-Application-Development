@@ -21,6 +21,7 @@ export type AppStackParamList = {
   NovoChamado: undefined;
   ChamadoDetails: { id: number };
   EditarChamado: { id: number };
+  EditarPerfil: undefined;
   SobreApp: undefined;
 };
 

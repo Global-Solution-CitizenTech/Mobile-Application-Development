@@ -73,8 +73,8 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.card,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md + 2,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.cardBorder,
       marginBottom: spacing.md,

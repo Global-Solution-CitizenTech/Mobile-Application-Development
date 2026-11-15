@@ -21,15 +21,15 @@ export interface ButtonProps extends TouchableOpacityProps {
 
 const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; fontSize: number }> = {
   sm: {
-    container: { paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md },
+    container: { minHeight: 36, paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md },
     fontSize: fontSize.caption,
   },
   md: {
-    container: { paddingVertical: spacing.sm + 4, paddingHorizontal: spacing.lg },
+    container: { minHeight: 48, paddingVertical: spacing.sm + 4, paddingHorizontal: spacing.lg },
     fontSize: fontSize.body,
   },
   lg: {
-    container: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
+    container: { minHeight: 52, paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
     fontSize: fontSize.bodyLarge,
   },
 };
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
   },
   contentRow: {
     flexDirection: 'row',

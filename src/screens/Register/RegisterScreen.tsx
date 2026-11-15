@@ -14,7 +14,12 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 export const RegisterScreen = ({ navigation }: Props) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const { field, submitting, handleRegister } = useRegisterForm();
+  const { field, submitting, handleRegister, onUsarGps, capturandoGps, erroGps, localizacaoPreview } =
+    useRegisterForm();
+
+  const localizacaoResumo = localizacaoPreview
+    ? [localizacaoPreview.bairro, localizacaoPreview.cidade].filter(Boolean).join(' • ') || 'Localização obtida'
+    : null;
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -44,6 +49,10 @@ export const RegisterScreen = ({ navigation }: Props) => {
             onSubmit={handleRegister}
             onGoToLogin={() => navigation.replace('Login')}
             submitting={submitting}
+            onUsarGps={() => void onUsarGps()}
+            capturandoGps={capturandoGps}
+            erroGps={erroGps}
+            localizacaoResumo={localizacaoResumo}
           />
         </View>
       </ScrollView>

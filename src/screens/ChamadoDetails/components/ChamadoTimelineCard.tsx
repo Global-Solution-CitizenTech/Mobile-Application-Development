@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { formatTimelineObservation, getStatusVisuals } from '@/theme/semanticConfig';
 import type { HistoricoChamado } from '@/types/chamado';
 import { formatDate } from '@/utils/formatters';
@@ -53,13 +53,14 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.border,
       gap: spacing.md,
+      ...shadows.sm,
     },
-    title: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: theme.text },
+    title: { fontSize: fontSize.bodyLarge, fontWeight: fontWeight.bold, color: theme.text },
     emptyText: { fontSize: fontSize.bodySmall, color: theme.textMuted },
     timeline: { gap: spacing.xs },
     itemRow: { flexDirection: 'row', gap: spacing.sm + 2 },

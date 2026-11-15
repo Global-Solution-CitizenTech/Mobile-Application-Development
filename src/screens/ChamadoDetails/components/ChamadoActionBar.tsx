@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import type { AppTheme } from '@/theme/types';
-import { borderRadius, spacing } from '@/theme';
+import { borderRadius, shadows, spacing } from '@/theme';
 import type { Chamado } from '@/types/chamado';
 
 interface ChamadoActionBarProps {
@@ -95,11 +95,12 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.border,
-      gap: spacing.sm,
+      gap: spacing.sm + 2,
+      ...shadows.sm,
     },
     row: { flexDirection: 'row', gap: spacing.sm },
     flexBtn: { flex: 1 },

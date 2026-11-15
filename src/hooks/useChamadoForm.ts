@@ -122,8 +122,9 @@ export function useChamadoForm(options: UseChamadoFormOptions) {
         resetForm();
         onSuccess(created);
       },
-      onError: (err) =>
-        showError('Erro ao enviar', getApiErrorMessage(err, 'Erro ao registrar chamado.')),
+      onError: (err) => {
+        showError('Erro ao enviar', getApiErrorMessage(err, 'Erro ao registrar chamado.'));
+      },
     });
   };
 

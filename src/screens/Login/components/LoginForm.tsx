@@ -26,11 +26,6 @@ export const LoginForm = ({
 
   return (
     <View style={[styles.card, shadows.md]}>
-      <Text style={styles.formTitle}>Acesse sua conta</Text>
-      <Text style={styles.formDescription}>
-        Colabore com sua comunidade e acompanhe cada ocorrência urbana em tempo real.
-      </Text>
-
       <View style={styles.fieldsGap}>
         <Input
           label="E-mail"
@@ -39,6 +34,9 @@ export const LoginForm = ({
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
           leftIcon={<Ionicons name="mail-outline" size={18} color={theme.textMuted} />}
         />
 
@@ -47,6 +45,10 @@ export const LoginForm = ({
           placeholder="Digite sua senha"
           {...field('senha')}
           isPassword
+          autoComplete="current-password"
+          textContentType="password"
+          returnKeyType="done"
+          onSubmitEditing={onSubmit}
           leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.textMuted} />}
         />
       </View>
@@ -74,35 +76,24 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.card,
-      borderRadius: borderRadius.xl,
-      padding: spacing.lg + 4,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.cardBorder,
-    },
-    formTitle: {
-      fontSize: fontSize.title,
-      fontWeight: fontWeight.extrabold,
-      color: theme.text,
-      marginBottom: 6,
-    },
-    formDescription: {
-      fontSize: fontSize.bodySmall,
-      color: theme.textSecondary,
-      lineHeight: 19,
-      marginBottom: spacing.lg,
+      gap: spacing.lg - 4,
     },
     fieldsGap: {
-      gap: spacing.xs,
+      gap: spacing.md,
     },
     loginButton: {
-      marginTop: spacing.sm,
+      marginTop: spacing.xs,
     },
     footerRow: {
       flexDirection: 'row',
-      justifyContent: 'center',
       alignItems: 'center',
-      gap: spacing.xs,
-      marginTop: spacing.lg,
+      justifyContent: 'center',
+      gap: spacing.xs + 2,
+      marginTop: spacing.xs,
       paddingTop: spacing.md,
       borderTopWidth: 1,
       borderTopColor: theme.divider,

@@ -90,7 +90,7 @@ export const EditarChamadoScreen = ({ navigation, route }: Props) => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.xs },
+    scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.md },
     actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
     btn: { flex: 1 },
   });

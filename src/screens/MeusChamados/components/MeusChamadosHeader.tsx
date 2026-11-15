@@ -14,12 +14,6 @@ interface MeusChamadosHeaderProps {
   onSelectTab: (tab: MeusChamadosTab) => void;
 }
 
-const TABS: { key: MeusChamadosTab; label: string }[] = [
-  { key: 'TODOS', label: 'Todos' },
-  { key: 'ATIVOS', label: 'Em Aberto / Análise' },
-  { key: 'CONCLUIDOS', label: 'Finalizados' },
-];
-
 export const MeusChamadosHeader = ({
   total,
   abertos,
@@ -30,6 +24,12 @@ export const MeusChamadosHeader = ({
 }: MeusChamadosHeaderProps) => {
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
+
+  const tabs: { key: MeusChamadosTab; label: string; count: number }[] = [
+    { key: 'TODOS', label: 'Todos', count: total },
+    { key: 'ATIVOS', label: 'Em Aberto', count: abertos + emAndamento },
+    { key: 'CONCLUIDOS', label: 'Finalizados', count: concluidos },
+  ];
 
   return (
     <View
@@ -42,28 +42,15 @@ export const MeusChamadosHeader = ({
         },
       ]}
     >
-      <Text style={styles.title}>Meus Chamados</Text>
-      <Text style={styles.subtitle}>
-        {total} {total === 1 ? 'ocorrência registrada' : 'ocorrências registradas'}
-      </Text>
-
-      <View style={styles.countersRow}>
-        <View style={styles.counterBox}>
-          <Text style={styles.counterNum}>{abertos}</Text>
-          <Text style={styles.counterLabel}>Abertos</Text>
-        </View>
-        <View style={styles.counterBox}>
-          <Text style={styles.counterNum}>{emAndamento}</Text>
-          <Text style={styles.counterLabel}>Andamento</Text>
-        </View>
-        <View style={styles.counterBox}>
-          <Text style={styles.counterNum}>{concluidos}</Text>
-          <Text style={styles.counterLabel}>Concluídos</Text>
-        </View>
+      <View style={styles.titleSection}>
+        <Text style={styles.title}>Meus Chamados</Text>
+        <Text style={styles.subtitle}>
+          {total} {total === 1 ? 'ocorrência registrada por você' : 'ocorrências registradas por você'}
+        </Text>
       </View>
 
       <View style={styles.tabsRow}>
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const active = activeTab === tab.key;
           return (
             <TouchableOpacity
@@ -71,8 +58,12 @@ export const MeusChamadosHeader = ({
               style={[styles.tabBtn, active && styles.tabBtnActive]}
               onPress={() => onSelectTab(tab.key)}
               activeOpacity={0.8}
+              hitSlop={6}
             >
               <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab.label}</Text>
+              <View style={[styles.badge, active ? styles.badgeActive : styles.badgeInactive]}>
+                <Text style={[styles.badgeText, active ? styles.badgeTextActive : styles.badgeTextInactive]}>{tab.count}</Text>
+              </View>
             </TouchableOpacity>
           );
         })}
@@ -85,33 +76,69 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       paddingHorizontal: spacing.md,
-      paddingBottom: spacing.sm + 4,
+      paddingBottom: spacing.md,
       backgroundColor: theme.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
-      gap: spacing.xs + 2,
+      gap: spacing.md,
+    },
+    titleSection: {
+      gap: 3,
     },
     title: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
     subtitle: { fontSize: fontSize.bodySmall, color: theme.textSecondary },
-    countersRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
-    counterBox: {
-      flex: 1,
+    tabsRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
       backgroundColor: theme.cardSubtle,
-      borderRadius: borderRadius.md,
-      paddingVertical: spacing.sm,
-      alignItems: 'center',
+      padding: 4,
+      borderRadius: borderRadius.full,
     },
-    counterNum: { fontSize: fontSize.subtitle, fontWeight: fontWeight.extrabold, color: theme.primary },
-    counterLabel: { fontSize: fontSize.tiny + 1, color: theme.textSecondary, fontWeight: fontWeight.medium },
-    tabsRow: { flexDirection: 'row', gap: spacing.xs + 2, marginTop: spacing.xs },
     tabBtn: {
       flex: 1,
-      paddingVertical: spacing.sm,
-      borderRadius: borderRadius.full,
-      backgroundColor: theme.cardSubtle,
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.xs,
+      borderRadius: borderRadius.full,
     },
-    tabBtnActive: { backgroundColor: theme.primary },
-    tabText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
-    tabTextActive: { color: theme.inverseText },
+    tabBtnActive: {
+      backgroundColor: theme.surface,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    tabText: {
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.bold,
+      color: theme.textSecondary,
+    },
+    tabTextActive: {
+      color: theme.primary,
+    },
+    badge: {
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+      borderRadius: borderRadius.full,
+    },
+    badgeActive: {
+      backgroundColor: theme.primaryLight,
+    },
+    badgeInactive: {
+      backgroundColor: 'transparent',
+    },
+    badgeText: {
+      fontSize: fontSize.tiny + 1,
+      fontWeight: fontWeight.bold,
+    },
+    badgeTextActive: {
+      color: theme.primary,
+    },
+    badgeTextInactive: {
+      color: theme.textMuted,
+    },
   });

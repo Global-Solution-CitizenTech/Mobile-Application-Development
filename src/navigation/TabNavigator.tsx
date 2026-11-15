@@ -33,6 +33,7 @@ export const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        sceneStyle: { backgroundColor: theme.background },
         tabBarActiveTintColor: theme.tabBarActive,
         tabBarInactiveTintColor: theme.tabBarInactive,
         tabBarHideOnKeyboard: true,

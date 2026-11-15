@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatCard } from '@/components/StatCard';
-import { useThemedStyles } from '@/contexts/ThemeContext';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import type { AppTheme } from '@/theme/types';
 
@@ -21,6 +21,7 @@ export const ProfileStatsCard = ({
   loading = false,
   onPressVerChamados,
 }: ProfileStatsCardProps) => {
+  const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -28,36 +29,36 @@ export const ProfileStatsCard = ({
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.title}>Minhas Estatísticas</Text>
-          <Text style={styles.subtitle}>Resumo da sua participação na cidade</Text>
+          <Text style={styles.subtitle}>
+            {emAndamento > 0 ? `${emAndamento} em andamento` : 'Participação cívica na cidade'}
+          </Text>
         </View>
         <TouchableOpacity onPress={onPressVerChamados} activeOpacity={0.75} hitSlop={6}>
           <Text style={styles.link}>Ver Meus</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.grid}>
+      <View style={styles.statsRow}>
         <StatCard
           label="Reportados"
           value={loading ? '—' : total}
           icon="megaphone-outline"
+          color={theme.primary}
+          bgColor={theme.primaryLight}
         />
-        <StatCard
-          label="Em Andamento"
-          value={loading ? '—' : emAndamento}
-          icon="time-outline"
-        />
-      </View>
-
-      <View style={styles.grid}>
         <StatCard
           label="Concluídos"
           value={loading ? '—' : concluidos}
           icon="checkmark-circle-outline"
+          color={theme.success}
+          bgColor={theme.successBg}
         />
         <StatCard
-          label="Apoios Recebidos"
+          label="Apoios"
           value={loading ? '—' : apoiosRecebidos}
           icon="thumbs-up-outline"
+          color={theme.warning}
+          bgColor={theme.warningBg}
         />
       </View>
     </View>
@@ -68,11 +69,11 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.md + 4,
       borderWidth: 1,
       borderColor: theme.border,
-      gap: spacing.sm + 2,
+      gap: spacing.md,
       ...shadows.sm,
     },
     headerRow: {
@@ -96,7 +97,7 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: fontWeight.bold,
       color: theme.primary,
     },
-    grid: {
+    statsRow: {
       flexDirection: 'row',
       gap: spacing.sm,
     },

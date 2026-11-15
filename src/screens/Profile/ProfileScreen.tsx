@@ -7,7 +7,6 @@ import { FeedbackModal } from '@/components/FeedbackModal';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useProfileData } from '@/hooks/useProfileData';
 import type { ProfileTabNavigationProp } from '@/navigation/types';
-import { EditProfileModal } from '@/screens/Profile/components/EditProfileModal';
 import { ProfileStatsCard } from '@/screens/Profile/components/ProfileStatsCard';
 import { ProfileUserCard } from '@/screens/Profile/components/ProfileUserCard';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
@@ -25,16 +24,10 @@ export const ProfileScreen = () => {
     statsLoading,
     isDark,
     toggleTheme,
-    form,
-    editModalVisible,
-    setEditModalVisible,
     logoutModalVisible,
     setLogoutModalVisible,
-    saving,
     refreshing,
-    openEditModal,
     handleRefreshProfile,
-    handleSaveProfile,
     signOut,
   } = useProfileData();
 
@@ -76,7 +69,7 @@ export const ProfileScreen = () => {
       />
 
       <View style={styles.sectionCard}>
-        <TouchableOpacity style={styles.menuRow} onPress={openEditModal} activeOpacity={0.75}>
+        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('EditarPerfil')} activeOpacity={0.75}>
           <View style={styles.menuLeft}>
             <Ionicons name="create-outline" size={20} color={theme.primary} />
             <Text style={styles.menuText}>Editar Meus Dados</Text>
@@ -122,14 +115,6 @@ export const ProfileScreen = () => {
         onPress={() => setLogoutModalVisible(true)}
       />
 
-      <EditProfileModal
-        visible={editModalVisible}
-        onClose={() => setEditModalVisible(false)}
-        field={form.field}
-        onSave={handleSaveProfile}
-        saving={saving}
-      />
-
       <FeedbackModal
         visible={logoutModalVisible}
         type="warning"
@@ -150,16 +135,22 @@ export const ProfileScreen = () => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    content: { paddingBottom: spacing.xxl, gap: spacing.md },
+    content: { paddingBottom: spacing.xxxl, gap: spacing.lg - 4 },
     screenTitle: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
     sectionCard: {
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
+      borderRadius: borderRadius.cardLg,
       borderWidth: 1,
       borderColor: theme.border,
       overflow: 'hidden',
     },
-    menuRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.md },
+    menuRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md + 2,
+    },
     menuLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 4 },
     menuText: { fontSize: fontSize.body, fontWeight: fontWeight.semibold, color: theme.text },
     divider: { height: 1, backgroundColor: theme.border },

@@ -14,6 +14,7 @@ import type { AppStackParamList } from '@/navigation/types';
 import { PhotoEvidencePicker } from '@/screens/NovoChamado/components/PhotoEvidencePicker';
 import type { Chamado } from '@/types/chamado';
 import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
+import { getCategoryLabel, getPriorityLabel } from '@/theme/semanticConfig';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NovoChamado'>;
 
@@ -75,7 +76,7 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
 
         <View style={styles.submitWrapper}>
           <Button
-            title="Enviar Ocorrência"
+            title={form.submitting ? 'Enviando...' : 'Enviar Ocorrência'}
             leftIcon={<Ionicons name="send-outline" size={18} color={theme.inverseText} />}
             size="lg"
             loading={form.submitting}
@@ -87,10 +88,10 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
       <FeedbackModal
         visible={Boolean(createdChamado)}
         type="success"
-        title="Chamado Criado!"
+        title="Chamado Criado com Sucesso!"
         message={
           createdChamado
-            ? `"${createdChamado.titulo}" foi classificado pela IA e registrado com sucesso.`
+            ? `Protocolo #${createdChamado.idChamado}\n\n• Categoria: ${getCategoryLabel(createdChamado.categoriaNome)}\n• Gravidade: ${getPriorityLabel(createdChamado.prioridadeNome)}`
             : ''
         }
         confirmText="Ver Chamado"
@@ -114,22 +115,23 @@ export const NovoChamadoScreen = ({ navigation }: Props) => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.xs },
+    scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.md },
     aiHintBox: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: spacing.xs + 2,
-      padding: spacing.sm + 4,
-      marginBottom: spacing.xs,
-      borderRadius: borderRadius.md,
+      gap: spacing.sm,
+      padding: spacing.md,
+      borderRadius: borderRadius.card,
       backgroundColor: theme.primaryLight,
+      borderWidth: 1,
+      borderColor: theme.primaryBorder,
     },
     aiHintText: {
       flex: 1,
       fontSize: fontSize.caption,
       fontWeight: fontWeight.medium,
-      color: theme.primary,
-      lineHeight: 18,
+      color: theme.primaryDark,
+      lineHeight: 19,
     },
-    submitWrapper: { marginTop: spacing.sm },
+    submitWrapper: { marginTop: spacing.xs },
   });

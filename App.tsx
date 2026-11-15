@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -9,13 +10,13 @@ import { bindReactNativeQueryLifecycle, queryClient } from '@/lib/queryClient';
 import { NavigationRouter } from '@/navigation/index';
 
 function ThemedApplication() {
-  const { isDark } = useTheme();
+  const { theme, isDark } = useTheme();
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <NavigationRouter />
-    </>
+    </View>
   );
 }
 

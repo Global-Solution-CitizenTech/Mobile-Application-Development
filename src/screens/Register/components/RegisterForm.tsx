@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
@@ -14,6 +14,10 @@ interface RegisterFormProps {
   onSubmit: () => void;
   onGoToLogin: () => void;
   submitting: boolean;
+  onUsarGps?: () => void;
+  capturandoGps?: boolean;
+  erroGps?: string | null;
+  localizacaoResumo?: string | null;
 }
 
 export const RegisterForm = ({
@@ -21,6 +25,10 @@ export const RegisterForm = ({
   onSubmit,
   onGoToLogin,
   submitting,
+  onUsarGps,
+  capturandoGps,
+  erroGps,
+  localizacaoResumo,
 }: RegisterFormProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -34,6 +42,9 @@ export const RegisterForm = ({
         placeholder="Seu nome completo"
         {...field('nome')}
         maxLength={100}
+        returnKeyType="next"
+        autoComplete="name"
+        textContentType="name"
         leftIcon={<Ionicons name="person-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -43,6 +54,9 @@ export const RegisterForm = ({
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
+        returnKeyType="next"
         {...field('email')}
         maxLength={100}
         leftIcon={<Ionicons name="mail-outline" size={18} color={theme.textMuted} />}
@@ -60,6 +74,28 @@ export const RegisterForm = ({
 
       <View style={styles.sectionDivider} />
       <Text style={styles.sectionEyebrow}>Localização</Text>
+
+      {onUsarGps && (
+        <View style={styles.gpsSection}>
+          <TouchableOpacity
+            style={styles.gpsButton}
+            onPress={onUsarGps}
+            disabled={capturandoGps}
+            activeOpacity={0.8}
+          >
+            {capturandoGps ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <Ionicons name="navigate-outline" size={18} color={theme.primary} />
+            )}
+            <Text style={styles.gpsText}>
+              {capturandoGps ? 'Obtendo endereço via GPS...' : 'Preencher Endereço pelo GPS'}
+            </Text>
+          </TouchableOpacity>
+          {localizacaoResumo ? <Text style={styles.gpsSuccess}>{localizacaoResumo}</Text> : null}
+          {erroGps ? <Text style={styles.gpsError}>{erroGps}</Text> : null}
+        </View>
+      )}
 
       <View style={styles.row}>
         <View style={styles.cepCol}>
@@ -106,6 +142,9 @@ export const RegisterForm = ({
         isPassword
         {...field('senha')}
         maxLength={60}
+        returnKeyType="next"
+        autoComplete="new-password"
+        textContentType="newPassword"
         leftIcon={<Ionicons name="lock-closed-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -115,6 +154,10 @@ export const RegisterForm = ({
         isPassword
         {...field('confirmarSenha')}
         maxLength={60}
+        returnKeyType="done"
+        autoComplete="new-password"
+        textContentType="newPassword"
+        onSubmitEditing={onSubmit}
         leftIcon={<Ionicons name="shield-checkmark-outline" size={18} color={theme.textMuted} />}
       />
 
@@ -140,25 +183,41 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.card,
-      borderRadius: borderRadius.xl,
-      padding: spacing.lg + 2,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.cardBorder,
-      gap: 2,
+      gap: spacing.sm + 2,
     },
     sectionEyebrow: {
-      fontSize: fontSize.tiny + 1,
+      fontSize: fontSize.caption,
       fontWeight: fontWeight.bold,
       color: theme.primary,
       textTransform: 'uppercase',
-      letterSpacing: 0.7,
-      marginBottom: spacing.xs,
+      letterSpacing: 0.8,
+      marginTop: spacing.xs,
+      marginBottom: 2,
     },
     sectionDivider: {
       height: 1,
-      backgroundColor: theme.divider,
-      marginVertical: spacing.sm,
+      backgroundColor: theme.border,
+      marginVertical: spacing.md - 2,
     },
+    gpsSection: { marginBottom: spacing.xs, gap: spacing.xs },
+    gpsButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: theme.primaryBorder,
+      backgroundColor: theme.primaryLight,
+    },
+    gpsText: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.primaryDark },
+    gpsSuccess: { fontSize: fontSize.caption, color: theme.primary, fontWeight: fontWeight.medium },
+    gpsError: { fontSize: fontSize.caption, color: theme.danger },
     row: {
       flexDirection: 'row',
       gap: spacing.sm,
@@ -170,14 +229,14 @@ const createStyles = (theme: AppTheme) =>
       flex: 1,
     },
     submitBtn: {
-      marginTop: spacing.sm,
+      marginTop: spacing.md,
     },
     footerRow: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
       gap: spacing.xs,
-      marginTop: spacing.lg,
+      marginTop: spacing.md,
       paddingTop: spacing.md,
       borderTopWidth: 1,
       borderTopColor: theme.divider,

@@ -195,8 +195,8 @@ const createStyles = (theme: AppTheme) =>
     versionText: { fontSize: fontSize.tiny, fontWeight: fontWeight.bold, color: theme.primaryDark },
     commitCard: {
       backgroundColor: theme.card,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md + 2,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.primaryBorder,
       marginBottom: spacing.md,
@@ -219,8 +219,8 @@ const createStyles = (theme: AppTheme) =>
     commitSubtitle: { fontSize: fontSize.tiny, color: theme.textSecondary, marginTop: 1 },
     hashBox: {
       backgroundColor: theme.cardSubtle,
-      borderRadius: borderRadius.md,
-      padding: spacing.sm + 4,
+      borderRadius: borderRadius.card,
+      padding: spacing.md,
       borderWidth: 1,
       borderColor: theme.border,
     },
@@ -250,8 +250,8 @@ const createStyles = (theme: AppTheme) =>
     commitMetaValue: { fontSize: fontSize.tiny, color: theme.text, marginBottom: spacing.xs },
     card: {
       backgroundColor: theme.card,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md + 2,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.cardBorder,
       marginBottom: spacing.md,

@@ -34,15 +34,20 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
 
       <View style={styles.contentRow}>
         <View style={styles.mainInfo}>
-          <Text style={styles.metaText}>
-            Protocolo #{chamado.idChamado} • {formatShortDate(chamado.dtAbertura)}
-          </Text>
           <Text style={styles.title} numberOfLines={2}>
             {chamado.titulo}
           </Text>
-          <Text style={styles.description} numberOfLines={2}>
-            {chamado.descricao}
-          </Text>
+          {chamado.descricao ? (
+            <Text style={styles.description} numberOfLines={2}>
+              {chamado.descricao}
+            </Text>
+          ) : null}
+          <View style={styles.metaRow}>
+            <Ionicons name="location-outline" size={13} color={theme.textMuted} />
+            <Text style={styles.metaText} numberOfLines={1}>
+              {getShortEndereco(chamado.endereco)} • #{chamado.idChamado}
+            </Text>
+          </View>
         </View>
 
         {showThumbnail ? (
@@ -54,40 +59,40 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
         ) : null}
       </View>
 
-      <View style={styles.locationRow}>
-        <Ionicons name="location-outline" size={14} color={theme.textMuted} />
-        <Text style={styles.locationText} numberOfLines={1}>
-          {getShortEndereco(chamado.endereco)}
-        </Text>
-      </View>
-
       <View style={styles.footerRow}>
         <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
-          <Ionicons name="flag-outline" size={11} color={priority.color} />
+          <Ionicons name="flag-outline" size={12} color={priority.color} />
           <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.voteBtn, chamado.apoiadoPorMim && styles.voteBtnActive, !podeApoiar && styles.voteBtnDisabled]}
-          onPress={(event) => {
-            event.stopPropagation();
-            onApoiar?.();
-          }}
-          disabled={!podeApoiar}
-          activeOpacity={0.75}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={chamado.apoiadoPorMim ? 'Remover apoio da ocorrência' : 'Apoiar ocorrência'}
-        >
-          <Ionicons
-            name={chamado.apoiadoPorMim ? 'thumbs-up' : 'thumbs-up-outline'}
-            size={14}
-            color={chamado.apoiadoPorMim ? theme.primary : theme.textSecondary}
-          />
-          <Text style={[styles.voteText, chamado.apoiadoPorMim && styles.voteTextActive]}>
-            {chamado.totalVotos} {chamado.totalVotos === 1 ? 'apoio' : 'apoios'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.footerRight}>
+          <Text style={styles.dateText}>{formatShortDate(chamado.dtAbertura)}</Text>
+          {podeApoiar ? (
+            <TouchableOpacity
+              style={[styles.voteBtn, chamado.apoiadoPorMim && styles.voteBtnActive]}
+              onPress={(event) => {
+                event.stopPropagation();
+                onApoiar?.();
+              }}
+              activeOpacity={0.75}
+              hitSlop={6}
+            >
+              <Ionicons
+                name={chamado.apoiadoPorMim ? 'thumbs-up' : 'thumbs-up-outline'}
+                size={13}
+                color={chamado.apoiadoPorMim ? theme.primary : theme.textSecondary}
+              />
+              <Text style={[styles.voteText, chamado.apoiadoPorMim && styles.voteTextActive]}>
+                {chamado.totalVotos}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.voteBtn}>
+              <Ionicons name="thumbs-up-outline" size={13} color={theme.textMuted} />
+              <Text style={styles.voteTextMuted}>{chamado.totalVotos}</Text>
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -97,44 +102,47 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
+      borderRadius: borderRadius.card,
+      padding: spacing.md + 2,
       borderWidth: 1,
       borderColor: theme.border,
-      gap: spacing.sm,
+      gap: spacing.sm + 3,
       ...shadows.sm,
     },
     topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs },
-    contentRow: { flexDirection: 'row', gap: spacing.sm + 4 },
-    mainInfo: { flex: 1, gap: 4 },
-    metaText: { fontSize: fontSize.tiny + 1, color: theme.textMuted, fontWeight: fontWeight.medium },
-    title: { fontSize: fontSize.bodyLarge, fontWeight: fontWeight.bold, color: theme.text, lineHeight: 21 },
+    contentRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+    mainInfo: { flex: 1, gap: 5 },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+    metaText: { fontSize: fontSize.caption, color: theme.textMuted },
+    title: { fontSize: fontSize.bodyLarge, fontWeight: fontWeight.bold, color: theme.text, lineHeight: 22 },
     description: { fontSize: fontSize.bodySmall, color: theme.textSecondary, lineHeight: 18 },
-    thumbnail: { width: 72, height: 72, borderRadius: borderRadius.md, backgroundColor: theme.cardSubtle },
-    locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    locationText: { flex: 1, fontSize: fontSize.caption, color: theme.textSecondary },
+    thumbnail: { width: 76, height: 76, borderRadius: borderRadius.md + 2, backgroundColor: theme.cardSubtle },
     footerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingTop: spacing.xs + 2,
-      borderTopWidth: 1,
-      borderTopColor: theme.border,
+      paddingTop: spacing.xs,
     },
     priorityPill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      paddingHorizontal: spacing.sm,
+      paddingHorizontal: spacing.sm + 2,
       paddingVertical: 4,
       borderRadius: borderRadius.full,
     },
     priorityText: { fontSize: fontSize.tiny + 1, fontWeight: fontWeight.bold },
+    footerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    dateText: { fontSize: fontSize.caption, color: theme.textMuted },
     voteBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      paddingHorizontal: spacing.sm + 2,
+      paddingHorizontal: spacing.sm + 4,
       paddingVertical: 5,
       borderRadius: borderRadius.full,
       backgroundColor: theme.cardSubtle,
@@ -142,7 +150,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.border,
     },
     voteBtnActive: { backgroundColor: theme.primaryLight, borderColor: theme.primary },
-    voteBtnDisabled: { opacity: 0.65 },
-    voteText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
+    voteText: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.textSecondary },
     voteTextActive: { color: theme.primary },
+    voteTextMuted: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.textMuted },
   });

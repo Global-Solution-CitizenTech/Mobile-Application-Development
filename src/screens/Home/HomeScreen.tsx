@@ -2,6 +2,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } 
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Avatar } from '@/components/Avatar';
 import { ChamadoCard } from '@/components/ChamadoCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -57,14 +58,21 @@ export const HomeScreen = () => {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.heroHeader}>
-        <View style={styles.greetingBox}>
-          <Text style={styles.greeting}>Olá, {getFirstName(usuario?.nome)}!</Text>
-          <Text style={styles.subtitle}>
-            {usuario?.endereco?.bairro
-              ? `${usuario.endereco.bairro}, ${usuario.endereco.cidade}`
-              : 'Zeladoria urbana colaborativa'}
-          </Text>
-        </View>
+        <TouchableOpacity
+          style={styles.userProfileRow}
+          onPress={() => navigation.navigate('ProfileTab')}
+          activeOpacity={0.75}
+        >
+          <Avatar nome={usuario?.nome} tamanho="md" />
+          <View style={styles.greetingBox}>
+            <Text style={styles.greeting}>Olá, {getFirstName(usuario?.nome)}!</Text>
+            <Text style={styles.subtitle}>
+              {usuario?.endereco?.bairro && !/^n[aã]o\s+informado$/i.test(usuario.endereco.bairro)
+                ? `${usuario.endereco.bairro}, ${usuario.endereco.cidade}`
+                : usuario?.endereco?.cidade || 'Zeladoria urbana colaborativa'}
+            </Text>
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.radarPill}
           onPress={() => navigation.navigate('RadarBairroTab')}
@@ -113,7 +121,7 @@ export const HomeScreen = () => {
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Ocorrências Mais Recentes</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('RadarBairroTab')}>
+            <TouchableOpacity onPress={() => navigation.navigate('RadarBairroTab')} activeOpacity={0.75} hitSlop={8}>
               <Text style={styles.seeAll}>Abrir Radar</Text>
             </TouchableOpacity>
           </View>
@@ -147,8 +155,9 @@ export const HomeScreen = () => {
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    content: { gap: spacing.md },
+    content: { gap: spacing.lg - 4 },
     heroHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+    userProfileRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 4, flex: 1 },
     greetingBox: { flex: 1 },
     greeting: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
     subtitle: { fontSize: fontSize.bodySmall, color: theme.textSecondary, marginTop: 2 },
@@ -167,27 +176,27 @@ const createStyles = (theme: AppTheme) =>
     aiCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm + 4,
+      gap: spacing.md,
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.md + 2,
       borderWidth: 1,
       borderColor: theme.border,
       ...shadows.sm,
     },
     aiIconBox: {
-      width: 44,
-      height: 44,
-      borderRadius: borderRadius.md,
+      width: 48,
+      height: 48,
+      borderRadius: borderRadius.md + 4,
       backgroundColor: theme.primaryLight,
       alignItems: 'center',
       justifyContent: 'center',
     },
     aiBody: { flex: 1 },
-    aiTitle: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: theme.text },
+    aiTitle: { fontSize: fontSize.bodyLarge, fontWeight: fontWeight.bold, color: theme.text },
     aiSubtitle: { fontSize: fontSize.caption, color: theme.textSecondary, marginTop: 2 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.xs },
     sectionTitle: { fontSize: fontSize.subtitle, fontWeight: fontWeight.bold, color: theme.text },
     seeAll: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.primary },
-    list: { gap: spacing.sm + 4 },
+    list: { gap: spacing.md },
   });

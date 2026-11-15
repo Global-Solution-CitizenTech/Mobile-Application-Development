@@ -89,18 +89,18 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
+      borderRadius: borderRadius.cardLg,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.border,
       gap: spacing.md,
       ...shadows.sm,
     },
     badgesRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.xs },
-    photo: { width: '100%', height: 210, borderRadius: borderRadius.md, backgroundColor: theme.cardSubtle },
+    photo: { width: '100%', height: 210, borderRadius: borderRadius.card, backgroundColor: theme.cardSubtle },
     photoPlaceholder: {
       height: 110,
-      borderRadius: borderRadius.md,
+      borderRadius: borderRadius.card,
       backgroundColor: theme.cardSubtle,
       alignItems: 'center',
       justifyContent: 'center',
@@ -127,7 +127,7 @@ const createStyles = (theme: AppTheme) =>
     orgaoText: { flex: 1, fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.text },
     parecerBox: {
       padding: spacing.sm + 4,
-      borderRadius: borderRadius.md,
+      borderRadius: borderRadius.lg,
       backgroundColor: theme.primaryLight,
       borderLeftWidth: 3,
       borderLeftColor: theme.primary,
@@ -141,8 +141,10 @@ const createStyles = (theme: AppTheme) =>
       alignItems: 'center',
       gap: spacing.sm,
       padding: spacing.sm + 4,
-      borderRadius: borderRadius.md,
+      borderRadius: borderRadius.card,
       backgroundColor: theme.primaryLight,
+      borderWidth: 1,
+      borderColor: theme.primaryBorder,
     },
     aiButtonText: { flex: 1, fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.primary },
   });

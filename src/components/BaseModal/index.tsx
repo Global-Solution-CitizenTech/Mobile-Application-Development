@@ -119,7 +119,7 @@ const createStyles = (theme: AppTheme) =>
     card: {
       width: '100%',
       backgroundColor: theme.surface,
-      borderRadius: borderRadius.lg,
+      borderRadius: borderRadius.cardLg,
       padding: spacing.lg,
       borderWidth: 1,
       borderColor: theme.border,

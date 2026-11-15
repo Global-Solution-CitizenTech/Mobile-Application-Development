@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PickerTriggerButton, SelectPickerModal } from '@/components/SelectPickerModal';
+import { SelectPickerModal } from '@/components/SelectPickerModal';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getCategoryLabel, STATUS_OPTIONS } from '@/theme/semanticConfig';
@@ -88,6 +88,20 @@ export const RadarHeaderFilters = ({
         ? 'Todos bairros'
         : 'Todos estados';
 
+  const locationSubtitle = useMemo(() => {
+    const countText = `${totalCount} ${totalCount === 1 ? 'ocorrência' : 'ocorrências'}`;
+    if (!locationFilter.valor) {
+      return `${countText} • Todas as cidades`;
+    }
+    const prefix =
+      locationFilter.nivel === 'BAIRRO'
+        ? 'Bairro '
+        : locationFilter.nivel === 'ESTADO'
+          ? 'Estado '
+          : '';
+    return `${countText} • ${prefix}${locationFilter.valor}`;
+  }, [locationFilter.nivel, locationFilter.valor, totalCount]);
+
   const nivelLabel =
     modalLocationTab === 'CIDADE'
       ? 'Todas as cidades'
@@ -126,91 +140,119 @@ export const RadarHeaderFilters = ({
       <View style={styles.titleRow}>
         <View style={styles.titleBox}>
           <Text style={styles.title}>Radar da Cidade</Text>
-          <Text style={styles.subtitle}>
-            {totalCount} {totalCount === 1 ? 'ocorrência' : 'ocorrências'}
-            {locationFilter.valor ? ` • ${locationFilter.valor}` : ''}
-          </Text>
+          <Text style={styles.subtitle}>{locationSubtitle}</Text>
         </View>
 
         <TouchableOpacity
           style={[styles.reportButton, shadows.sm]}
           onPress={onPressReportar}
           activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Reportar nova ocorrência"
         >
-          <Ionicons name="add-circle-outline" size={18} color={theme.inverseText} />
+          <Ionicons name="add" size={18} color={theme.inverseText} />
           <Text style={styles.reportButtonText}>Reportar</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchAndSortRow}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color={theme.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar rua, título ou bairro..."
-            placeholderTextColor={theme.textMuted}
-            value={busca}
-            onChangeText={onChangeBusca}
-            returnKeyType="search"
-          />
-          {busca.length > 0 ? (
-            <TouchableOpacity onPress={() => onChangeBusca('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color={theme.textMuted} />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        <View style={styles.sortRow}>
-          <TouchableOpacity
-            style={[styles.sortBtn, sortBy === 'RECENTES' && styles.sortBtnActive]}
-            onPress={() => onChangeSort('RECENTES')}
-          >
-            <Text style={[styles.sortText, sortBy === 'RECENTES' && styles.sortTextActive]}>Recentes</Text>
+      <View style={styles.searchRow}>
+        <Ionicons name="search-outline" size={18} color={theme.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar rua, título ou bairro..."
+          placeholderTextColor={theme.textMuted}
+          value={busca}
+          onChangeText={onChangeBusca}
+          returnKeyType="search"
+        />
+        {busca.length > 0 ? (
+          <TouchableOpacity onPress={() => onChangeBusca('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color={theme.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sortBtn, sortBy === 'MAIS_APOIADOS' && styles.sortBtnActive]}
-            onPress={() => onChangeSort('MAIS_APOIADOS')}
-          >
-            <Text style={[styles.sortText, sortBy === 'MAIS_APOIADOS' && styles.sortTextActive]}>+ Apoios</Text>
-          </TouchableOpacity>
-        </View>
+        ) : null}
       </View>
 
-      <View style={styles.filterButtonsRow}>
-        <View style={styles.filterBtnWrap}>
-          <PickerTriggerButton
-            icon="location-outline"
-            valueLabel={locationLabel}
-            active={Boolean(locationFilter.valor)}
-            onPress={openLocationModal}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsScroll}>
+        <TouchableOpacity
+          style={[styles.chip, Boolean(locationFilter.valor) && styles.chipActive]}
+          onPress={openLocationModal}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="location-outline"
+            size={13}
+            color={locationFilter.valor ? theme.primary : theme.textSecondary}
           />
-        </View>
-        <View style={styles.filterBtnWrap}>
-          <PickerTriggerButton
-            icon="grid-outline"
-            valueLabel={categoriaFiltro === 'TODAS' ? 'Categoria' : getCategoryLabel(categoriaFiltro)}
-            active={categoriaFiltro !== 'TODAS'}
-            onPress={() => setOpenModal('categoria')}
+          <Text style={[styles.chipText, Boolean(locationFilter.valor) && styles.chipTextActive]} numberOfLines={1}>
+            {locationLabel}
+          </Text>
+          <Ionicons
+            name="chevron-down"
+            size={12}
+            color={locationFilter.valor ? theme.primary : theme.textMuted}
           />
-        </View>
-        <View style={styles.filterBtnWrap}>
-          <PickerTriggerButton
-            icon="funnel-outline"
-            valueLabel={statusLabel}
-            active={statusFiltro !== 'TODOS'}
-            onPress={() => setOpenModal('status')}
-          />
-        </View>
-      </View>
-
-      {hasActiveFilters ? (
-        <TouchableOpacity style={styles.clearBtn} onPress={onClearFilters} activeOpacity={0.75}>
-          <Ionicons name="refresh-outline" size={14} color={theme.primary} />
-          <Text style={styles.clearText}>Mostrar todas / Limpar filtros</Text>
         </TouchableOpacity>
-      ) : null}
+
+        <TouchableOpacity
+          style={[styles.chip, categoriaFiltro !== 'TODAS' && styles.chipActive]}
+          onPress={() => setOpenModal('categoria')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="grid-outline"
+            size={13}
+            color={categoriaFiltro !== 'TODAS' ? theme.primary : theme.textSecondary}
+          />
+          <Text style={[styles.chipText, categoriaFiltro !== 'TODAS' && styles.chipTextActive]} numberOfLines={1}>
+            {categoriaFiltro === 'TODAS' ? 'Categoria' : getCategoryLabel(categoriaFiltro)}
+          </Text>
+          <Ionicons
+            name="chevron-down"
+            size={12}
+            color={categoriaFiltro !== 'TODAS' ? theme.primary : theme.textMuted}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.chip, statusFiltro !== 'TODOS' && styles.chipActive]}
+          onPress={() => setOpenModal('status')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="funnel-outline"
+            size={13}
+            color={statusFiltro !== 'TODOS' ? theme.primary : theme.textSecondary}
+          />
+          <Text style={[styles.chipText, statusFiltro !== 'TODOS' && styles.chipTextActive]} numberOfLines={1}>
+            {statusLabel}
+          </Text>
+          <Ionicons
+            name="chevron-down"
+            size={12}
+            color={statusFiltro !== 'TODOS' ? theme.primary : theme.textMuted}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.chip, styles.chipSort, sortBy === 'MAIS_APOIADOS' && styles.chipActive]}
+          onPress={() => onChangeSort(sortBy === 'RECENTES' ? 'MAIS_APOIADOS' : 'RECENTES')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="swap-vertical-outline"
+            size={13}
+            color={sortBy === 'MAIS_APOIADOS' ? theme.primary : theme.textSecondary}
+          />
+          <Text style={[styles.chipText, sortBy === 'MAIS_APOIADOS' && styles.chipTextActive]}>
+            {sortBy === 'RECENTES' ? 'Recentes' : '+ Apoios'}
+          </Text>
+        </TouchableOpacity>
+
+        {hasActiveFilters ? (
+          <TouchableOpacity style={[styles.chip, styles.chipClear]} onPress={onClearFilters} activeOpacity={0.8}>
+            <Ionicons name="close-circle-outline" size={14} color={theme.danger} />
+            <Text style={styles.chipClearText}>Limpar</Text>
+          </TouchableOpacity>
+        ) : null}
+      </ScrollView>
 
       <SelectPickerModal
         visible={openModal === 'categoria'}
@@ -313,19 +355,13 @@ const createStyles = (theme: AppTheme) =>
       fontWeight: fontWeight.bold,
       color: theme.inverseText,
     },
-    searchAndSortRow: {
+    searchRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-    },
-    searchBar: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.xs + 2,
       paddingHorizontal: spacing.sm + 4,
-      height: 42,
-      borderRadius: borderRadius.md,
+      height: 44,
+      borderRadius: borderRadius.card,
       backgroundColor: theme.cardSubtle,
       borderWidth: 1,
       borderColor: theme.border,
@@ -335,48 +371,45 @@ const createStyles = (theme: AppTheme) =>
       fontSize: fontSize.bodySmall,
       color: theme.text,
     },
-    sortRow: {
+    chipsScroll: {
       flexDirection: 'row',
+      gap: spacing.xs + 3,
+      paddingVertical: 2,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: spacing.sm + 4,
+      paddingVertical: spacing.xs + 3,
+      borderRadius: borderRadius.full,
       backgroundColor: theme.cardSubtle,
-      borderRadius: borderRadius.md,
       borderWidth: 1,
       borderColor: theme.border,
-      padding: 3,
     },
-    sortBtn: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 6,
-      borderRadius: borderRadius.sm,
+    chipActive: {
+      backgroundColor: theme.primaryLight,
+      borderColor: theme.primaryBorder,
     },
-    sortBtnActive: {
-      backgroundColor: theme.surface,
-    },
-    sortText: {
+    chipText: {
       fontSize: fontSize.caption,
       fontWeight: fontWeight.semibold,
       color: theme.textSecondary,
     },
-    sortTextActive: {
+    chipTextActive: {
       color: theme.primary,
       fontWeight: fontWeight.bold,
     },
-    filterButtonsRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: spacing.xs + 2,
+    chipSort: {
+      backgroundColor: theme.surface,
     },
-    filterBtnWrap: {
-      flexGrow: 1,
+    chipClear: {
+      backgroundColor: theme.dangerBg,
+      borderColor: theme.dangerBorder,
     },
-    clearBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      alignSelf: 'flex-end',
-    },
-    clearText: {
+    chipClearText: {
       fontSize: fontSize.caption,
       fontWeight: fontWeight.bold,
-      color: theme.primary,
+      color: theme.danger,
     },
   });
