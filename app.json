@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F8FAFC",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#064E3B"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "br.com.fiap.zelafix"
@@ -45,7 +40,17 @@
         }
       ],
       "expo-secure-store",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#064E3B",
+          "imageWidth": 200
+        }
+      ]
     ],
     "extra": {
       "eas": {
