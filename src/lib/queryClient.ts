@@ -19,16 +19,33 @@ export function bindReactNativeQueryLifecycle(): () => void {
     focusManager.setFocused(status === 'active');
   });
 
+  let activeSubscription: { remove: () => void } | null = null;
+
+  const removeNetworkListener = () => {
+    if (activeSubscription) {
+      activeSubscription.remove();
+      activeSubscription = null;
+    }
+  };
+
   onlineManager.setEventListener((setOnline) => {
+    removeNetworkListener();
     const subscription = Network.addNetworkStateListener((state) => {
       const reachable = state.isConnected === true && state.isInternetReachable !== false;
       setOnline(reachable);
     });
-    return () => subscription.remove();
+    activeSubscription = subscription;
+    return () => {
+      if (activeSubscription === subscription) {
+        removeNetworkListener();
+      }
+    };
   });
 
   return () => {
     appStateSub.remove();
+    removeNetworkListener();
+    onlineManager.setEventListener(() => undefined);
   };
 }
 

@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useInfiniteChamadosList } from '@/hooks/useChamados';
+import { useChamadosList, useInfiniteChamadosList } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useDebounce } from '@/hooks/useDebounce';
 import { CATEGORIA_CATALOG } from '@/theme/semanticConfig';
-import type { LocationFilterLevel, RadarLocationFilter, RadarSortOption, StatusFiltro } from '@/types/filters';
+import type {
+  LocationFilterLevel,
+  RadarLocationFilter,
+  RadarSortOption,
+  StatusFiltro,
+} from '@/types/filters';
 
 function uniqueSorted(values: (string | undefined | null)[]): string[] {
   const map = new Map<string, string>();
@@ -17,13 +22,11 @@ function uniqueSorted(values: (string | undefined | null)[]): string[] {
   return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
 }
 
-export function useRadarData(
-  routeCategoria: string | undefined,
-  onChangeRouteCategoria: (categoria?: string) => void
-) {
+export function useRadarData(initialCategoria?: string) {
   const { usuario } = useAuth();
   const userCity = usuario?.endereco?.cidade?.trim() ?? '';
 
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>(initialCategoria || 'TODAS');
   const [statusFiltro, setStatusFiltro] = useState<StatusFiltro>('TODOS');
   const [busca, setBusca] = useState('');
   const [sortBy, setSortBy] = useState<RadarSortOption>('RECENTES');
@@ -32,16 +35,23 @@ export function useRadarData(
     valor: null,
   });
 
-  const categoriaFiltro = routeCategoria || 'TODAS';
+  const prevInitialCategoriaRef = useRef(initialCategoria);
+  useEffect(() => {
+    if (initialCategoria !== prevInitialCategoriaRef.current) {
+      prevInitialCategoriaRef.current = initialCategoria;
+      setCategoriaFiltro(initialCategoria || 'TODAS');
+    }
+  }, [initialCategoria]);
+
   const trimmedBusca = busca.trim();
   const debouncedBusca = useDebounce(trimmedBusca, 350);
   const buscaEfetiva = trimmedBusca === '' ? '' : debouncedBusca;
   const locationValue = locationFilter.valor?.trim() || undefined;
 
-  const setCategoriaFiltro = (categoria: string) => {
-    onChangeRouteCategoria(categoria === 'TODAS' ? undefined : categoria);
-  };
-
+  // Nota de API (`ChamadoController.findAll` / `Chamado.java`): o endpoint `/chamados` suporta ordenação
+  // apenas por colunas da entidade `Chamado` (ex.: `dtAbertura`), não por `totalVotos` (calculado via
+  // `VotoChamadoRepository` no serviço). Por isso mantemos `sort: 'dtAbertura,desc'` na API e aplicamos
+  // ordenação estável por votos nos itens carregados quando `MAIS_APOIADOS` está selecionado.
   const listQuery = useInfiniteChamadosList({
     status: statusFiltro === 'TODOS' ? undefined : statusFiltro,
     categoria: categoriaFiltro === 'TODAS' ? undefined : categoriaFiltro,
@@ -52,24 +62,53 @@ export function useRadarData(
     size: 10,
     sort: 'dtAbertura,desc',
   });
-  const { apoiarChamado } = useChamadoMutations();
+  // Fonte não filtrada em cache para manter opções de cidade/bairro/estado estáveis após selecionar um filtro.
+  const locationSeedQuery = useChamadosList({ page: 0, size: 50, sort: 'dtAbertura,desc' });
+  const { apoiarChamado, isSupportingId } = useChamadoMutations();
 
   const items = listQuery.chamados;
-  const locationOptions: Record<LocationFilterLevel, string[]> = {
-    CIDADE: uniqueSorted([usuario?.endereco?.cidade, ...items.map((c) => c.endereco.cidade)]),
-    BAIRRO: uniqueSorted([usuario?.endereco?.bairro, ...items.map((c) => c.endereco.bairro)]),
-    ESTADO: uniqueSorted([usuario?.endereco?.estado, ...items.map((c) => c.endereco.estado)]),
-  };
+  const locationSourceItems = locationSeedQuery.chamados;
 
-  const chamados = sortBy === 'MAIS_APOIADOS'
-    ? [...items].sort((a, b) => b.totalVotos - a.totalVotos)
-    : items;
+  const locationOptions: Record<LocationFilterLevel, string[]> = useMemo(
+    () => ({
+      CIDADE: uniqueSorted([
+        usuario?.endereco?.cidade,
+        ...locationSourceItems.map((c) => c.endereco.cidade),
+        ...items.map((c) => c.endereco.cidade),
+      ]),
+      BAIRRO: uniqueSorted([
+        usuario?.endereco?.bairro,
+        ...locationSourceItems.map((c) => c.endereco.bairro),
+        ...items.map((c) => c.endereco.bairro),
+      ]),
+      ESTADO: uniqueSorted([
+        usuario?.endereco?.estado,
+        ...locationSourceItems.map((c) => c.endereco.estado),
+        ...items.map((c) => c.endereco.estado),
+      ]),
+    }),
+    [
+      items,
+      locationSourceItems,
+      usuario?.endereco?.bairro,
+      usuario?.endereco?.cidade,
+      usuario?.endereco?.estado,
+    ]
+  );
 
-  const loadMore = () => {
+  const chamados = useMemo(
+    () =>
+      sortBy === 'MAIS_APOIADOS'
+        ? [...items].sort((a, b) => b.totalVotos - a.totalVotos || b.idChamado - a.idChamado)
+        : items,
+    [items, sortBy]
+  );
+
+  const loadMore = useCallback(() => {
     if (listQuery.hasNextPage && !listQuery.isFetchingNextPage) {
       void listQuery.fetchNextPage();
     }
-  };
+  }, [listQuery]);
 
   const isUsingCustomLocation =
     locationFilter.nivel !== 'CIDADE' || locationFilter.valor !== null;
@@ -80,12 +119,12 @@ export function useRadarData(
     trimmedBusca.length > 0 ||
     isUsingCustomLocation;
 
-  const limparFiltros = () => {
+  const limparFiltros = useCallback(() => {
     setStatusFiltro('TODOS');
-    onChangeRouteCategoria(undefined);
+    setCategoriaFiltro('TODAS');
     setBusca('');
     setLocationFilter({ nivel: 'CIDADE', valor: null });
-  };
+  }, []);
 
   return {
     chamados,
@@ -113,5 +152,6 @@ export function useRadarData(
     error: listQuery.error,
     refetch: listQuery.refetch,
     apoiarChamado,
+    isSupportingId,
   };
 }

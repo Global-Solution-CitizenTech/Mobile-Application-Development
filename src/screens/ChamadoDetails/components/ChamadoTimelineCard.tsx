@@ -1,14 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { formatTimelineObservation, getStatusVisuals } from '@/theme/semanticConfig';
-import type { HistoricoChamado } from '@/types/chamado';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ChamadoTimelineCardProps } from '@/types/ui';
 import { formatDate } from '@/utils/formatters';
-
-interface ChamadoTimelineCardProps {
-  historico: HistoricoChamado[];
-}
+import { shadows } from '@/utils/shadow';
 
 export const ChamadoTimelineCard = ({ historico }: ChamadoTimelineCardProps) => {
   const { theme } = useTheme();
@@ -37,7 +35,9 @@ export const ChamadoTimelineCard = ({ historico }: ChamadoTimelineCardProps) => 
                     <Text style={[styles.statusLabel, { color: visuals.text }]}>{visuals.label}</Text>
                     <Text style={styles.date}>{formatDate(item.data)}</Text>
                   </View>
-                  {item.observacao ? <Text style={styles.obs}>{formatTimelineObservation(item.observacao)}</Text> : null}
+                  {item.observacao ? (
+                    <Text style={styles.obs}>{formatTimelineObservation(item.observacao)}</Text>
+                  ) : null}
                   {item.autorNome ? <Text style={styles.autor}>Por {item.autorNome}</Text> : null}
                 </View>
               </View>
@@ -68,7 +68,12 @@ const createStyles = (theme: AppTheme) =>
     dot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
     line: { flex: 1, width: 2, backgroundColor: theme.border, marginTop: 4, minHeight: 24 },
     content: { flex: 1, paddingBottom: spacing.md, gap: 3 },
-    itemHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+    itemHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.sm,
+    },
     statusLabel: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold },
     date: { fontSize: fontSize.tiny + 1, color: theme.textMuted },
     obs: { fontSize: fontSize.bodySmall, color: theme.textSecondary, lineHeight: 19 },

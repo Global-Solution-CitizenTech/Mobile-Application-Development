@@ -1,5 +1,3 @@
-import { shadows } from '@/utils/shadow';
-
 export const spacing = {
   none: 0,
   xxs: 2,
@@ -24,5 +22,3 @@ export const borderRadius = {
   cardLg: 24,
   full: 9999,
 };
-
-export { shadows };

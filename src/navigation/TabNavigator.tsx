@@ -3,13 +3,13 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
-import type { AppTabParamList } from '@/navigation/types';
 import { HomeScreen } from '@/screens/Home/HomeScreen';
 import { MeusChamadosScreen } from '@/screens/MeusChamados/MeusChamadosScreen';
 import { ProfileScreen } from '@/screens/Profile/ProfileScreen';
 import { RadarBairroScreen } from '@/screens/RadarBairro/RadarBairroScreen';
 import { ZelaBotScreen } from '@/screens/ZelaBot/ZelaBotScreen';
-import { fontSize, fontWeight } from '@/theme';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTabParamList } from '@/types/navigation';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 

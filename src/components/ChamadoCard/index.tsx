@@ -1,23 +1,24 @@
 import { useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CategoryBadge } from '@/components/CategoryBadge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
-import type { Chamado } from '@/types/chamado';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ChamadoCardProps } from '@/types/ui';
 import { formatShortDate, getShortEndereco } from '@/utils/formatters';
 import { canSupportChamado } from '@/utils/permissions';
+import { shadows } from '@/utils/shadow';
 
-interface ChamadoCardProps {
-  chamado: Chamado;
-  onPress: () => void;
-  onApoiar?: () => void;
-}
-
-export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) => {
+export const ChamadoCard = ({
+  chamado,
+  onPress,
+  onApoiar,
+  isSupporting = false,
+}: ChamadoCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
@@ -69,19 +70,33 @@ export const ChamadoCard = ({ chamado, onPress, onApoiar }: ChamadoCardProps) =>
           <Text style={styles.dateText}>{formatShortDate(chamado.dtAbertura)}</Text>
           {podeApoiar ? (
             <TouchableOpacity
-              style={[styles.voteBtn, chamado.apoiadoPorMim && styles.voteBtnActive]}
+              style={[
+                styles.voteBtn,
+                chamado.apoiadoPorMim && styles.voteBtnActive,
+                isSupporting && styles.voteBtnPending,
+              ]}
               onPress={(event) => {
                 event.stopPropagation();
                 onApoiar?.();
               }}
+              disabled={isSupporting}
               activeOpacity={0.75}
               hitSlop={6}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isSupporting, busy: isSupporting }}
             >
-              <Ionicons
-                name={chamado.apoiadoPorMim ? 'thumbs-up' : 'thumbs-up-outline'}
-                size={13}
-                color={chamado.apoiadoPorMim ? theme.primary : theme.textSecondary}
-              />
+              {isSupporting ? (
+                <ActivityIndicator
+                  size="small"
+                  color={chamado.apoiadoPorMim ? theme.primary : theme.textSecondary}
+                />
+              ) : (
+                <Ionicons
+                  name={chamado.apoiadoPorMim ? 'thumbs-up' : 'thumbs-up-outline'}
+                  size={13}
+                  color={chamado.apoiadoPorMim ? theme.primary : theme.textSecondary}
+                />
+              )}
               <Text style={[styles.voteText, chamado.apoiadoPorMim && styles.voteTextActive]}>
                 {chamado.totalVotos}
               </Text>
@@ -150,6 +165,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.border,
     },
     voteBtnActive: { backgroundColor: theme.primaryLight, borderColor: theme.primary },
+    voteBtnPending: { opacity: 0.7 },
     voteText: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.textSecondary },
     voteTextActive: { color: theme.primary },
     voteTextMuted: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.textMuted },

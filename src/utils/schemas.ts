@@ -2,9 +2,22 @@ import { z } from 'zod';
 import { CATEGORIA_CATALOG } from '../theme/semanticConfig.ts';
 import type { StatusChamado } from '../types/categoria.ts';
 import type { FotoUpload } from '../types/chamado.ts';
+import type { FormErrors } from '../types/form.ts';
 import { onlyDigits, splitPhoneDigits } from './formatters.ts';
 
-export type FormErrors<T> = Partial<Record<keyof T, string>>;
+function setFieldError<T extends Record<string, unknown>>(
+  target: FormErrors<T>,
+  key: string,
+  message: string
+): void {
+  if (key === '__proto__' || key === 'constructor' || key === 'prototype') return;
+  Object.defineProperty(target, key, {
+    value: message,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  });
+}
 
 /**
  * Converte erros de validação do Zod em um mapa plano campo -> primeira mensagem
@@ -17,7 +30,7 @@ export function extractFieldErrors<T extends Record<string, unknown>>(error: z.Z
   for (const [key, messages] of Object.entries(fieldErrors)) {
     const first = messages?.[0];
     if (first) {
-      result[key as keyof T] = first;
+      setFieldError(result, key, first);
     }
   }
 
@@ -80,6 +93,19 @@ const enderecoFields = {
   referencia: z.string().trim().min(1, 'Informe um ponto de referência').max(50, 'Máximo de 50 caracteres'),
 };
 
+function isValidFotoUpload(val: unknown): val is FotoUpload {
+  if (!val || typeof val !== 'object') return false;
+  if (!('uri' in val) || !('name' in val) || !('type' in val)) return false;
+  return (
+    typeof val.uri === 'string' &&
+    val.uri.trim().length > 0 &&
+    typeof val.name === 'string' &&
+    val.name.trim().length > 0 &&
+    typeof val.type === 'string' &&
+    val.type.trim().toLowerCase().startsWith('image/')
+  );
+}
+
 export const LoginSchema = z.object({
   email: emailField,
   senha: z.string().min(1, 'Informe sua senha'),
@@ -119,27 +145,12 @@ export const ChamadoFormSchema = z.object({
 
 export const ChamadoCreateSchema = z.object({
   ...enderecoFields,
-  foto: z.custom<FotoUpload>(
-    (val) =>
-      Boolean(
-        val &&
-          typeof val === 'object' &&
-          'uri' in val &&
-          typeof val.uri === 'string' &&
-          val.uri.trim().length > 0
-      ),
-    { message: 'Envie uma foto da ocorrência' }
-  ),
+  foto: z.custom<FotoUpload>(isValidFotoUpload, {
+    message: 'Envie uma foto da ocorrência',
+  }),
 });
 
 export const StatusUpdateSchema = z.object({
   status: z.enum(STATUS_CHAMADO_VALUES),
   observacao: z.string().trim().min(1, 'Informe uma observação ou parecer').max(255, 'Máximo de 255 caracteres'),
 });
-
-export type LoginFormData = z.infer<typeof LoginSchema>;
-export type RegisterFormData = z.infer<typeof RegisterSchema>;
-export type ProfileEditFormData = z.infer<typeof ProfileEditSchema>;
-export type ChamadoFormData = z.infer<typeof ChamadoFormSchema>;
-export type ChamadoCreateFormData = z.infer<typeof ChamadoCreateSchema>;
-export type StatusUpdateFormData = z.infer<typeof StatusUpdateSchema>;

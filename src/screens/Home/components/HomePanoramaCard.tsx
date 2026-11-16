@@ -2,18 +2,16 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StatCard } from '@/components/StatCard';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { EstatisticasChamados } from '@/types/chamado';
-
-interface HomePanoramaCardProps {
-  estatisticas: EstatisticasChamados;
-  taxaResolucao: number;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { HomePanoramaCardProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const HomePanoramaCard = ({ estatisticas, taxaResolucao }: HomePanoramaCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const clampedProgress = Math.max(0, Math.min(100, taxaResolucao));
 
   return (
     <View style={styles.card}>
@@ -35,20 +33,40 @@ export const HomePanoramaCard = ({ estatisticas, taxaResolucao }: HomePanoramaCa
 
       <View style={styles.progressContainer}>
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.max(4, Math.min(100, taxaResolucao))}%` }]} />
+          <View style={[styles.progressFill, { width: `${clampedProgress}%` }]} />
         </View>
       </View>
 
       <View style={styles.grid}>
-        <StatCard label="Total" value={estatisticas.total} icon="layers-outline" color={theme.primary} bgColor={theme.primaryLight} />
-        <StatCard label="Em Andamento" value={estatisticas.emAndamento} icon="construct-outline" color={theme.warning} bgColor={theme.warningBg} />
-        <StatCard label="Resolvidos" value={estatisticas.resolvidos} icon="checkmark-circle-outline" color={theme.success} bgColor={theme.successBg}  />
+        <StatCard
+          label="Total"
+          value={estatisticas.total}
+          icon="layers-outline"
+          color={theme.primary}
+          bgColor={theme.primaryLight}
+        />
+        <StatCard
+          label="Em Andamento"
+          value={estatisticas.emAndamento}
+          icon="construct-outline"
+          color={theme.warning}
+          bgColor={theme.warningBg}
+        />
+        <StatCard
+          label="Resolvidos"
+          value={estatisticas.resolvidos}
+          icon="checkmark-circle-outline"
+          color={theme.success}
+          bgColor={theme.successBg}
+        />
       </View>
 
       <View style={styles.footerRow}>
         <Ionicons name="thumbs-up-outline" size={13} color={theme.textMuted} />
         <Text style={styles.footerText}>
-          {estatisticas.totalApoios} {estatisticas.totalApoios === 1 ? 'apoio comunitário' : 'apoios comunitários'} • {estatisticas.abertos} em triagem inicial
+          {estatisticas.totalApoios}{' '}
+          {estatisticas.totalApoios === 1 ? 'apoio comunitário' : 'apoios comunitários'} •{' '}
+          {estatisticas.abertos} em triagem inicial
         </Text>
       </View>
     </View>

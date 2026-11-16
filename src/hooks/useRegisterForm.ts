@@ -1,7 +1,8 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedback } from '@/contexts/FeedbackContext';
-import { useLocalizacao } from '@/hooks/useLocalizacao';
+import { formatLocalizacaoResumo, useLocalizacao } from '@/hooks/useLocalizacao';
 import { useZodForm } from '@/hooks/useZodForm';
 import { buildUsuarioRequest } from '@/services/authService';
 import type { UsuarioRequest } from '@/types/auth';
@@ -27,15 +28,24 @@ export function useRegisterForm() {
   const { showError } = useFeedback();
   const form = useZodForm(RegisterSchema, INITIAL_REGISTER);
   const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao } = useLocalizacao();
+  const mountedRef = useRef(true);
+  const submittingRef = useRef(false);
 
-  const handleUsarGps = async () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const handleUsarGps = useCallback(async () => {
     const loc = await capturarLocalizacao();
-    if (!loc) return;
+    if (!loc || !mountedRef.current) return;
     if (loc.cep) form.setFieldValue('cep', maskCepInput(loc.cep));
     if (loc.rua) form.setFieldValue('rua', loc.rua);
     if (loc.numero) form.setFieldValue('numero', loc.numero);
     if (loc.referencia) form.setFieldValue('referencia', loc.referencia);
-  };
+  }, [capturarLocalizacao, form]);
 
   const registerMutation = useMutation({
     mutationFn: (payload: UsuarioRequest) => signUp(payload),
@@ -45,13 +55,18 @@ export function useRegisterForm() {
         getApiErrorMessage(error, 'Não foi possível concluir o cadastro.')
       );
     },
+    onSettled: () => {
+      submittingRef.current = false;
+    },
   });
 
-  const handleRegister = () => {
+  const handleRegister = useCallback(() => {
+    if (submittingRef.current || registerMutation.isPending) return;
     const parsed = form.validate();
     if (!parsed) return;
+    submittingRef.current = true;
     registerMutation.mutate(buildUsuarioRequest(parsed));
-  };
+  }, [form, registerMutation]);
 
   return {
     ...form,
@@ -59,6 +74,7 @@ export function useRegisterForm() {
     capturandoGps,
     erroGps,
     localizacaoPreview: ultimaLocalizacao,
+    localizacaoResumo: formatLocalizacaoResumo(ultimaLocalizacao),
     onUsarGps: handleUsarGps,
     handleRegister,
   };

@@ -1,77 +1,96 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { type NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import { Button } from '@/components/Button';
+import { CategoryGridSelector } from '@/components/CategoryGridSelector';
 import { ChamadoFormFields } from '@/components/ChamadoFormFields';
 import { EmptyState } from '@/components/EmptyState';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { Header } from '@/components/Header';
+import { KeyboardScreenLayout } from '@/components/KeyboardScreenLayout';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { useChamadoForm } from '@/hooks/useChamadoForm';
-import type { AppStackParamList } from '@/navigation/types';
-import { CategoryGridSelector } from '@/components/CategoryGridSelector';
-import { spacing } from '@/theme';
+import { useEditarChamadoForm } from '@/hooks/useEditarChamadoForm';
+import { spacing } from '@/theme/spacing';
+import type { AppStackScreenProps } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'EditarChamado'>;
-
-export const EditarChamadoScreen = ({ navigation, route }: Props) => {
+export const EditarChamadoScreen = ({ navigation, route }: AppStackScreenProps<'EditarChamado'>) => {
   const styles = useThemedStyles(createStyles);
-  const insets = useSafeAreaInsets();
-  const { id } = route.params;
-  const form = useChamadoForm({ mode: 'edit', chamadoId: id });
+  const chamadoId = route.params?.id ?? Number.NaN;
+  const hasValidId = Number.isInteger(chamadoId) && chamadoId > 0;
+  const form = useEditarChamadoForm(chamadoId);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs', { screen: 'MeusChamadosTab' });
+    }
+  };
+
+  const showForm = !form.loadingChamado && !form.loadError && hasValidId;
+
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <Header title={`Editar Chamado #${id}`} subtitle="Atualize título, descrição ou endereço" showBack onBack={() => navigation.goBack()} />
-
-      {form.loadingChamado ? (
-        <LoadingSpinner message="Carregando dados da ocorrência..." />
-      ) : form.loadError ? (
-        <EmptyState icon="alert-circle-outline" title="Erro ao carregar" description={form.loadError} actionTitle="Voltar" onAction={() => navigation.goBack()} />
-      ) : (
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
-              paddingBottom: Math.max(insets.bottom, spacing.xl) + spacing.lg,
-              paddingLeft: Math.max(insets.left, spacing.md),
-              paddingRight: Math.max(insets.right, spacing.md),
-            },
-          ]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <CategoryGridSelector
-            categorias={form.categorias}
-            selectedCategoriaId={form.values.categoriaId}
-            onSelectCategoriaId={(catId) => form.setFieldValue('categoriaId', catId)}
-            error={form.errors.categoriaId}
+    <>
+      <KeyboardScreenLayout
+        scrollable={showForm}
+        header={
+          <Header
+            title={hasValidId ? `Editar Chamado #${chamadoId}` : 'Editar Chamado'}
+            subtitle="Atualize título, descrição ou endereço"
+            showBack
+            onBack={handleGoBack}
           />
-
-          <ChamadoFormFields
-            field={form.field}
-            onUsarGps={() => {
-              void form.handleUsarGps();
-            }}
-            capturandoGps={form.capturandoGps}
-            erroGps={form.erroGps}
+        }
+      >
+        {form.loadingChamado ? (
+          <LoadingSpinner message="Carregando dados da ocorrência..." />
+        ) : form.loadError || !hasValidId ? (
+          <EmptyState
+            icon="alert-circle-outline"
+            title="Erro ao carregar"
+            description={form.loadError ?? 'ID de chamado inválido.'}
+            actionTitle="Voltar"
+            onAction={handleGoBack}
           />
-
-          <View style={styles.actions}>
-            <Button title="Cancelar" variant="outline" onPress={() => navigation.goBack()} style={styles.btn} disabled={form.submitting} />
-            <Button
-              title="Salvar Alterações"
-              loading={form.submitting}
-              onPress={() => form.submit(() => setSavedSuccess(true))}
-              style={styles.btn}
+        ) : (
+          <>
+            <CategoryGridSelector
+              categorias={form.categorias}
+              selectedCategoriaId={form.values.categoriaId}
+              onSelectCategoriaId={(catId) => form.setFieldValue('categoriaId', catId)}
+              error={form.errors.categoriaId}
             />
-          </View>
-        </ScrollView>
-      )}
+
+            <ChamadoFormFields
+              field={form.field}
+              onUsarGps={() => {
+                void form.handleUsarGps();
+              }}
+              capturandoGps={form.capturandoGps}
+              erroGps={form.erroGps}
+              localizacaoResumo={form.localizacaoResumo}
+            />
+
+            <View style={styles.actions}>
+              <Button
+                title="Cancelar"
+                variant="outline"
+                onPress={handleGoBack}
+                style={styles.btn}
+                disabled={form.submitting}
+              />
+              <Button
+                title="Salvar Alterações"
+                loading={form.submitting}
+                onPress={() => form.submit(() => setSavedSuccess(true))}
+                style={styles.btn}
+              />
+            </View>
+          </>
+        )}
+      </KeyboardScreenLayout>
 
       <FeedbackModal
         visible={savedSuccess}
@@ -80,17 +99,15 @@ export const EditarChamadoScreen = ({ navigation, route }: Props) => {
         message="As alterações foram salvas na API com sucesso."
         onConfirm={() => {
           setSavedSuccess(false);
-          navigation.goBack();
+          handleGoBack();
         }}
       />
-    </KeyboardAvoidingView>
+    </>
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (_theme: AppTheme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
-    scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.md },
     actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
     btn: { flex: 1 },
   });

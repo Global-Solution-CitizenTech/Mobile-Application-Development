@@ -2,18 +2,17 @@ import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
-import type { AiInsightItem } from '@/types/ai';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ZelaBotInsightsBannerProps } from '@/types/ui';
 
-interface ZelaBotInsightsBannerProps {
-  bairro?: string;
-  insights: AiInsightItem[];
-  loading: boolean;
-}
-
-export const ZelaBotInsightsBanner = ({ bairro, insights, loading }: ZelaBotInsightsBannerProps) => {
+export const ZelaBotInsightsBanner = ({
+  bairro,
+  insights,
+  loading,
+}: ZelaBotInsightsBannerProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [expanded, setExpanded] = useState(false);

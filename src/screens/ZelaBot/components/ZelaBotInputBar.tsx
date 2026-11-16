@@ -3,16 +3,10 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-
-interface ZelaBotInputBarProps {
-  value: string;
-  onChangeText: (text: string) => void;
-  onSend: (customText?: string) => void;
-  sugestoes: string[];
-  disabled: boolean;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ZelaBotInputBarProps } from '@/types/ui';
 
 export const ZelaBotInputBar = ({
   value,
@@ -90,8 +84,11 @@ export const ZelaBotInputBar = ({
           editable={!disabled}
           maxLength={600}
           multiline
+          submitBehavior="submit"
           returnKeyType="send"
-          onSubmitEditing={() => canSend && onSend()}
+          onSubmitEditing={() => {
+            if (canSend) onSend();
+          }}
         />
         <TouchableOpacity
           style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}

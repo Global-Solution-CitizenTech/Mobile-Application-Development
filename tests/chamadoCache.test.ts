@@ -10,7 +10,34 @@ function makeChamado(
   apoiadoPorMim: boolean,
   totalVotos: number
 ): Chamado {
-  return { idChamado, apoiadoPorMim, totalVotos } as unknown as Chamado;
+  return {
+    idChamado,
+    titulo: `Chamado #${idChamado}`,
+    descricao: 'Descrição padrão para teste de cache.',
+    dtAbertura: '2026-11-14T10:00:00Z',
+    categoriaId: 1,
+    categoriaNome: 'ILUMINACAO_PUBLICA',
+    prioridadeId: 2,
+    prioridadeNome: 'MEDIA',
+    orgaoId: 1,
+    orgaoNome: 'ILUMINACAO_PUBLICA',
+    usuarioId: 1,
+    usuarioNome: 'Enzo',
+    endereco: {
+      id: 1,
+      cep: '01310100',
+      numero: '100',
+      rua: 'Avenida Paulista',
+      referencia: 'Esquina',
+      bairro: 'Bela Vista',
+      cidade: 'São Paulo',
+      estado: 'SP',
+    },
+    status: 'EM_ANALISE',
+    totalVotos,
+    apoiadoPorMim,
+    historico: [],
+  };
 }
 
 function makePage(items: Chamado[]): SpringPageResponse<Chamado> {
@@ -38,7 +65,8 @@ describe('chamadoCache', () => {
 
   it('patches SpringPageResponse caches (MeusChamados / Home)', () => {
     const page = makePage([makeChamado(10, false, 4), makeChamado(11, true, 1)]);
-    const updated = patchApoioInCache(page, 10) as SpringPageResponse<Chamado>;
+    const updated = patchApoioInCache(page, 10);
+    assert.ok(updated && 'content' in updated);
 
     assert.equal(updated.content[0]?.apoiadoPorMim, true);
     assert.equal(updated.content[0]?.totalVotos, 5);
@@ -55,9 +83,8 @@ describe('chamadoCache', () => {
       pageParams: [0, 1],
     };
 
-    const updated = patchApoioInCache(infinite, 2) as InfiniteData<
-      SpringPageResponse<Chamado>
-    >;
+    const updated = patchApoioInCache(infinite, 2);
+    assert.ok(updated && 'pages' in updated);
 
     assert.equal(updated.pages[0]?.content[0]?.totalVotos, 0);
     assert.equal(updated.pages[1]?.content[0]?.apoiadoPorMim, false);

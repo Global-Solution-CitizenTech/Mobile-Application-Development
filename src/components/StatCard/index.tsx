@@ -1,18 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme, IoniconName } from '@/theme/types';
-import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
-
-interface StatCardProps {
-  label: string;
-  value: number | string;
-  icon: IoniconName;
-  color?: string;
-  bgColor?: string;
-  style?: StyleProp<ViewStyle>;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { StatCardProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const StatCard = ({
   label,

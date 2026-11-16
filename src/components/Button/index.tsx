@@ -1,21 +1,10 @@
-import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import type { StyleProp, TextStyle, TouchableOpacityProps, ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-import type { ButtonSize, ButtonVariant } from '@/types/ui';
-
-export interface ButtonProps extends TouchableOpacityProps {
-  title: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  loading?: boolean;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
-  style?: StyleProp<ViewStyle>;
-  textStyle?: StyleProp<TextStyle>;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ButtonProps, ButtonSize, ButtonVariant } from '@/types/ui';
 
 const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; fontSize: number }> = {
   sm: {
@@ -32,13 +21,10 @@ const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; fontSize: number }
   },
 };
 
-interface VariantPalette {
-  bg: string;
-  text: string;
-  borderColor?: string;
-}
-
-function getVariantPalette(variant: ButtonVariant, theme: AppTheme): VariantPalette {
+function getVariantPalette(
+  variant: ButtonVariant,
+  theme: AppTheme,
+): { bg: string; text: string; borderColor?: string } {
   switch (variant) {
     case 'primary':
       return { bg: theme.primary, text: theme.inverseText };

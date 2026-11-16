@@ -1,16 +1,20 @@
-import { RefreshControl, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
+import { EmptyState } from '@/components/EmptyState';
 import { FeedbackModal } from '@/components/FeedbackModal';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useProfileData } from '@/hooks/useProfileData';
-import type { ProfileTabNavigationProp } from '@/navigation/types';
+import { ProfileMenuCard } from '@/screens/Profile/components/ProfileMenuCard';
 import { ProfileStatsCard } from '@/screens/Profile/components/ProfileStatsCard';
 import { ProfileUserCard } from '@/screens/Profile/components/ProfileUserCard';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
+import { spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { ProfileTabNavigationProp } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
 
 export const ProfileScreen = () => {
   const navigation = useNavigation<ProfileTabNavigationProp>();
@@ -31,7 +35,25 @@ export const ProfileScreen = () => {
     signOut,
   } = useProfileData();
 
-  if (!usuario) return null;
+  if (!usuario) {
+    return (
+      <View style={styles.fallbackContainer}>
+        {statsLoading ? (
+          <LoadingSpinner fullScreen message="Carregando perfil..." />
+        ) : (
+          <EmptyState
+            icon="person-outline"
+            title="Perfil indisponível"
+            description="Não foi possível carregar os dados da sua conta no momento."
+            actionTitle="Tentar novamente"
+            onAction={() => {
+              void handleRefreshProfile();
+            }}
+          />
+        )}
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -68,45 +90,13 @@ export const ProfileScreen = () => {
         onPressVerChamados={() => navigation.navigate('MeusChamadosTab')}
       />
 
-      <View style={styles.sectionCard}>
-        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('EditarPerfil')} activeOpacity={0.75}>
-          <View style={styles.menuLeft}>
-            <Ionicons name="create-outline" size={20} color={theme.primary} />
-            <Text style={styles.menuText}>Editar Meus Dados</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <View style={styles.menuRow}>
-          <View style={styles.menuLeft}>
-            <Ionicons name={isDark ? 'moon' : 'sunny-outline'} size={20} color={theme.primary} />
-            <Text style={styles.menuText}>Modo Escuro</Text>
-          </View>
-          <Switch value={isDark} onValueChange={toggleTheme} trackColor={{ true: theme.primary }} />
-        </View>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('ZelaBotTab')} activeOpacity={0.75}>
-          <View style={styles.menuLeft}>
-            <Ionicons name="sparkles-outline" size={20} color={theme.primary} />
-            <Text style={styles.menuText}>ZelaBot IA</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity style={styles.menuRow} onPress={() => navigation.navigate('SobreApp')} activeOpacity={0.75}>
-          <View style={styles.menuLeft}>
-            <Ionicons name="information-circle-outline" size={20} color={theme.primary} />
-            <Text style={styles.menuText}>Sobre o Aplicativo</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
-        </TouchableOpacity>
-      </View>
+      <ProfileMenuCard
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
+        onPressEditarPerfil={() => navigation.navigate('EditarPerfil')}
+        onPressZelaBot={() => navigation.navigate('ZelaBotTab')}
+        onPressSobreApp={() => navigation.navigate('SobreApp')}
+      />
 
       <Button
         title="Sair da Conta"
@@ -134,24 +124,22 @@ export const ProfileScreen = () => {
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
-    content: { paddingBottom: spacing.xxxl, gap: spacing.lg - 4 },
-    screenTitle: { fontSize: fontSize.heading, fontWeight: fontWeight.extrabold, color: theme.text },
-    sectionCard: {
-      backgroundColor: theme.surface,
-      borderRadius: borderRadius.cardLg,
-      borderWidth: 1,
-      borderColor: theme.border,
-      overflow: 'hidden',
+    container: {
+      flex: 1,
+      backgroundColor: theme.background,
     },
-    menuRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.md + 2,
+    fallbackContainer: {
+      flex: 1,
+      backgroundColor: theme.background,
+      justifyContent: 'center',
     },
-    menuLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 4 },
-    menuText: { fontSize: fontSize.body, fontWeight: fontWeight.semibold, color: theme.text },
-    divider: { height: 1, backgroundColor: theme.border },
+    content: {
+      paddingBottom: spacing.xxxl,
+      gap: spacing.lg - 4,
+    },
+    screenTitle: {
+      fontSize: fontSize.heading,
+      fontWeight: fontWeight.extrabold,
+      color: theme.text,
+    },
   });

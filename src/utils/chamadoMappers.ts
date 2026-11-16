@@ -1,9 +1,17 @@
 import { env } from '../config/env.ts';
 import { CATEGORIA_CATALOG } from '../theme/semanticConfig.ts';
-import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse } from '../types/chamado.ts';
+import type {
+  Chamado,
+  ChamadoCreateRequest,
+  ChamadoRequest,
+  ChamadoResponse,
+  FotoUpload,
+  ReactNativeFormFile,
+  ReactNativeMultipartFormData,
+} from '../types/chamado.ts';
 import type { EnderecoFormInput, EnderecoRequest } from '../types/endereco.ts';
-import { onlyDigits } from './formatters.ts';
 import type { ChamadoCreateFormData, ChamadoFormData } from '../types/form.ts';
+import { onlyDigits } from './formatters.ts';
 
 export function buildApiAssetUrl(path?: string | null, baseUrl: string = env.apiUrl): string | undefined {
   if (!path || path.trim() === '') return undefined;
@@ -30,6 +38,24 @@ export function mapChamadoResponse(item: ChamadoResponse): Chamado {
     ...rest,
     fotoUrl: foto ? buildApiAssetUrl(`${foto}?v=${encodeURIComponent(item.dtAbertura)}`) : undefined,
   };
+}
+
+export function toReactNativeFormFile(foto: FotoUpload): ReactNativeFormFile {
+  return {
+    uri: foto.uri.trim(),
+    name: foto.name.trim(),
+    type: foto.type.trim(),
+  };
+}
+
+export function appendMultipartFile(
+  formData: FormData | ReactNativeMultipartFormData,
+  field: string,
+  foto: FotoUpload
+): void {
+  // React Native aceita `{ uri, name, type }` no FormData.append, diferente do DOM `Blob`.
+  const target = formData as unknown as ReactNativeMultipartFormData;
+  target.append(field, toReactNativeFormFile(foto));
 }
 
 export function toChamadoCreateRequest(form: ChamadoCreateFormData): ChamadoCreateRequest {

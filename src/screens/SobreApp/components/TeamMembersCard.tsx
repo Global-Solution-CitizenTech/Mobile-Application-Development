@@ -1,21 +1,30 @@
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFeedback } from '@/contexts/FeedbackContext';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { TeamMembersCardProps } from '@/types/ui';
 import { getInitials } from '@/utils/formatters';
-import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
-import type { IntegranteGrupo } from '@/types/version';
-
-interface TeamMembersCardProps {
-  integrantes: IntegranteGrupo[];
-}
+import { shadows } from '@/utils/shadow';
 
 export const TeamMembersCard = ({ integrantes }: TeamMembersCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const { showError } = useFeedback();
 
-  const openLink = (url: string) => {
-    void Linking.openURL(url).catch(() => undefined);
+  const openLink = async (url: string) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+        showError('Link indisponível', 'Não há aplicativo compatível para abrir este endereço.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch {
+      showError('Erro ao abrir link', 'Não foi possível abrir o endereço no navegador.');
+    }
   };
 
   return (
@@ -44,7 +53,9 @@ export const TeamMembersCard = ({ integrantes }: TeamMembersCardProps) => {
               {integrante.github ? (
                 <TouchableOpacity
                   style={styles.socialButton}
-                  onPress={() => openLink(integrante.github)}
+                  onPress={() => {
+                    void openLink(integrante.github);
+                  }}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="logo-github" size={14} color={theme.text} />
@@ -54,7 +65,9 @@ export const TeamMembersCard = ({ integrantes }: TeamMembersCardProps) => {
               {integrante.linkedin ? (
                 <TouchableOpacity
                   style={styles.socialButton}
-                  onPress={() => openLink(integrante.linkedin)}
+                  onPress={() => {
+                    void openLink(integrante.linkedin);
+                  }}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="logo-linkedin" size={14} color={theme.info} />

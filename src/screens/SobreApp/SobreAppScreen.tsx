@@ -1,39 +1,38 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Image, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
+import { TECH_STACK } from '@/config/sobreAppData';
 import { APP_VERSION_INFO, GIT_COMMIT_INFO, INTEGRANTES_EQUIPE } from '@/config/version';
-import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import type { AppStackParamList } from '@/navigation/types';
+import { useFeedback } from '@/contexts/FeedbackContext';
+import { useThemedStyles } from '@/contexts/ThemeContext';
+import { CommitInfoCard } from '@/screens/SobreApp/components/CommitInfoCard';
+import { OdsInfoCard } from '@/screens/SobreApp/components/OdsInfoCard';
 import { TeamMembersCard } from '@/screens/SobreApp/components/TeamMembersCard';
-import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
-import { formatDate } from '@/utils/formatters';
-
-const TECH_STACK = [
-  'React Native + Expo SDK 58',
-  'TypeScript Strict',
-  'TanStack React Query v5',
-  'Zod v4 Schema Validation',
-  'React Navigation v7',
-  'Axios + JWT Interceptors',
-  'Expo SecureStore + Network',
-  'API Java Spring Boot (Azure)',
-  'Triagem IA + Priorização',
-];
+import { TechStackCard } from '@/screens/SobreApp/components/TechStackCard';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppStackNavigationProp } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
+import { shadows } from '@/utils/shadow';
 
 export const SobreAppScreen = () => {
-  const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'SobreApp'>>();
+  const { showError } = useFeedback();
+  const navigation = useNavigation<AppStackNavigationProp<'SobreApp'>>();
 
-  const handleShareBuild = () => {
-    void Share.share({
-      message: `${APP_VERSION_INFO.appName} v${APP_VERSION_INFO.version} (${APP_VERSION_INFO.buildNumber})\nCommit: ${GIT_COMMIT_INFO.commitHash}\nBranch: ${GIT_COMMIT_INFO.branch}`,
-    }).catch(() => undefined);
+  const handleShareBuild = async () => {
+    try {
+      await Share.share({
+        message: `${APP_VERSION_INFO.appName} v${APP_VERSION_INFO.version} (${APP_VERSION_INFO.buildNumber})\nCommit: ${GIT_COMMIT_INFO.commitHash}\nBranch: ${GIT_COMMIT_INFO.branch}`,
+      });
+    } catch {
+      showError(
+        'Erro ao compartilhar',
+        'Não foi possível abrir o compartilhamento das informações do build.'
+      );
+    }
   };
 
   return (
@@ -73,82 +72,18 @@ export const SobreAppScreen = () => {
           </View>
         </View>
 
-        <View style={[styles.commitCard, shadows.md]}>
-          <View style={styles.commitHeaderRow}>
-            <View style={styles.commitIconContainer}>
-              <Ionicons name="git-commit-outline" size={22} color={theme.primary} />
-            </View>
-            <View style={styles.flexOne}>
-              <Text style={styles.commitTitle}>Commit Hash de Referência</Text>
-              <Text style={styles.commitSubtitle}>
-                Extraído dinamicamente do Git no build (FIAP GS 2026/2)
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.hashBox}>
-            <View style={styles.hashRow}>
-              <Text style={styles.hashLabel}>HASH COMPLETO:</Text>
-              <TouchableOpacity onPress={handleShareBuild} style={styles.shareBtn} activeOpacity={0.7}>
-                <Ionicons name="share-social-outline" size={15} color={theme.primaryDark} />
-                <Text style={styles.shareBtnText}>Compartilhar</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.hashValue} selectable>
-              {GIT_COMMIT_INFO.commitHash}
-            </Text>
-
-            <View style={styles.shortHashRow}>
-              <Text style={styles.shortHashLabel}>ID Curto:</Text>
-              <View style={styles.shortHashBadge}>
-                <Text style={styles.shortHashValue} selectable>
-                  {GIT_COMMIT_INFO.shortCommitHash}
-                </Text>
-              </View>
-              <Text style={styles.branchText}>Branch: {GIT_COMMIT_INFO.branch}</Text>
-            </View>
-
-            <View style={styles.commitMetaBlock}>
-              <Text style={styles.commitMetaLabel}>DATA DO COMMIT</Text>
-              <Text style={styles.commitMetaValue} selectable>
-                {formatDate(GIT_COMMIT_INFO.commitDate)}
-              </Text>
-              <Text style={styles.commitMetaLabel}>MENSAGEM</Text>
-              <Text style={styles.commitMetaValue}>{GIT_COMMIT_INFO.commitMessage}</Text>
-            </View>
-          </View>
-        </View>
+        <CommitInfoCard
+          commitInfo={GIT_COMMIT_INFO}
+          onShare={() => {
+            void handleShareBuild();
+          }}
+        />
 
         <TeamMembersCard integrantes={INTEGRANTES_EQUIPE} />
 
-        <View style={[styles.card, shadows.sm]}>
-          <View style={styles.sectionHeaderRow}>
-            <Ionicons name="globe-outline" size={20} color={theme.primary} />
-            <Text style={styles.sectionTitle}>Alinhamento com a ODS 11 - ONU</Text>
-          </View>
-          <Text style={styles.odsTitle}>Cidades e Comunidades Sustentáveis</Text>
-          <Text style={styles.odsText}>
-            O ZelaFix democratiza a zeladoria urbana permitindo que qualquer cidadão identifique,
-            priorize colaborativamente e acompanhe problemas em espaços públicos, acelerando a
-            resposta do poder público.
-          </Text>
-        </View>
+        <OdsInfoCard />
 
-        <View style={[styles.card, shadows.sm]}>
-          <View style={styles.sectionHeaderRow}>
-            <Ionicons name="layers-outline" size={20} color={theme.text} />
-            <Text style={styles.sectionTitle}>Stack Tecnológico & Arquitetura</Text>
-          </View>
-
-          <View style={styles.techPillGrid}>
-            {TECH_STACK.map((tech) => (
-              <View key={tech} style={styles.techPill}>
-                <Ionicons name="checkmark" size={12} color={theme.primaryDark} />
-                <Text style={styles.techPillText}>{tech}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        <TechStackCard items={TECH_STACK} />
 
         <Text style={styles.copyrightText}>
           FIAP Global Solution 2026/2 • Análise e Desenvolvimento de Sistemas
@@ -163,7 +98,6 @@ const createStyles = (theme: AppTheme) =>
     safeArea: { flex: 1, backgroundColor: theme.background },
     container: { flex: 1, backgroundColor: theme.background },
     scrollContent: { padding: spacing.md, paddingBottom: spacing.xxxl },
-    flexOne: { flex: 1 },
     header: { alignItems: 'center', paddingVertical: spacing.md },
     logoBadge: {
       width: 68,
@@ -182,7 +116,12 @@ const createStyles = (theme: AppTheme) =>
       color: theme.text,
       letterSpacing: -0.4,
     },
-    tagline: { fontSize: fontSize.caption, color: theme.textSecondary, textAlign: 'center', marginTop: 2 },
+    tagline: {
+      fontSize: fontSize.caption,
+      color: theme.textSecondary,
+      textAlign: 'center',
+      marginTop: 2,
+    },
     versionBadge: {
       marginTop: spacing.sm,
       backgroundColor: theme.primaryLight,
@@ -192,86 +131,15 @@ const createStyles = (theme: AppTheme) =>
       paddingVertical: 5,
       borderRadius: borderRadius.full,
     },
-    versionText: { fontSize: fontSize.tiny, fontWeight: fontWeight.bold, color: theme.primaryDark },
-    commitCard: {
-      backgroundColor: theme.card,
-      borderRadius: borderRadius.cardLg,
-      padding: spacing.lg,
-      borderWidth: 1,
-      borderColor: theme.primaryBorder,
-      marginBottom: spacing.md,
+    versionText: {
+      fontSize: fontSize.tiny,
+      fontWeight: fontWeight.bold,
+      color: theme.primaryDark,
     },
-    commitHeaderRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm + 2,
-      marginBottom: spacing.sm + 2,
+    copyrightText: {
+      textAlign: 'center',
+      fontSize: fontSize.tiny,
+      color: theme.textMuted,
+      marginTop: spacing.xs,
     },
-    commitIconContainer: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: theme.primaryLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    commitTitle: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: theme.text },
-    commitSubtitle: { fontSize: fontSize.tiny, color: theme.textSecondary, marginTop: 1 },
-    hashBox: {
-      backgroundColor: theme.cardSubtle,
-      borderRadius: borderRadius.card,
-      padding: spacing.md,
-      borderWidth: 1,
-      borderColor: theme.border,
-    },
-    hashRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-    hashLabel: { fontSize: 10, fontWeight: fontWeight.bold, color: theme.textMuted, letterSpacing: 0.6 },
-    shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    shareBtnText: { fontSize: fontSize.tiny, fontWeight: fontWeight.bold, color: theme.primaryDark },
-    hashValue: { fontSize: fontSize.tiny, color: theme.text, fontWeight: fontWeight.medium, marginBottom: spacing.sm },
-    shortHashRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
-    shortHashLabel: { fontSize: fontSize.tiny, color: theme.textSecondary },
-    shortHashBadge: {
-      backgroundColor: theme.primaryLight,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: borderRadius.sm,
-    },
-    shortHashValue: { fontSize: fontSize.tiny, fontWeight: fontWeight.bold, color: theme.primaryDark },
-    branchText: { fontSize: fontSize.tiny, color: theme.textMuted },
-    commitMetaBlock: {
-      marginTop: spacing.sm,
-      paddingTop: spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: theme.divider,
-      gap: 2,
-    },
-    commitMetaLabel: { fontSize: 10, fontWeight: fontWeight.bold, color: theme.textMuted, letterSpacing: 0.6 },
-    commitMetaValue: { fontSize: fontSize.tiny, color: theme.text, marginBottom: spacing.xs },
-    card: {
-      backgroundColor: theme.card,
-      borderRadius: borderRadius.cardLg,
-      padding: spacing.lg,
-      borderWidth: 1,
-      borderColor: theme.cardBorder,
-      marginBottom: spacing.md,
-    },
-    sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.xs + 2 },
-    sectionTitle: { fontSize: fontSize.bodyLarge, fontWeight: fontWeight.bold, color: theme.text },
-    odsTitle: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: theme.primaryDark, marginBottom: 4 },
-    odsText: { fontSize: fontSize.caption, color: theme.textSecondary, lineHeight: 19 },
-    techPillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs },
-    techPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      backgroundColor: theme.primaryLight,
-      borderWidth: 1,
-      borderColor: theme.primaryBorder,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: borderRadius.full,
-    },
-    techPillText: { fontSize: fontSize.tiny, fontWeight: fontWeight.semibold, color: theme.primaryDark },
-    copyrightText: { textAlign: 'center', fontSize: fontSize.tiny, color: theme.textMuted, marginTop: spacing.xs },
   });

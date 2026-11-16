@@ -1,17 +1,11 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
-import type { CategoriaResponse } from '@/types/categoria';
-
-interface CategoryGridSelectorProps {
-  categorias: readonly CategoriaResponse[];
-  selectedCategoriaId: number;
-  onSelectCategoriaId: (id: number) => void;
-  error?: string;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { CategoryGridSelectorProps } from '@/types/ui';
 
 export const CategoryGridSelector = ({
   categorias,

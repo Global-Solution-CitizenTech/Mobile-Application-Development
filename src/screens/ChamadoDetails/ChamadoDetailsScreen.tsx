@@ -1,31 +1,38 @@
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { type NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EmptyState } from '@/components/EmptyState';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { Header } from '@/components/Header';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
 import { useChamadoDetails } from '@/hooks/useChamadoDetails';
-import type { AppStackParamList } from '@/navigation/types';
 import { ChamadoActionBar } from '@/screens/ChamadoDetails/components/ChamadoActionBar';
 import { ChamadoLocationCard } from '@/screens/ChamadoDetails/components/ChamadoLocationCard';
 import { ChamadoSummaryCard } from '@/screens/ChamadoDetails/components/ChamadoSummaryCard';
 import { ChamadoTimelineCard } from '@/screens/ChamadoDetails/components/ChamadoTimelineCard';
 import { StatusChangeModal } from '@/screens/ChamadoDetails/components/StatusChangeModal';
-import { spacing } from '@/theme';
 import { getCategoryLabel } from '@/theme/semanticConfig';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppStackScreenProps } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'ChamadoDetails'>;
-
-export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
-  const { id } = route.params;
+export const ChamadoDetailsScreen = ({ navigation, route }: AppStackScreenProps<'ChamadoDetails'>) => {
+  const id = route.params?.id ?? Number.NaN;
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
   const details = useChamadoDetails(id);
   const chamado = details.chamado;
+
+  const handleGoBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs', { screen: 'HomeTab' });
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -33,18 +40,24 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
         title={chamado ? `Protocolo #${chamado.idChamado}` : 'Detalhes do Chamado'}
         subtitle={chamado ? getCategoryLabel(chamado.categoriaNome) : 'Acompanhamento oficial'}
         showBack
-        onBack={() => navigation.goBack()}
+        onBack={handleGoBack}
       />
 
-      {details.isLoading ? (
+      {details.isLoading && !chamado ? (
         <LoadingSpinner message="Carregando ocorrência..." />
-      ) : details.fetchError || !chamado ? (
+      ) : !details.hasValidId || !chamado ? (
         <EmptyState
           icon="alert-circle-outline"
           title="Chamado não disponível"
           description={details.fetchError ?? 'Não foi possível localizar esta ocorrência.'}
-          actionTitle="Tentar Novamente"
-          onAction={() => { void details.refetch(); }}
+          actionTitle={details.hasValidId ? 'Tentar Novamente' : 'Voltar'}
+          onAction={() => {
+            if (details.hasValidId) {
+              void details.refetch();
+            } else {
+              handleGoBack();
+            }
+          }}
         />
       ) : (
         <ScrollView
@@ -56,12 +69,40 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
               paddingRight: Math.max(insets.right, spacing.md),
             },
           ]}
-          refreshControl={<RefreshControl refreshing={details.isRefreshing} onRefresh={() => { void details.refetch(); }} tintColor={theme.primary} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={details.isRefreshing}
+              onRefresh={() => {
+                void details.refetch();
+              }}
+              tintColor={theme.primary}
+            />
+          }
           showsVerticalScrollIndicator={false}
         >
+          {details.fetchError ? (
+            <TouchableOpacity
+              style={styles.refreshNotice}
+              onPress={() => {
+                void details.refetch();
+              }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="alert-circle-outline" size={16} color={theme.warning} />
+              <Text style={styles.refreshNoticeText}>
+                Não foi possível atualizar ({details.fetchError}). Toque para tentar novamente.
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
           <ChamadoSummaryCard
             chamado={chamado}
-            onAskAi={() => navigation.popTo('MainTabs', { screen: 'ZelaBotTab', params: { chamadoId: chamado.idChamado } })}
+            onAskAi={() =>
+              navigation.navigate('MainTabs', {
+                screen: 'ZelaBotTab',
+                params: { chamadoId: chamado.idChamado },
+              })
+            }
           />
 
           <ChamadoLocationCard endereco={chamado.endereco} />
@@ -100,7 +141,7 @@ export const ChamadoDetailsScreen = ({ navigation, route }: Props) => {
         confirmText="Excluir"
         cancelText="Cancelar"
         confirmLoading={details.isDeleting}
-        onConfirm={() => details.handleConfirmDelete(() => navigation.goBack())}
+        onConfirm={() => details.handleConfirmDelete(handleGoBack)}
         onCancel={() => details.setDeleteModalVisible(false)}
       />
     </View>
@@ -111,4 +152,20 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     scrollContent: { padding: spacing.md, gap: spacing.md },
+    refreshNotice: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs + 2,
+      padding: spacing.sm + 2,
+      borderRadius: borderRadius.md,
+      backgroundColor: theme.warningBg,
+      borderWidth: 1,
+      borderColor: theme.warningBorder,
+    },
+    refreshNoticeText: {
+      flex: 1,
+      fontSize: fontSize.caption,
+      color: theme.text,
+      fontWeight: fontWeight.medium,
+    },
   });

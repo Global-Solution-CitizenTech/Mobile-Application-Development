@@ -92,11 +92,26 @@ export function getFirstName(name?: string | null): string {
   return parts[0] || 'Cidadão';
 }
 
+const PLACEHOLDER_BAIRRO_REGEX = /^n[aã]o\s+informad[oa]$/i;
+
+export function isMeaningfulBairro(bairro?: string | null): boolean {
+  const trimmed = bairro?.trim();
+  if (!trimmed) return false;
+  return !PLACEHOLDER_BAIRRO_REGEX.test(trimmed);
+}
+
 export function getShortEndereco(endereco?: EnderecoResumo | null): string {
   if (!endereco) return 'Região não informada';
-  if (endereco.bairro && endereco.cidade) return `${endereco.bairro}, ${endereco.cidade}`;
-  if (endereco.bairro) return endereco.bairro;
-  if (endereco.rua) return endereco.rua;
-  if (endereco.referencia) return endereco.referencia;
+  const bairro = isMeaningfulBairro(endereco.bairro) ? endereco.bairro?.trim() : undefined;
+  const cidade = endereco.cidade?.trim() || undefined;
+  const rua = endereco.rua?.trim() || undefined;
+  const referencia = endereco.referencia?.trim() || undefined;
+
+  if (bairro && cidade) return `${bairro}, ${cidade}`;
+  if (bairro) return bairro;
+  if (rua && cidade) return `${rua}, ${cidade}`;
+  if (rua) return rua;
+  if (cidade) return cidade;
+  if (referencia) return referencia;
   return 'Região não informada';
 }

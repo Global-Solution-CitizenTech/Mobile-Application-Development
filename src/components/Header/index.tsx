@@ -1,19 +1,12 @@
-import type { ReactNode } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-
-interface HeaderProps {
-  title: string;
-  subtitle?: string;
-  showBack?: boolean;
-  onBack?: () => void;
-  rightAction?: ReactNode;
-  centerTitle?: boolean;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { HeaderProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const Header = ({
   title,

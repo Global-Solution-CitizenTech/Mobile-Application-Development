@@ -1,19 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme, IoniconName } from '@/theme/types';
-import { spacing, fontSize, fontWeight } from '@/theme';
-
-interface EmptyStateProps {
-  icon?: IoniconName;
-  title: string;
-  description: string;
-  actionTitle?: string;
-  onAction?: () => void;
-  style?: StyleProp<ViewStyle>;
-}
+import { spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { EmptyStateProps } from '@/types/ui';
 
 export const EmptyState = ({
   icon = 'clipboard-outline',

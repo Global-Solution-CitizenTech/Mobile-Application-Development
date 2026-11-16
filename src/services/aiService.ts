@@ -22,6 +22,13 @@ aiClient.interceptors.response.use(
   (error: AxiosError<ApiErrorResponse>) => Promise.reject(normalizeHttpError(error))
 );
 
+let aiMessageCounter = 0;
+
+export function createAiMessageId(prefix = 'ai'): string {
+  aiMessageCounter += 1;
+  return `${prefix}_${Date.now()}_${aiMessageCounter}`;
+}
+
 function toChamadoContextPayload(chamado?: Chamado | null): ChamadoContextPayload | undefined {
   if (!chamado) return undefined;
   return {
@@ -42,12 +49,15 @@ function toChamadoContextPayload(chamado?: Chamado | null): ChamadoContextPayloa
 export const aiService = {
   warmup: createThrottledPing(() => aiClient.get('/health', { timeout: 20000 })),
 
-  async enviarMensagem(params: {
-    pergunta: string;
-    chamado?: Chamado | null;
-    historico: AiMessage[];
-    sessionId: string;
-  }): Promise<{ message: AiMessage; sessionId: string }> {
+  async enviarMensagem(
+    params: {
+      pergunta: string;
+      chamado?: Chamado | null;
+      historico: AiMessage[];
+      sessionId: string;
+    },
+    signal?: AbortSignal
+  ): Promise<{ message: AiMessage; sessionId: string }> {
     const payload: AiChatRequest = {
       pergunta: params.pergunta,
       chamadoContext: toChamadoContextPayload(params.chamado),
@@ -61,13 +71,13 @@ export const aiService = {
       sessionId: params.sessionId,
     };
 
-    const { data } = await aiClient.post<AiChatResponse>('/ai/chat', payload);
+    const { data } = await aiClient.post<AiChatResponse>('/ai/chat', payload, { signal });
     const resolvedSessionId = data.sessionId || params.sessionId;
 
     return {
       sessionId: resolvedSessionId,
       message: {
-        id: `ai_${Date.now()}`,
+        id: createAiMessageId('ai'),
         sender: 'assistant',
         text: data.resposta,
         timestamp: new Date().toISOString(),
@@ -80,15 +90,19 @@ export const aiService = {
     };
   },
 
-  async obterInsights(bairro?: string): Promise<AiInsightsResponse> {
+  async obterInsights(bairro?: string, signal?: AbortSignal): Promise<AiInsightsResponse> {
     const { data } = await aiClient.post<AiInsightsResponse>('/ai/insights', null, {
+      signal,
       params: bairro?.trim() ? { bairro: bairro.trim() } : undefined,
     });
     return data;
   },
 
-  async listarSessoes(limit = 30): Promise<AiChatSession[]> {
-    const { data } = await aiClient.get<{ sessoes: AiSessionResponse[] }>('/ai/sessions', { params: { limit } });
+  async listarSessoes(limit = 30, signal?: AbortSignal): Promise<AiChatSession[]> {
+    const { data } = await aiClient.get<{ sessoes: AiSessionResponse[] }>('/ai/sessions', {
+      signal,
+      params: { limit },
+    });
     return (data.sessoes ?? []).map((item) => ({
       sessionId: item.session_id,
       titulo: item.titulo,
@@ -97,8 +111,9 @@ export const aiService = {
     }));
   },
 
-  async carregarHistorico(sessionId: string, limit = 80): Promise<AiMessage[]> {
+  async carregarHistorico(sessionId: string, limit = 80, signal?: AbortSignal): Promise<AiMessage[]> {
     const { data } = await aiClient.get<{ mensagens: AiHistoryResponse[] }>('/ai/history', {
+      signal,
       params: { session_id: sessionId, limit },
     });
     return (data.mensagens ?? []).map((m) => ({

@@ -1,57 +1,85 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedback } from '@/contexts/FeedbackContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useChamadosList } from '@/hooks/useChamados';
-import { getApiErrorMessage } from '@/utils/apiError';
-import { isStatusFinal } from '@/utils/permissions';
+import { useUserChamadosSummary } from '@/hooks/useMeusChamadosData';
+import { getApiErrorMessage, normalizeHttpError } from '@/utils/apiError';
 
 export function useProfileData() {
   const { usuario, signOut, refreshProfile } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { showError } = useFeedback();
 
-  const meusChamadosQuery = useChamadosList({
-    apenasMeus: true,
-    page: 0,
-    size: 50,
-    sort: 'dtAbertura,desc',
-  });
-
-  const lista = meusChamadosQuery.chamados;
-  const userStats = {
-    total: meusChamadosQuery.pageInfo ? meusChamadosQuery.totalElements : lista.length,
-    emAndamento: lista.filter((c) => !isStatusFinal(c.status)).length,
-    concluidos: lista.filter((c) => c.status === 'CONCLUIDO').length,
-    apoiosRecebidos: lista.reduce((acc, c) => acc + c.totalVotos, 0),
-  };
-
+  const summary = useUserChamadosSummary();
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [refreshingProfile, setRefreshingProfile] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
-  const refreshMutation = useMutation({
-    mutationFn: () => refreshProfile(),
-    onError: (error) => {
-      showError('Ops!', getApiErrorMessage(error, 'Não foi possível atualizar seu perfil.'));
-    },
-  });
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
-  const handleRefreshProfile = async () => {
-    await Promise.all([
-      refreshMutation.mutateAsync().catch(() => undefined),
-      meusChamadosQuery.refetch(),
-    ]);
-  };
+  const handleRefreshProfile = useCallback(async () => {
+    if (refreshingProfile) return;
+    setRefreshingProfile(true);
+    setRefreshError(null);
+
+    try {
+      const [profileResult, chamadosResult] = await Promise.allSettled([
+        refreshProfile(),
+        summary.refetch(),
+      ]);
+
+      if (!mountedRef.current) return;
+
+      if (profileResult.status === 'rejected') {
+        const normalized = normalizeHttpError(profileResult.reason);
+        // Não exibe modal de erro sobre um 401 que já dispara o signOut global.
+        if (normalized.status !== 401) {
+          const message = getApiErrorMessage(
+            profileResult.reason,
+            'Não foi possível atualizar seu perfil.'
+          );
+          setRefreshError(message);
+          showError('Ops!', message);
+        }
+        return;
+      }
+
+      if (chamadosResult.status === 'rejected') {
+        const normalized = normalizeHttpError(chamadosResult.reason);
+        if (normalized.status !== 401) {
+          setRefreshError(
+            getApiErrorMessage(chamadosResult.reason, 'Não foi possível atualizar seus chamados.')
+          );
+        }
+      }
+    } finally {
+      if (mountedRef.current) {
+        setRefreshingProfile(false);
+      }
+    }
+  }, [refreshProfile, refreshingProfile, showError, summary]);
 
   return {
     usuario,
-    userStats,
-    statsLoading: meusChamadosQuery.isLoading,
+    userStats: {
+      total: summary.stats.total,
+      emAndamento: summary.stats.ativos,
+      concluidos: summary.stats.concluidosSomente,
+      apoiosRecebidos: summary.stats.apoiosRecebidos,
+    },
+    statsLoading: summary.isLoading,
+    error: refreshError ?? summary.error,
     isDark,
     toggleTheme,
     logoutModalVisible,
     setLogoutModalVisible,
-    refreshing: refreshMutation.isPending || meusChamadosQuery.isRefetching,
+    refreshing: refreshingProfile || summary.isRefetching,
     handleRefreshProfile,
     signOut,
   };

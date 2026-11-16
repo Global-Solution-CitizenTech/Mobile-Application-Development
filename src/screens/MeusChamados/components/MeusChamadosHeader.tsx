@@ -1,18 +1,11 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { MeusChamadosTab } from '@/types/filters';
-
-interface MeusChamadosHeaderProps {
-  total: number;
-  abertos: number;
-  emAndamento: number;
-  concluidos: number;
-  activeTab: MeusChamadosTab;
-  onSelectTab: (tab: MeusChamadosTab) => void;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { MeusChamadosHeaderProps, MeusChamadosTabItem } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const MeusChamadosHeader = ({
   total,
@@ -25,7 +18,7 @@ export const MeusChamadosHeader = ({
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
 
-  const tabs: { key: MeusChamadosTab; label: string; count: number }[] = [
+  const tabs: MeusChamadosTabItem[] = [
     { key: 'TODOS', label: 'Todos', count: total },
     { key: 'ATIVOS', label: 'Em Aberto', count: abertos + emAndamento },
     { key: 'CONCLUIDOS', label: 'Finalizados', count: concluidos },
@@ -62,7 +55,9 @@ export const MeusChamadosHeader = ({
             >
               <Text style={[styles.tabText, active && styles.tabTextActive]}>{tab.label}</Text>
               <View style={[styles.badge, active ? styles.badgeActive : styles.badgeInactive]}>
-                <Text style={[styles.badgeText, active ? styles.badgeTextActive : styles.badgeTextInactive]}>{tab.count}</Text>
+                <Text style={[styles.badgeText, active ? styles.badgeTextActive : styles.badgeTextInactive]}>
+                  {tab.count}
+                </Text>
               </View>
             </TouchableOpacity>
           );
@@ -102,15 +97,11 @@ const createStyles = (theme: AppTheme) =>
       gap: 6,
       paddingVertical: spacing.sm + 2,
       paddingHorizontal: spacing.xs,
-      borderRadius: 24,
+      borderRadius: borderRadius.full,
     },
     tabBtnActive: {
       backgroundColor: theme.surface,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.08,
-      shadowRadius: 2,
-      elevation: 2,
+      ...shadows.sm,
     },
     tabText: {
       fontSize: fontSize.caption,
@@ -123,7 +114,7 @@ const createStyles = (theme: AppTheme) =>
     badge: {
       minWidth: 22,
       height: 22,
-      borderRadius: 11,
+      borderRadius: borderRadius.full,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 5,

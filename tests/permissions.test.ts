@@ -1,19 +1,80 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { Usuario } from '../src/types/auth.ts';
+import type { CargoUsuario, Usuario } from '../src/types/auth.ts';
 import type { Chamado } from '../src/types/chamado.ts';
-import { canAccessMobileApp, canChangeChamadoStatus, canDeleteChamado, canEditChamado, canSupportChamado, getCargoLabel, isStatusFinal } from '../src/utils/permissions.ts';
+import {
+  canAccessMobileApp,
+  canChangeChamadoStatus,
+  canDeleteChamado,
+  canEditChamado,
+  canSupportChamado,
+  getCargoLabel,
+  isStatusFinal,
+} from '../src/utils/permissions.ts';
 
-const CIDADAO_AUTOR: Usuario = { id: 1, nome: 'Enzo', email: 'enzo@fiap.com', cargo: 'CIDADAO' } as Usuario;
-const CIDADAO_OUTRO: Usuario = { id: 2, nome: 'Maria', email: 'maria@fiap.com', cargo: 'CIDADAO' } as Usuario;
-const GESTOR_USER: Usuario = { id: 3, nome: 'Carlos', email: 'carlos@sp.gov.br', cargo: 'GESTOR' } as Usuario;
-const ADMIN_USER: Usuario = { id: 4, nome: 'Admin', email: 'admin@zelafix.com', cargo: 'ADMIN' } as Usuario;
+function makeUsuario(id: number, nome: string, email: string, cargo: CargoUsuario): Usuario {
+  return {
+    id,
+    nome,
+    email,
+    cargo,
+    ddd: '11',
+    numeroTelefone: '987654321',
+    endereco: {
+      id: 1,
+      cep: '01310100',
+      numero: '100',
+      rua: 'Avenida Paulista',
+      referencia: 'Próximo ao metrô',
+      bairro: 'Bela Vista',
+      cidade: 'São Paulo',
+      estado: 'SP',
+    },
+  };
+}
 
-const CHAMADO_DO_ENZO: Chamado = {
+function makeChamado(overrides: Partial<Chamado> = {}): Chamado {
+  return {
+    idChamado: 10,
+    titulo: 'Poste sem iluminação',
+    descricao: 'Poste apagado há três dias na esquina.',
+    dtAbertura: '2026-11-14T10:00:00Z',
+    categoriaId: 1,
+    categoriaNome: 'ILUMINACAO_PUBLICA',
+    prioridadeId: 2,
+    prioridadeNome: 'MEDIA',
+    orgaoId: 1,
+    orgaoNome: 'ILUMINACAO_PUBLICA',
+    usuarioId: 1,
+    usuarioNome: 'Enzo',
+    endereco: {
+      id: 1,
+      cep: '01310100',
+      numero: '100',
+      rua: 'Avenida Paulista',
+      referencia: 'Esquina',
+      bairro: 'Bela Vista',
+      cidade: 'São Paulo',
+      estado: 'SP',
+    },
+    status: 'EM_ANALISE',
+    totalVotos: 0,
+    apoiadoPorMim: false,
+    historico: [],
+    ...overrides,
+  };
+}
+
+const CIDADAO_AUTOR = makeUsuario(1, 'Enzo', 'enzo@fiap.com', 'CIDADAO');
+const CIDADAO_OUTRO = makeUsuario(2, 'Maria', 'maria@fiap.com', 'CIDADAO');
+const GESTOR_USER = makeUsuario(3, 'Carlos', 'carlos@sp.gov.br', 'GESTOR');
+const ADMIN_USER = makeUsuario(4, 'Admin', 'admin@zelafix.com', 'ADMIN');
+
+const CHAMADO_DO_ENZO = makeChamado({
   idChamado: 10,
   usuarioId: 1,
   status: 'EM_ANALISE',
-} as Chamado;
+});
 
 describe('permissions', () => {
   describe('canAccessMobileApp', () => {

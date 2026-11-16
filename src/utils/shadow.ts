@@ -1,11 +1,6 @@
 import type { ViewStyle } from 'react-native';
 import { colors } from '@/theme/colors';
-
-interface ShadowOptions {
-  offsetY: number;
-  blur: number;
-  opacity: number;
-}
+import type { ShadowOptions } from '@/types/theme';
 
 function createShadow({ offsetY, blur, opacity }: ShadowOptions): ViewStyle {
   return {

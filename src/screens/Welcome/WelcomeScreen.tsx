@@ -1,44 +1,34 @@
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { borderRadius, spacing, fontSize, fontWeight, shadows } from '@/theme';
-import type { AuthStackParamList } from '@/navigation/types';
-import type { PilarItem } from '@/types/ui';
-
-type WelcomeNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
-
-const PILARES: PilarItem[] = [
-  {
-    icon: 'camera-outline',
-    titulo: 'Relato Fotográfico Rápido',
-    descricao: 'Registre buracos, bueiros ou postes apagados com localização GPS automática.',
-  },
-  {
-    icon: 'sparkles-outline',
-    titulo: 'Triagem Inteligente com IA',
-    descricao: 'Classificação automática de severidade e encaminhamento para o órgão competente.',
-  },
-  {
-    icon: 'people-outline',
-    titulo: 'Priorização Comunitária',
-    descricao: 'Apoie demandas dos seus vizinhos para elevar o ranking de urgência do bairro.',
-  },
-];
+import { PILARES } from '@/config/sobreAppData';
+import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AuthStackNavigationProp } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
+import { shadows } from '@/utils/shadow';
 
 export const WelcomeScreen = () => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const navigation = useNavigation<WelcomeNavigationProp>();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<AuthStackNavigationProp<'Welcome'>>();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+    <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: Math.max(insets.top, spacing.xl),
+            paddingBottom: Math.max(insets.bottom, spacing.xl),
+            paddingLeft: Math.max(insets.left, spacing.lg),
+            paddingRight: Math.max(insets.right, spacing.lg),
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.odsPill}>
@@ -101,21 +91,19 @@ export const WelcomeScreen = () => {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    safeArea: {
+    container: {
       flex: 1,
       backgroundColor: theme.background,
     },
     scrollContent: {
       flexGrow: 1,
       justifyContent: 'space-between',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.xl,
     },
     odsPill: {
       flexDirection: 'row',

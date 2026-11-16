@@ -2,11 +2,12 @@ import { api } from '@/services/api';
 import type { SpringPageResponse } from '@/types/api';
 import type { Chamado, ChamadoCreateRequest, ChamadoRequest, ChamadoResponse, ChamadoStatusRequest, EstatisticasChamados } from '@/types/chamado';
 import type { FiltroChamados } from '@/types/filters';
-import { mapChamadoResponse } from '@/utils/chamadoMappers';
+import { appendMultipartFile, mapChamadoResponse } from '@/utils/chamadoMappers';
 
 export const chamadoService = {
-  async listar(filtros?: FiltroChamados): Promise<SpringPageResponse<Chamado>> {
+  async listar(filtros?: FiltroChamados, signal?: AbortSignal): Promise<SpringPageResponse<Chamado>> {
     const { data } = await api.get<SpringPageResponse<ChamadoResponse>>('/chamados', {
+      signal,
       params: {
         status: filtros?.status || undefined,
         categoria: filtros?.categoria || undefined,
@@ -26,8 +27,8 @@ export const chamadoService = {
     };
   },
 
-  async buscarPorId(id: number): Promise<Chamado> {
-    const { data } = await api.get<ChamadoResponse>(`/chamados/${id}`);
+  async buscarPorId(id: number, signal?: AbortSignal): Promise<Chamado> {
+    const { data } = await api.get<ChamadoResponse>(`/chamados/${id}`, { signal });
     return mapChamadoResponse(data);
   },
 
@@ -39,7 +40,7 @@ export const chamadoService = {
     if (payload.endereco.rua) {
       formData.append('rua', payload.endereco.rua);
     }
-    formData.append('foto', payload.foto as unknown as Blob);
+    appendMultipartFile(formData, 'foto', payload.foto);
     const { data } = await api.post<ChamadoResponse>('/chamados', formData);
     return mapChamadoResponse(data);
   },
@@ -63,8 +64,8 @@ export const chamadoService = {
     await api.delete(`/chamados/${id}`);
   },
 
-  async obterEstatisticas(): Promise<EstatisticasChamados> {
-    const { data } = await api.get<EstatisticasChamados>('/chamados/estatisticas');
+  async obterEstatisticas(signal?: AbortSignal): Promise<EstatisticasChamados> {
+    const { data } = await api.get<EstatisticasChamados>('/chamados/estatisticas', { signal });
     return data;
   },
 };

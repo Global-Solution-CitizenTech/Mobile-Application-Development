@@ -2,22 +2,10 @@ import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, shadows, spacing } from '@/theme';
-import type { Chamado } from '@/types/chamado';
-
-interface ChamadoActionBarProps {
-  chamado: Chamado;
-  podeApoiar: boolean;
-  podeEditar: boolean;
-  podeAlterarStatus: boolean;
-  podeExcluir: boolean;
-  isSupporting: boolean;
-  onApoiar: () => void;
-  onEditar: () => void;
-  onAlterarStatus: () => void;
-  onExcluir: () => void;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import type { AppTheme } from '@/types/theme';
+import type { ChamadoActionBarProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const ChamadoActionBar = ({
   chamado,
@@ -42,7 +30,11 @@ export const ChamadoActionBar = ({
     <View style={styles.container}>
       {podeApoiar && (
         <Button
-          title={chamado.apoiadoPorMim ? `Apoiado (${chamado.totalVotos})` : `Apoiar Ocorrência (${chamado.totalVotos})`}
+          title={
+            chamado.apoiadoPorMim
+              ? `Apoiado (${chamado.totalVotos})`
+              : `Apoiar Ocorrência (${chamado.totalVotos})`
+          }
           variant={chamado.apoiadoPorMim ? 'primary' : 'outline'}
           leftIcon={
             <Ionicons

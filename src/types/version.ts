@@ -14,3 +14,10 @@ export interface GitCommitMetadata {
   branch: string;
   commitMessage: string;
 }
+
+export interface AppVersionInfo {
+  appName: string;
+  tagline: string;
+  version: string;
+  buildNumber: string;
+}

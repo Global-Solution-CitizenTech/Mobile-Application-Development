@@ -39,8 +39,6 @@ export function createThrottledPing(
   };
 }
 
-export { buildApiAssetUrl } from '@/utils/chamadoMappers';
-
 export const api: AxiosInstance = create({
   baseURL: env.apiUrl,
   timeout: 65000, // 65s para cobrir o timeout assíncrono do Spring Boot (60s) e cold starts
@@ -51,6 +49,21 @@ export const api: AxiosInstance = create({
 });
 
 let onUnauthorizedCallback: UnauthorizedCallback | null = null;
+let unauthorizedHandlingPromise: Promise<void> | null = null;
+
+function handleUnauthorizedSession(): Promise<void> {
+  if (!unauthorizedHandlingPromise) {
+    unauthorizedHandlingPromise = (async () => {
+      try {
+        await storageService.clearSession().catch(() => undefined);
+        onUnauthorizedCallback?.();
+      } finally {
+        unauthorizedHandlingPromise = null;
+      }
+    })();
+  }
+  return unauthorizedHandlingPromise;
+}
 
 export function registerUnauthorizedHandler(callback: UnauthorizedCallback): () => void {
   onUnauthorizedCallback = callback;
@@ -90,8 +103,7 @@ api.interceptors.response.use(
     const isLoginAttempt = error.config?.url?.includes('/login') ?? false;
 
     if (status === 401 && !isLoginAttempt) {
-      await storageService.clearSession().catch(() => undefined);
-      onUnauthorizedCallback?.();
+      await handleUnauthorizedSession();
     }
 
     return Promise.reject(normalizeHttpError(error));

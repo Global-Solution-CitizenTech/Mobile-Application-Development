@@ -1,24 +1,55 @@
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header } from '@/components/Header';
 import { MessageListSeparator } from '@/components/ListSeparator';
-import { PickerTriggerButton, SelectPickerModal } from '@/components/SelectPickerModal';
+import { PickerTriggerButton } from '@/components/PickerTriggerButton';
+import { SelectPickerModal } from '@/components/SelectPickerModal';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useZelaBot } from '@/hooks/useZelaBot';
-import type { AppTabRouteProp } from '@/navigation/types';
 import { ZelaBotHistoryModal } from '@/screens/ZelaBot/components/ZelaBotHistoryModal';
 import { ZelaBotInputBar } from '@/screens/ZelaBot/components/ZelaBotInputBar';
 import { ZelaBotInsightsBanner } from '@/screens/ZelaBot/components/ZelaBotInsightsBanner';
 import { ZelaBotMessageBubble } from '@/screens/ZelaBot/components/ZelaBotMessageBubble';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
 import type { AiMessage } from '@/types/ai';
+import type { Chamado } from '@/types/chamado';
 import type { SelectPickerOption } from '@/types/filters';
+import type { AppTabRouteProp } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
+import { isMeaningfulBairro } from '@/utils/formatters';
 
 const GERAL_CONTEXT_KEY = '__GERAL__';
+
+function parseChamadoContextId(value: string): number | null {
+  if (value === GERAL_CONTEXT_KEY) return null;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function buildZelaBotContextOptions(chamados: readonly Chamado[]): SelectPickerOption<string>[] {
+  return [
+    {
+      value: GERAL_CONTEXT_KEY,
+      label: 'Consulta Geral',
+      subtitle: 'Dúvidas sobre prazos, decretos e direitos municipais',
+    },
+    ...chamados.map((chamado) => ({
+      value: String(chamado.idChamado),
+      label: `#${chamado.idChamado} · ${chamado.titulo}`,
+      subtitle: [
+        chamado.categoriaNome,
+        isMeaningfulBairro(chamado.endereco.bairro) ? chamado.endereco.bairro : undefined,
+        chamado.endereco.cidade,
+      ]
+        .filter(Boolean)
+        .join(' • '),
+    })),
+  ];
+}
 
 export const ZelaBotScreen = () => {
   const route = useRoute<AppTabRouteProp<'ZelaBotTab'>>();
@@ -28,22 +59,34 @@ export const ZelaBotScreen = () => {
   const flatListRef = useRef<FlatList<AiMessage>>(null);
   const [contextModalVisible, setContextModalVisible] = useState(false);
 
-  const bot = useZelaBot(route.params?.chamadoId);
+  const rawChamadoId = route.params?.chamadoId;
+  const initialChamadoId =
+    typeof rawChamadoId === 'number' && Number.isInteger(rawChamadoId) && rawChamadoId > 0
+      ? rawChamadoId
+      : undefined;
 
-  const contextOptions: SelectPickerOption<string>[] = [
-    {
-      value: GERAL_CONTEXT_KEY,
-      label: 'Consulta Geral',
-      subtitle: 'Dúvidas sobre prazos, decretos e direitos municipais',
-    },
-    ...bot.chamadosDisponiveis.map((chamado) => ({
-      value: String(chamado.idChamado),
-      label: `#${chamado.idChamado} · ${chamado.titulo}`,
-      subtitle: [chamado.categoriaNome, chamado.endereco.bairro, chamado.endereco.cidade]
-        .filter(Boolean)
-        .join(' • '),
-    })),
-  ];
+  const bot = useZelaBot(initialChamadoId);
+
+  const prevMessageCountRef = useRef(0);
+  const prevSessionIdRef = useRef(bot.sessionId);
+
+  useEffect(() => {
+    const messageCount = bot.messages.length;
+    const sessionChanged = bot.sessionId !== prevSessionIdRef.current;
+    const hasNewMessages = messageCount > prevMessageCountRef.current;
+
+    if (messageCount > 0 && (hasNewMessages || sessionChanged)) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+
+    prevMessageCountRef.current = messageCount;
+    prevSessionIdRef.current = bot.sessionId;
+  }, [bot.messages.length, bot.sessionId]);
+
+  const contextOptions = useMemo(
+    () => buildZelaBotContextOptions(bot.chamadosDisponiveis),
+    [bot.chamadosDisponiveis]
+  );
 
   const currentContextLabel = bot.selectedChamado
     ? `#${bot.selectedChamado.idChamado} · ${bot.selectedChamado.titulo}`
@@ -52,7 +95,7 @@ export const ZelaBotScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Header
         title="ZelaBot IA"
@@ -126,9 +169,6 @@ export const ZelaBotScreen = () => {
         ItemSeparatorComponent={MessageListSeparator}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        onContentSizeChange={() => {
-          if (bot.messages.length > 0) flatListRef.current?.scrollToEnd({ animated: true });
-        }}
         ListEmptyComponent={
           <View style={styles.emptyHero}>
             <View style={styles.heroIcon}>
@@ -167,9 +207,7 @@ export const ZelaBotScreen = () => {
         subtitle="Escolha um chamado específico ou use Consulta Geral"
         options={contextOptions}
         selectedValue={bot.selectedChamadoId ? String(bot.selectedChamadoId) : GERAL_CONTEXT_KEY}
-        onSelect={(val) =>
-          bot.selecionarChamadoContexto(val === GERAL_CONTEXT_KEY ? null : Number(val))
-        }
+        onSelect={(val) => bot.selecionarChamadoContexto(parseChamadoContextId(val))}
         searchable={contextOptions.length > 5}
         searchPlaceholder="Buscar por título, protocolo ou bairro..."
       />

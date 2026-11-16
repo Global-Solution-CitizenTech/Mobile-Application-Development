@@ -184,7 +184,7 @@ describe('schemas', () => {
   });
 
   describe('ChamadoCreateSchema', () => {
-    it('accepts valid photo upload object with uri', () => {
+    it('accepts valid photo upload object with uri, name and image mime type', () => {
       const result = ChamadoCreateSchema.safeParse({
         cep: '01310100',
         numero: '100',
@@ -192,20 +192,52 @@ describe('schemas', () => {
         foto: { uri: 'file:///photo.jpg', name: 'photo.jpg', type: 'image/jpeg' },
       });
       assert.equal(result.success, true);
+
+      const upperMimeResult = ChamadoCreateSchema.safeParse({
+        cep: '01310100',
+        numero: '100',
+        referencia: 'Esquina',
+        foto: { uri: 'file:///photo.png', name: 'photo.png', type: 'IMAGE/PNG' },
+      });
+      assert.equal(upperMimeResult.success, true);
     });
 
-    it('rejects missing or empty photo', () => {
-      const result = ChamadoCreateSchema.safeParse({
+    it('rejects missing, incomplete or non-image photo uploads', () => {
+      const nullFoto = ChamadoCreateSchema.safeParse({
         cep: '01310100',
         numero: '100',
         referencia: 'Esquina',
         foto: null,
       });
-      assert.equal(result.success, false);
-      if (!result.success) {
-        const errors = extractFieldErrors(result.error);
+      assert.equal(nullFoto.success, false);
+      if (!nullFoto.success) {
+        const errors = extractFieldErrors(nullFoto.error);
         assert.equal(errors.foto, 'Envie uma foto da ocorrência');
       }
+
+      const emptyUri = ChamadoCreateSchema.safeParse({
+        cep: '01310100',
+        numero: '100',
+        referencia: 'Esquina',
+        foto: { uri: '   ', name: 'photo.jpg', type: 'image/jpeg' },
+      });
+      assert.equal(emptyUri.success, false);
+
+      const emptyName = ChamadoCreateSchema.safeParse({
+        cep: '01310100',
+        numero: '100',
+        referencia: 'Esquina',
+        foto: { uri: 'file:///photo.jpg', name: '   ', type: 'image/jpeg' },
+      });
+      assert.equal(emptyName.success, false);
+
+      const nonImageMime = ChamadoCreateSchema.safeParse({
+        cep: '01310100',
+        numero: '100',
+        referencia: 'Esquina',
+        foto: { uri: 'file:///doc.pdf', name: 'doc.pdf', type: 'application/pdf' },
+      });
+      assert.equal(nonImageMime.success, false);
     });
   });
 

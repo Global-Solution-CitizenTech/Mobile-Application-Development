@@ -4,20 +4,13 @@ import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
 import { useZodForm } from '@/hooks/useZodForm';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { STATUS_OPTIONS } from '@/theme/semanticConfig';
-import type { StatusChamado } from '@/types/categoria';
-import { StatusUpdateSchema, type StatusUpdateFormData } from '@/utils/schemas';
-
-interface StatusChangeModalProps {
-  visible: boolean;
-  currentStatus: StatusChamado;
-  onClose: () => void;
-  onSubmit: (data: StatusUpdateFormData) => void;
-  submitting: boolean;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { StatusChangeModalProps } from '@/types/ui';
+import { StatusUpdateSchema } from '@/utils/schemas';
 
 export const StatusChangeModal = ({
   visible,
@@ -27,10 +20,10 @@ export const StatusChangeModal = ({
   submitting,
 }: StatusChangeModalProps) => {
   const styles = useThemedStyles(createStyles);
-  const { values, errors, setFieldValue, validate, reset } = useZodForm(
-    StatusUpdateSchema,
-    { status: currentStatus, observacao: '' }
-  );
+  const { values, errors, setFieldValue, validate, reset } = useZodForm(StatusUpdateSchema, {
+    status: currentStatus,
+    observacao: '',
+  });
 
   useEffect(() => {
     if (visible) {
@@ -68,6 +61,7 @@ export const StatusChangeModal = ({
             );
           })}
         </View>
+        {errors.status ? <Text style={styles.errorText}>{errors.status}</Text> : null}
 
         <Input
           label="Parecer / Observação *"
@@ -82,7 +76,13 @@ export const StatusChangeModal = ({
         />
 
         <View style={styles.actions}>
-          <Button title="Cancelar" variant="outline" onPress={onClose} style={styles.btn} disabled={submitting} />
+          <Button
+            title="Cancelar"
+            variant="outline"
+            onPress={onClose}
+            style={styles.btn}
+            disabled={submitting}
+          />
           <Button title="Confirmar" onPress={handleConfirm} loading={submitting} style={styles.btn} />
         </View>
       </View>
@@ -94,7 +94,12 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     form: { gap: spacing.sm },
     label: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.semibold, color: theme.text },
-    chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs + 2, marginBottom: spacing.xs },
+    chipsWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs + 2,
+      marginBottom: spacing.xs,
+    },
     chip: {
       paddingHorizontal: spacing.sm + 4,
       paddingVertical: spacing.xs + 3,
@@ -106,6 +111,7 @@ const createStyles = (theme: AppTheme) =>
     chipActive: { backgroundColor: theme.primary, borderColor: theme.primary },
     chipText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
     chipTextActive: { color: theme.inverseText },
+    errorText: { fontSize: fontSize.caption, color: theme.danger, fontWeight: fontWeight.medium },
     textArea: { minHeight: 84, textAlignVertical: 'top', paddingTop: spacing.sm },
     actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
     btn: { flex: 1 },

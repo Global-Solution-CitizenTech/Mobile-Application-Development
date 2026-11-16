@@ -32,4 +32,9 @@ export interface SelectPickerOption<T extends string = string> {
   subtitle?: string;
 }
 
+export interface SelectPickerTab<TabKey extends string = string> {
+  key: TabKey;
+  label: string;
+}
+
 export type RadarActiveModal = 'categoria' | 'status' | 'localizacao' | null;

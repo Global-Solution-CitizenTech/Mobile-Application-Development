@@ -1,18 +1,15 @@
+import { useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-import type { BoundFieldProps, LoginFormData, StringFieldKeys } from '@/types/form';
-
-interface LoginFormProps {
-  field: <K extends StringFieldKeys<LoginFormData>>(name: K) => BoundFieldProps;
-  isLoading: boolean;
-  onSubmit: () => void;
-  onGoToRegister: () => void;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { LoginFormProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const LoginForm = ({
   field,
@@ -22,6 +19,7 @@ export const LoginForm = ({
 }: LoginFormProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const senhaRef = useRef<TextInputInstance>(null);
 
   return (
     <View style={[styles.card, shadows.md]}>
@@ -36,10 +34,13 @@ export const LoginForm = ({
           autoComplete="email"
           textContentType="emailAddress"
           returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => senhaRef.current?.focus()}
           leftIcon={<Ionicons name="mail-outline" size={18} color={theme.textMuted} />}
         />
 
         <Input
+          ref={senhaRef}
           label="Senha"
           placeholder="Digite sua senha"
           {...field('senha')}

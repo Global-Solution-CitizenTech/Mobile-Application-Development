@@ -1,22 +1,11 @@
-import type { ReactNode } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, TouchableWithoutFeedback } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-
-interface BaseModalProps {
-  visible: boolean;
-  onClose: () => void;
-  title?: string;
-  subtitle?: string;
-  children: ReactNode;
-  footer?: ReactNode;
-  maxWidth?: number;
-  centered?: boolean;
-  dismissable?: boolean;
-  scrollable?: boolean;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { BaseModalProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const BaseModal = ({
   visible,
@@ -44,59 +33,63 @@ export const BaseModal = ({
       }}
       statusBarTranslucent
     >
-      <TouchableWithoutFeedback onPress={dismissable ? onClose : undefined}>
-        <View style={[styles.overlay, centered && styles.overlayCentered]}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={styles.keyboardContainer}
+      <View style={[styles.overlay, centered && styles.overlayCentered]}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={dismissable ? onClose : undefined}
+          disabled={!dismissable}
+          accessibilityRole="none"
+        />
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardContainer}
+          pointerEvents="box-none"
+        >
+          <View
+            style={[
+              styles.card,
+              shadows.lg,
+              { maxWidth, maxHeight: Math.round(windowHeight * 0.88) },
+              centered && styles.cardCentered,
+            ]}
           >
-            <TouchableWithoutFeedback>
-              <View
-                style={[
-                  styles.card,
-                  shadows.lg,
-                  { maxWidth, maxHeight: Math.round(windowHeight * 0.88) },
-                  centered && styles.cardCentered,
-                ]}
-              >
-                {title && (
-                  <View style={styles.header}>
-                    <View style={styles.headerText}>
-                      <Text style={styles.title}>{title}</Text>
-                      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-                    </View>
-                    <TouchableOpacity
-                      onPress={dismissable ? onClose : undefined}
-                      disabled={!dismissable}
-                      style={!dismissable ? styles.closeButtonDisabled : undefined}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      accessibilityRole="button"
-                      accessibilityLabel="Fechar"
-                      accessibilityState={{ disabled: !dismissable }}
-                    >
-                      <Ionicons name="close" size={22} color={theme.textSecondary} />
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {scrollable ? (
-                  <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                    style={styles.bodyScroll}
-                  >
-                    {children}
-                  </ScrollView>
-                ) : (
-                  <View>{children}</View>
-                )}
-
-                {footer && <View style={styles.footer}>{footer}</View>}
+            {title ? (
+              <View style={styles.header}>
+                <View style={styles.headerText}>
+                  <Text style={styles.title}>{title}</Text>
+                  {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+                </View>
+                <TouchableOpacity
+                  onPress={dismissable ? onClose : undefined}
+                  disabled={!dismissable}
+                  style={!dismissable ? styles.closeButtonDisabled : undefined}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Fechar"
+                  accessibilityState={{ disabled: !dismissable }}
+                >
+                  <Ionicons name="close" size={22} color={theme.textSecondary} />
+                </TouchableOpacity>
               </View>
-            </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
+            ) : null}
+
+            {scrollable ? (
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                style={styles.bodyScroll}
+              >
+                {children}
+              </ScrollView>
+            ) : (
+              <View style={styles.bodyNonScroll}>{children}</View>
+            )}
+
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -113,7 +106,9 @@ const createStyles = (theme: AppTheme) =>
       padding: spacing.lg,
     },
     keyboardContainer: {
+      flex: 1,
       width: '100%',
+      justifyContent: 'center',
       alignItems: 'center',
     },
     card: {
@@ -149,6 +144,9 @@ const createStyles = (theme: AppTheme) =>
     },
     bodyScroll: {
       flexGrow: 0,
+    },
+    bodyNonScroll: {
+      flexShrink: 1,
     },
     closeButtonDisabled: {
       opacity: 0.4,

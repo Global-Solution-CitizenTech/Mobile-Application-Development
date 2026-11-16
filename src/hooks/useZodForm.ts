@@ -1,21 +1,33 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { z } from 'zod';
-import type { BoundFieldProps, FormErrors, StringFieldKeys } from '@/types/form';
+import type { z } from 'zod';
+import type {
+  BoundFieldProps,
+  FieldBinder,
+  FormErrors,
+  StringFieldKeys,
+  UseZodFormReturn,
+} from '@/types/form';
 import { extractFieldErrors } from '@/utils/schemas';
 
 export function bindFieldHelpers<T extends Record<string, unknown>>(
   values: T,
   errors: FormErrors<T>,
-  setFieldValue: <K extends keyof T>(field: K, value: T[K]) => void
-) {
-  return <K extends StringFieldKeys<T>>(name: K): BoundFieldProps => ({
-    value: (values[name] ?? '') as string,
-    onChangeText: (text: string) => setFieldValue(name, text as T[K]),
-    error: errors[name],
-  });
+  onChangeStringField: <K extends StringFieldKeys<T>>(field: K, value: string) => void
+): FieldBinder<T> {
+  return <K extends StringFieldKeys<T>>(name: K): BoundFieldProps => {
+    const rawValue = values[name];
+    return {
+      value: typeof rawValue === 'string' ? rawValue : '',
+      onChangeText: (text: string) => onChangeStringField(name, text),
+      error: errors[name],
+    };
+  };
 }
 
-export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<T>, initialValues: T) {
+export function useZodForm<T extends Record<string, unknown>>(
+  schema: z.ZodType<T>,
+  initialValues: T
+): UseZodFormReturn<T> {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<FormErrors<T>>({});
   const initialValuesRef = useRef(initialValues);
@@ -24,22 +36,43 @@ export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<
     initialValuesRef.current = initialValues;
   }, [initialValues]);
 
-  const setFieldValue = <K extends keyof T>(field: K, value: T[K]) => {
-    setValues((prev) => ({ ...prev, [field]: value }));
+  const clearFieldError = useCallback((field: keyof T) => {
     setErrors((prev) => {
       if (!prev[field]) return prev;
       const next = { ...prev };
       delete next[field];
       return next;
     });
-  };
+  }, []);
+
+  const setFieldValue = useCallback(
+    <K extends keyof T>(field: K, value: T[K]) => {
+      setValues((prev) => ({ ...prev, [field]: value }));
+      clearFieldError(field);
+    },
+    [clearFieldError]
+  );
+
+  const setStringField = useCallback(
+    <K extends StringFieldKeys<T>>(field: K, value: string) => {
+      setValues((prev) => Object.assign({}, prev, { [field]: value }));
+      clearFieldError(field);
+    },
+    [clearFieldError]
+  );
 
   const reset = useCallback((nextValues?: T) => {
     setValues(nextValues ?? initialValuesRef.current);
     setErrors({});
   }, []);
 
-  const validate = (): T | null => {
+  const syncValues = useCallback((nextValues: T) => {
+    initialValuesRef.current = nextValues;
+    setValues(nextValues);
+    setErrors({});
+  }, []);
+
+  const validate = useCallback((): T | null => {
     const result = schema.safeParse(values);
     if (result.success) {
       setErrors({});
@@ -48,9 +81,9 @@ export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<
 
     setErrors(extractFieldErrors<T>(result.error));
     return null;
-  };
+  }, [schema, values]);
 
-  const field = bindFieldHelpers(values, errors, setFieldValue);
+  const field = bindFieldHelpers(values, errors, setStringField);
 
   return {
     values,
@@ -58,6 +91,7 @@ export function useZodForm<T extends Record<string, unknown>>(schema: z.ZodType<
     setFieldValue,
     field,
     reset,
+    syncValues,
     validate,
   };
 }

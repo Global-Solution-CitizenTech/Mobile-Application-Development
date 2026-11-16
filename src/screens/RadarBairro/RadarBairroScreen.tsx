@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,10 +8,11 @@ import { ChamadoListSeparator } from '@/components/ListSeparator';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { useRadarData } from '@/hooks/useRadarData';
-import type { AppTabRouteProp, RadarBairroTabNavigationProp } from '@/navigation/types';
 import { RadarHeaderFilters } from '@/screens/RadarBairro/components/RadarHeaderFilters';
-import { spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
+import { spacing } from '@/theme/spacing';
+import type { Chamado } from '@/types/chamado';
+import type { AppTabRouteProp, RadarBairroTabNavigationProp } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
 
 export const RadarBairroScreen = () => {
   const navigation = useNavigation<RadarBairroTabNavigationProp>();
@@ -18,10 +20,19 @@ export const RadarBairroScreen = () => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
+  const listRef = useRef<FlatList<Chamado>>(null);
 
-  const radar = useRadarData(route.params?.categoria, (categoria) =>
-    navigation.setParams({ categoria })
-  );
+  const radar = useRadarData(route.params?.categoria);
+
+  const filterKey = `${radar.categoriaFiltro}|${radar.statusFiltro}|${radar.busca}|${radar.locationFilter.nivel}|${radar.locationFilter.valor ?? ''}|${radar.sortBy}`;
+  const prevFilterKeyRef = useRef(filterKey);
+
+  useEffect(() => {
+    if (prevFilterKeyRef.current !== filterKey) {
+      prevFilterKeyRef.current = filterKey;
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    }
+  }, [filterKey]);
 
   return (
     <View style={styles.container}>
@@ -59,6 +70,7 @@ export const RadarBairroScreen = () => {
         />
       ) : (
         <FlatList
+          ref={listRef}
           data={radar.chamados}
           keyExtractor={(item) => String(item.idChamado)}
           renderItem={({ item }) => (
@@ -66,6 +78,7 @@ export const RadarBairroScreen = () => {
               chamado={item}
               onPress={() => navigation.navigate('ChamadoDetails', { id: item.idChamado })}
               onApoiar={() => radar.apoiarChamado(item.idChamado)}
+              isSupporting={radar.isSupportingId(item.idChamado)}
             />
           )}
           contentContainerStyle={[
@@ -104,9 +117,9 @@ export const RadarBairroScreen = () => {
                   ? `Nenhum registro encontrado para ${radar.locationFilter.valor}. Você pode ampliar os filtros ou reportar um problema agora.`
                   : 'Tente ajustar os filtros de busca ou categoria para visualizar mais registros.'
               }
-              actionTitle={radar.hasActiveFilters || radar.locationFilter.valor ? 'Mostrar Todas / Limpar' : 'Reportar Agora'}
+              actionTitle={radar.hasActiveFilters ? 'Mostrar Todas / Limpar' : 'Reportar Agora'}
               onAction={() =>
-                radar.hasActiveFilters || radar.locationFilter.valor
+                radar.hasActiveFilters
                   ? radar.limparFiltros()
                   : navigation.navigate('NovoChamado')
               }

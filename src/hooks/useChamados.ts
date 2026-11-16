@@ -8,31 +8,41 @@ import { getApiErrorMessage } from '@/utils/apiError';
 
 const EMPTY_CHAMADOS: Chamado[] = [];
 
+function isValidChamadoId(id?: number): id is number {
+  return typeof id === 'number' && Number.isInteger(id) && id > 0;
+}
+
 export const chamadoQueries = {
   list: (filtros: FiltroChamados, usuarioId?: number | null) =>
     queryOptions({
       queryKey: queryKeys.chamados.list(filtros, usuarioId),
-      queryFn: () => chamadoService.listar(filtros),
+      queryFn: ({ signal }) => chamadoService.listar(filtros, signal),
     }),
 
   infiniteList: (filtros: Omit<FiltroChamados, 'page'>, usuarioId?: number | null) =>
     infiniteQueryOptions({
       queryKey: queryKeys.chamados.infiniteList(filtros, usuarioId),
-      queryFn: ({ pageParam }) => chamadoService.listar({ ...filtros, page: pageParam }),
+      queryFn: ({ pageParam, signal }) =>
+        chamadoService.listar({ ...filtros, page: pageParam }, signal),
       initialPageParam: 0,
       getNextPageParam: (lastPage) => {
-        const next = lastPage.page.number + 1;
-        return next < lastPage.page.totalPages ? next : undefined;
+        const currentPage = lastPage.page?.number;
+        const totalPages = lastPage.page?.totalPages;
+        if (typeof currentPage !== 'number' || typeof totalPages !== 'number') {
+          return undefined;
+        }
+        const next = currentPage + 1;
+        return next < totalPages ? next : undefined;
       },
     }),
 
   detail: (id?: number) => {
-    const hasValidId = typeof id === 'number' && id > 0;
+    const validId = isValidChamadoId(id);
     return queryOptions({
       queryKey: queryKeys.chamados.detail(id),
-      queryFn: () => {
-        if (!hasValidId) throw new Error('ID de chamado inválido.');
-        return chamadoService.buscarPorId(id);
+      queryFn: ({ signal }) => {
+        if (!validId) throw new Error('ID de chamado inválido.');
+        return chamadoService.buscarPorId(id, signal);
       },
     });
   },
@@ -40,7 +50,7 @@ export const chamadoQueries = {
   estatisticas: () =>
     queryOptions({
       queryKey: queryKeys.chamados.estatisticas(),
-      queryFn: () => chamadoService.obterEstatisticas(),
+      queryFn: ({ signal }) => chamadoService.obterEstatisticas(signal),
     }),
 };
 
@@ -52,10 +62,11 @@ export function useChamadosList(filtros: FiltroChamados = {}, enabled = true) {
     enabled: enabled && Boolean(usuario),
   });
 
+  const chamados = query.data?.content ?? EMPTY_CHAMADOS;
   return {
-    chamados: query.data?.content ?? EMPTY_CHAMADOS,
+    chamados,
     pageInfo: query.data?.page ?? null,
-    totalElements: query.data?.page.totalElements ?? 0,
+    totalElements: query.data?.page?.totalElements ?? chamados.length,
     isLoading: query.isLoading,
     isRefetching: query.isRefetching,
     error: query.error ? getApiErrorMessage(query.error) : null,
@@ -72,8 +83,8 @@ export function useInfiniteChamadosList(filtros: Omit<FiltroChamados, 'page'> = 
   });
 
   const pages = query.data?.pages;
-  const chamados = pages ? pages.flatMap((page) => page.content) : EMPTY_CHAMADOS;
-  const totalElements = pages?.[0]?.page.totalElements ?? 0;
+  const chamados = pages ? pages.flatMap((page) => page.content ?? EMPTY_CHAMADOS) : EMPTY_CHAMADOS;
+  const totalElements = pages?.[0]?.page?.totalElements ?? chamados.length;
 
   return {
     chamados,
@@ -90,7 +101,7 @@ export function useInfiniteChamadosList(filtros: Omit<FiltroChamados, 'page'> = 
 
 export function useChamadoDetail(id?: number) {
   const { usuario } = useAuth();
-  const hasValidId = typeof id === 'number' && id > 0;
+  const hasValidId = isValidChamadoId(id);
 
   const query = useQuery({
     ...chamadoQueries.detail(id),
@@ -107,7 +118,12 @@ export function useChamadoDetail(id?: number) {
 }
 
 export function useEstatisticasChamados() {
-  const query = useQuery(chamadoQueries.estatisticas());
+  const { usuario } = useAuth();
+
+  const query = useQuery({
+    ...chamadoQueries.estatisticas(),
+    enabled: Boolean(usuario),
+  });
 
   return {
     estatisticas: query.data ?? null,

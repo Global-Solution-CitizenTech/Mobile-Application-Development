@@ -1,15 +1,11 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-
-interface AuthHeaderProps {
-  title: string;
-  subtitle: string;
-  onBack?: () => void;
-  showIcon?: boolean;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { AuthHeaderProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const AuthHeader = ({ title, subtitle, onBack, showIcon = true }: AuthHeaderProps) => {
   const { theme } = useTheme();

@@ -1,4 +1,4 @@
-import type { AppTheme, IoniconName, VisualBadgeConfig } from '@/theme/types';
+import type { AppTheme, CategoryColorKey, IoniconName, VisualBadgeConfig } from '@/types/theme';
 import type { CategoriaResponse, StatusChamado } from '@/types/categoria';
 
 const STATUS_LABELS: Record<StatusChamado, string> = {
@@ -16,8 +16,6 @@ export const STATUS_OPTIONS: readonly { value: StatusChamado; label: string }[] 
   { value: 'CONCLUIDO', label: STATUS_LABELS.CONCLUIDO },
   { value: 'REJEITADO', label: STATUS_LABELS.REJEITADO },
 ];
-
-type CategoryColorKey = 'warning' | 'info' | 'danger' | 'primary';
 
 const CATEGORY_META: Record<
   string,

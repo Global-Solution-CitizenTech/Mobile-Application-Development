@@ -1,15 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getPriorityVisuals } from '@/theme/semanticConfig';
-import type { AiMessage } from '@/types/ai';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ZelaBotMessageBubbleProps } from '@/types/ui';
 import { formatMessageTime } from '@/utils/formatters';
-
-interface ZelaBotMessageBubbleProps {
-  message: AiMessage;
-}
 
 export const ZelaBotMessageBubble = ({ message }: ZelaBotMessageBubbleProps) => {
   const { theme } = useTheme();

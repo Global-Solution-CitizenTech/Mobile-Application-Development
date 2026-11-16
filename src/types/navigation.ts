@@ -1,6 +1,6 @@
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp, NavigatorScreenParams, RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -25,8 +25,22 @@ export type AppStackParamList = {
   SobreApp: undefined;
 };
 
+export type RootStackParamList = AuthStackParamList & AppStackParamList;
+
+export type AuthStackScreenProps<RouteName extends keyof AuthStackParamList> =
+  NativeStackScreenProps<AuthStackParamList, RouteName>;
+
+export type AppStackScreenProps<RouteName extends keyof AppStackParamList> =
+  NativeStackScreenProps<AppStackParamList, RouteName>;
+
+export type AuthStackNavigationProp<RouteName extends keyof AuthStackParamList> =
+  NativeStackNavigationProp<AuthStackParamList, RouteName>;
+
+export type AppStackNavigationProp<RouteName extends keyof AppStackParamList> =
+  NativeStackNavigationProp<AppStackParamList, RouteName>;
+
 /** Navegação de uma aba que também pode abrir telas do stack principal. */
-type AppTabNavigationProp<TabName extends keyof AppTabParamList> = CompositeNavigationProp<
+export type AppTabNavigationProp<TabName extends keyof AppTabParamList> = CompositeNavigationProp<
   BottomTabNavigationProp<AppTabParamList, TabName>,
   NativeStackNavigationProp<AppStackParamList>
 >;
@@ -35,5 +49,6 @@ export type AppTabRouteProp<TabName extends keyof AppTabParamList> = RouteProp<A
 
 export type HomeTabNavigationProp = AppTabNavigationProp<'HomeTab'>;
 export type RadarBairroTabNavigationProp = AppTabNavigationProp<'RadarBairroTab'>;
+export type ZelaBotTabNavigationProp = AppTabNavigationProp<'ZelaBotTab'>;
 export type MeusChamadosTabNavigationProp = AppTabNavigationProp<'MeusChamadosTab'>;
 export type ProfileTabNavigationProp = AppTabNavigationProp<'ProfileTab'>;

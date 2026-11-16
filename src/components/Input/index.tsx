@@ -1,24 +1,14 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import type { StyleProp, TextInputProps, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, spacing, fontSize, fontWeight } from '@/theme';
-export interface InputProps extends TextInputProps {
-  label?: string;
-  error?: string | null;
-  helperText?: string;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
-  isPassword?: boolean;
-  mask?: (text: string) => string;
-  containerStyle?: StyleProp<ViewStyle>;
-  inputContainerStyle?: StyleProp<ViewStyle>;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { InputProps } from '@/types/ui';
 
 export const Input = ({
+  ref,
   label,
   error,
   helperText,
@@ -57,6 +47,7 @@ export const Input = ({
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
 
         <TextInput
+          ref={ref}
           style={[styles.textInput, style]}
           placeholderTextColor={theme.textMuted}
           secureTextEntry={isSecured}

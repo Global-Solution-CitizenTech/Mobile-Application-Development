@@ -1,4 +1,4 @@
-type AiSender = 'user' | 'assistant';
+export type AiSender = 'user' | 'assistant';
 
 export interface ChamadoContextPayload {
   id?: number;
@@ -14,7 +14,7 @@ export interface ChamadoContextPayload {
   foto_url?: string;
 }
 
-interface RetrievedSource {
+export interface RetrievedSource {
   id: string;
   source: string;
   category: string;
@@ -22,7 +22,7 @@ interface RetrievedSource {
   similarity_score: number;
 }
 
-interface AiHistoryMessage {
+export interface AiHistoryMessage {
   sender: 'user' | 'model';
   text: string;
 }

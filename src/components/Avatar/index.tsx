@@ -1,13 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { borderRadius, fontWeight } from '@/theme';
-import type { AvatarSize } from '@/types/ui';
+import { borderRadius } from '@/theme/spacing';
+import { fontWeight } from '@/theme/typography';
+import type { AvatarProps, AvatarSize } from '@/types/ui';
 import { getInitials } from '@/utils/formatters';
-
-interface AvatarProps {
-  nome?: string | null;
-  tamanho?: AvatarSize | number;
-}
 
 const PRESET_SIZES: Record<AvatarSize, { size: number; fontSize: number }> = {
   sm: { size: 32, fontSize: 13 },

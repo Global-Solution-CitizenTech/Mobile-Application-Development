@@ -1,17 +1,11 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatCard } from '@/components/StatCard';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-
-interface ProfileStatsCardProps {
-  total: number;
-  emAndamento: number;
-  concluidos: number;
-  apoiosRecebidos: number;
-  loading?: boolean;
-  onPressVerChamados: () => void;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ProfileStatsCardProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const ProfileStatsCard = ({
   total,

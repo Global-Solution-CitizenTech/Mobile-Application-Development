@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChamadosList, useEstatisticasChamados } from '@/hooks/useChamados';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
@@ -7,7 +8,7 @@ export function useHomeData() {
   const { usuario } = useAuth();
   const statsQuery = useEstatisticasChamados();
   const recentQuery = useChamadosList({ page: 0, size: 3, sort: 'dtAbertura,desc' });
-  const { apoiarChamado } = useChamadoMutations();
+  const { apoiarChamado, isSupportingId } = useChamadoMutations();
 
   const estatisticas = statsQuery.estatisticas;
   const taxaResolucao =
@@ -15,9 +16,9 @@ export function useHomeData() {
       ? 0
       : Math.round((estatisticas.resolvidos / estatisticas.total) * 100);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     await Promise.all([statsQuery.refetch(), recentQuery.refetch()]);
-  };
+  }, [recentQuery, statsQuery]);
 
   return {
     usuario,
@@ -26,9 +27,14 @@ export function useHomeData() {
     chamadosRecentes: recentQuery.chamados,
     categorias: CATEGORIA_CATALOG,
     isLoading: statsQuery.isLoading || recentQuery.isLoading,
+    isLoadingStats: statsQuery.isLoading,
+    isLoadingRecent: recentQuery.isLoading,
     isRefreshing: statsQuery.isRefetching || recentQuery.isRefetching,
+    statsError: statsQuery.error,
+    recentError: recentQuery.error,
     error: statsQuery.error || recentQuery.error,
     onRefresh,
     apoiarChamado,
+    isSupportingId,
   };
 }

@@ -1,192 +1,155 @@
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { type NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMutation } from '@tanstack/react-query';
+import { useRef } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import type { TextInputInstance } from 'react-native';
 import { Button } from '@/components/Button';
+import { EmptyState } from '@/components/EmptyState';
+import { EnderecoFormFields } from '@/components/EnderecoFormFields';
 import { Header } from '@/components/Header';
 import { Input } from '@/components/Input';
-import { useAuth } from '@/contexts/AuthContext';
-import { useFeedback } from '@/contexts/FeedbackContext';
+import { KeyboardScreenLayout } from '@/components/KeyboardScreenLayout';
 import { useThemedStyles } from '@/contexts/ThemeContext';
-import { useZodForm } from '@/hooks/useZodForm';
-import type { AppStackParamList } from '@/navigation/types';
-import { buildUsuarioRequest } from '@/services/authService';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { UsuarioRequest } from '@/types/auth';
-import type { ProfileEditFormData } from '@/types/form';
-import { getApiErrorMessage } from '@/utils/apiError';
-import { maskCepInput, maskPhoneInput } from '@/utils/formatters';
-import { ProfileEditSchema } from '@/utils/schemas';
+import { useEditarPerfilForm } from '@/hooks/useEditarPerfilForm';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppStackScreenProps } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
+import { maskPhoneInput } from '@/utils/formatters';
+import { shadows } from '@/utils/shadow';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'EditarPerfil'>;
-
-export const EditarPerfilScreen = ({ navigation }: Props) => {
-  const { usuario, updateProfile } = useAuth();
-  const { showError, showSuccess } = useFeedback();
+export const EditarPerfilScreen = ({ navigation }: AppStackScreenProps<'EditarPerfil'>) => {
   const styles = useThemedStyles(createStyles);
-  const insets = useSafeAreaInsets();
+  const form = useEditarPerfilForm();
 
-  const initialValues: ProfileEditFormData = {
-    nome: usuario?.nome ?? '',
-    email: usuario?.email ?? '',
-    telefone: usuario ? maskPhoneInput(`${usuario.ddd}${usuario.numeroTelefone}`) : '',
-    cep: usuario?.endereco ? maskCepInput(usuario.endereco.cep) : '',
-    rua: usuario?.endereco?.rua ?? '',
-    numero: usuario?.endereco?.numero ?? '',
-    referencia: usuario?.endereco?.referencia ?? '',
-    senha: '',
-  };
-
-  const form = useZodForm(ProfileEditSchema, initialValues);
-
-  const saveMutation = useMutation({
-    mutationFn: (payload: UsuarioRequest) => updateProfile(payload),
-    onSuccess: () => {
-      showSuccess('Perfil Atualizado', 'Seus dados foram atualizados com sucesso!');
-      navigation.goBack();
-    },
-    onError: (error) => {
-      showError('Ops!', getApiErrorMessage(error, 'Falha ao atualizar perfil.'));
-    },
-  });
+  const emailRef = useRef<TextInputInstance>(null);
+  const telefoneRef = useRef<TextInputInstance>(null);
+  const cepRef = useRef<TextInputInstance>(null);
+  const senhaRef = useRef<TextInputInstance>(null);
 
   const handleSave = () => {
-    const parsed = form.validate();
-    if (!parsed) return;
-    saveMutation.mutate(buildUsuarioRequest(parsed));
+    form.handleSave(() => navigation.goBack());
   };
 
+  const header = (
+    <Header
+      title="Editar Perfil"
+      subtitle="Atualize seus dados cadastrais"
+      showBack
+      onBack={() => navigation.goBack()}
+    />
+  );
+
+  if (!form.hasUsuario) {
+    return (
+      <KeyboardScreenLayout header={header} scrollable={false}>
+        <EmptyState
+          icon="person-outline"
+          title="Perfil indisponível"
+          description="Faça login novamente para editar seus dados cadastrais."
+          actionTitle="Voltar"
+          onAction={() => navigation.goBack()}
+          style={styles.emptyFallback}
+        />
+      </KeyboardScreenLayout>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <Header
-        title="Editar Perfil"
-        subtitle="Atualize seus dados cadastrais"
-        showBack
-        onBack={() => navigation.goBack()}
-      />
+    <KeyboardScreenLayout header={header}>
+      <View style={[styles.card, shadows.sm]}>
+        <Text style={styles.sectionTitle}>Dados Pessoais</Text>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingBottom: Math.max(insets.bottom, spacing.xl) + spacing.xl,
-            paddingLeft: Math.max(insets.left, spacing.md),
-            paddingRight: Math.max(insets.right, spacing.md),
-          },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.card, shadows.sm]}>
-          <Text style={styles.sectionTitle}>Dados Pessoais</Text>
+        <Input
+          label="Nome Completo *"
+          placeholder="Seu nome"
+          maxLength={100}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          autoComplete="name"
+          onSubmitEditing={() => emailRef.current?.focus()}
+          {...form.field('nome')}
+        />
 
-          <Input
-            label="Nome Completo *"
-            placeholder="Seu nome"
-            {...form.field('nome')}
-            maxLength={100}
-            returnKeyType="next"
-            autoComplete="name"
+        <Input
+          ref={emailRef}
+          label="E-mail *"
+          placeholder="seu@email.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          autoComplete="email"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          maxLength={100}
+          onSubmitEditing={() => telefoneRef.current?.focus()}
+          {...form.field('email')}
+        />
+
+        <Input
+          ref={telefoneRef}
+          label="Telefone com DDD *"
+          placeholder="(11) 99999-9999"
+          keyboardType="phone-pad"
+          mask={maskPhoneInput}
+          maxLength={15}
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => cepRef.current?.focus()}
+          {...form.field('telefone')}
+        />
+
+        <View style={styles.divider} />
+        <Text style={styles.sectionTitle}>Endereço Residencial</Text>
+
+        <EnderecoFormFields
+          field={form.field}
+          onUsarGps={() => void form.onUsarGps()}
+          capturandoGps={form.capturandoGps}
+          erroGps={form.erroGps}
+          localizacaoResumo={form.localizacaoResumo}
+          cepRef={cepRef}
+          referenciaReturnKeyType="next"
+          onSubmitReferencia={() => senhaRef.current?.focus()}
+        />
+
+        <View style={styles.divider} />
+        <Text style={styles.sectionTitle}>Confirmação de Segurança</Text>
+
+        <Input
+          ref={senhaRef}
+          label="Senha Atual ou Nova Senha *"
+          placeholder="Digite sua senha para confirmar"
+          isPassword
+          maxLength={60}
+          returnKeyType="done"
+          onSubmitEditing={handleSave}
+          helperText="Necessária para autorizar qualquer alteração cadastral."
+          {...form.field('senha')}
+        />
+
+        <View style={styles.actions}>
+          <Button
+            title={form.submitting ? 'Salvando...' : 'Salvar Alterações'}
+            onPress={handleSave}
+            loading={form.submitting}
+            size="lg"
           />
-
-          <Input
-            label="E-mail *"
-            placeholder="seu@email.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            returnKeyType="next"
-            {...form.field('email')}
-            maxLength={100}
+          <Button
+            title="Cancelar"
+            variant="outline"
+            onPress={() => navigation.goBack()}
+            disabled={form.submitting}
           />
-
-          <Input
-            label="Telefone com DDD *"
-            placeholder="(11) 99999-9999"
-            keyboardType="phone-pad"
-            mask={maskPhoneInput}
-            {...form.field('telefone')}
-            maxLength={15}
-          />
-
-          <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Endereço Residencial</Text>
-
-          <View style={styles.row}>
-            <View style={styles.flexCep}>
-              <Input
-                label="CEP *"
-                placeholder="00000-000"
-                keyboardType="number-pad"
-                mask={maskCepInput}
-                {...form.field('cep')}
-                maxLength={9}
-              />
-            </View>
-            <View style={styles.flexNum}>
-              <Input
-                label="Número *"
-                placeholder="100 ou S/N"
-                {...form.field('numero')}
-                maxLength={100}
-              />
-            </View>
-          </View>
-
-          <Input
-            label="Rua / Logradouro (Opcional)"
-            placeholder="Nome da sua rua"
-            {...form.field('rua')}
-            maxLength={100}
-          />
-
-          <Input
-            label="Ponto de Referência *"
-            placeholder="Ex: Próximo à padaria"
-            {...form.field('referencia')}
-            maxLength={50}
-          />
-
-          <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Confirmação de Segurança</Text>
-
-          <Input
-            label="Senha Atual ou Nova Senha *"
-            placeholder="Digite sua senha para confirmar"
-            isPassword
-            {...form.field('senha')}
-            maxLength={60}
-            returnKeyType="done"
-            onSubmitEditing={handleSave}
-            helperText="Necessária para autorizar qualquer alteração cadastral."
-          />
-
-          <View style={styles.actions}>
-            <Button
-              title={saveMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
-              onPress={handleSave}
-              loading={saveMutation.isPending}
-              size="lg"
-            />
-            <Button
-              title="Cancelar"
-              variant="outline"
-              onPress={() => navigation.goBack()}
-              disabled={saveMutation.isPending}
-            />
-          </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </KeyboardScreenLayout>
   );
 };
 
 const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
-    scrollContent: { padding: spacing.md, gap: spacing.md },
+    emptyFallback: {
+      flex: 1,
+    },
     card: {
       backgroundColor: theme.surface,
       borderRadius: borderRadius.cardLg,
@@ -208,8 +171,8 @@ const createStyles = (theme: AppTheme) =>
       backgroundColor: theme.border,
       marginVertical: spacing.xs,
     },
-    row: { flexDirection: 'row', gap: spacing.sm },
-    flexCep: { flex: 3 },
-    flexNum: { flex: 2 },
-    actions: { gap: spacing.sm, marginTop: spacing.md },
+    actions: {
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
   });

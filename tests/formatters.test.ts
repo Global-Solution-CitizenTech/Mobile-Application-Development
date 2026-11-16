@@ -1,7 +1,20 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { EnderecoResumo } from '../src/types/endereco.ts';
-import { formatCep, formatDate, formatMessageTime, formatShortDate, formatTelefone, getFirstName, getInitials, getShortEndereco, maskCepInput, maskPhoneInput, onlyDigits, splitPhoneDigits } from '../src/utils/formatters.ts';
+import {
+  formatCep,
+  formatDate,
+  formatMessageTime,
+  formatShortDate,
+  formatTelefone,
+  getFirstName,
+  getInitials,
+  getShortEndereco,
+  isMeaningfulBairro,
+  maskCepInput,
+  maskPhoneInput,
+  onlyDigits,
+  splitPhoneDigits,
+} from '../src/utils/formatters.ts';
 
 describe('formatters', () => {
   describe('onlyDigits', () => {
@@ -100,27 +113,50 @@ describe('formatters', () => {
     });
   });
 
+  describe('isMeaningfulBairro', () => {
+    it('rejects null, blank, and placeholder bairro strings', () => {
+      assert.equal(isMeaningfulBairro(null), false);
+      assert.equal(isMeaningfulBairro(undefined), false);
+      assert.equal(isMeaningfulBairro('   '), false);
+      assert.equal(isMeaningfulBairro('Não informado'), false);
+      assert.equal(isMeaningfulBairro('  nao   informado  '), false);
+      assert.equal(isMeaningfulBairro('NÃO INFORMADA'), false);
+    });
+
+    it('accepts real neighborhood names', () => {
+      assert.equal(isMeaningfulBairro('Bela Vista'), true);
+      assert.equal(isMeaningfulBairro(' Pinheiros '), true);
+    });
+  });
+
   describe('getShortEndereco', () => {
     it('formats address according to best available fields', () => {
       assert.equal(getShortEndereco(null), 'Região não informada');
-      assert.equal(getShortEndereco({} as EnderecoResumo), 'Região não informada');
+      assert.equal(getShortEndereco({}), 'Região não informada');
 
       assert.equal(
-        getShortEndereco({ bairro: 'Bela Vista', cidade: 'São Paulo' } as EnderecoResumo),
+        getShortEndereco({ bairro: 'Bela Vista', cidade: 'São Paulo' }),
         'Bela Vista, São Paulo'
       );
+      assert.equal(getShortEndereco({ bairro: 'Bela Vista' }), 'Bela Vista');
+      assert.equal(getShortEndereco({ rua: 'Avenida Paulista' }), 'Avenida Paulista');
+      assert.equal(getShortEndereco({ referencia: 'Próximo ao MASP' }), 'Próximo ao MASP');
+    });
+
+    it('ignores placeholder bairro values and falls back cleanly', () => {
       assert.equal(
-        getShortEndereco({ bairro: 'Bela Vista' } as EnderecoResumo),
-        'Bela Vista'
+        getShortEndereco({ bairro: 'Não informado', cidade: 'São Paulo' }),
+        'São Paulo'
       );
       assert.equal(
-        getShortEndereco({ rua: 'Avenida Paulista' } as EnderecoResumo),
-        'Avenida Paulista'
+        getShortEndereco({ bairro: 'nao informado', rua: 'Rua Augusta', cidade: 'São Paulo' }),
+        'Rua Augusta, São Paulo'
       );
       assert.equal(
-        getShortEndereco({ referencia: 'Próximo ao MASP' } as EnderecoResumo),
-        'Próximo ao MASP'
+        getShortEndereco({ bairro: 'Não informada', referencia: 'Praça da Sé' }),
+        'Praça da Sé'
       );
+      assert.equal(getShortEndereco({ bairro: 'Não informado' }), 'Região não informada');
     });
   });
 });

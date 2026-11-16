@@ -1,65 +1,44 @@
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { type NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import { AuthHeader } from '@/components/AuthHeader';
+import { KeyboardScreenLayout } from '@/components/KeyboardScreenLayout';
 import { useThemedStyles } from '@/contexts/ThemeContext';
 import { useLoginForm } from '@/hooks/useLoginForm';
-import type { AuthStackParamList } from '@/navigation/types';
 import { LoginForm } from '@/screens/Login/components/LoginForm';
-import { spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
+import { spacing } from '@/theme/spacing';
+import type { AuthStackScreenProps } from '@/types/navigation';
+import type { AppTheme } from '@/types/theme';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
-
-export const LoginScreen = ({ navigation }: Props) => {
+export const LoginScreen = ({ navigation }: AuthStackScreenProps<'Login'>) => {
   const styles = useThemedStyles(createStyles);
-  const insets = useSafeAreaInsets();
   const { field, submitting, handleLogin } = useLoginForm();
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop: Math.max(insets.top, spacing.lg) + spacing.sm,
-            paddingBottom: Math.max(insets.bottom, spacing.xl),
-            paddingLeft: Math.max(insets.left, spacing.lg),
-            paddingRight: Math.max(insets.right, spacing.lg),
-          },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.contentWrapper}>
-          <AuthHeader
-            title="ZelaFix"
-            subtitle="Acesse sua conta para acompanhar e melhorar a zeladoria do seu bairro"
-            onBack={() => navigation.goBack()}
-          />
+    <KeyboardScreenLayout contentContainerStyle={styles.scrollContent}>
+      <View style={styles.contentWrapper}>
+        <AuthHeader
+          title="ZelaFix"
+          subtitle="Acesse sua conta para acompanhar e melhorar a zeladoria do seu bairro"
+          onBack={() => navigation.goBack()}
+        />
 
-          <LoginForm
-            field={field}
-            isLoading={submitting}
-            onSubmit={handleLogin}
-            onGoToRegister={() => navigation.replace('Register')}
-          />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <LoginForm
+          field={field}
+          isLoading={submitting}
+          onSubmit={handleLogin}
+          onGoToRegister={() => navigation.replace('Register')}
+        />
+      </View>
+    </KeyboardScreenLayout>
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (_theme: AppTheme) =>
   StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
     scrollContent: {
       flexGrow: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      paddingHorizontal: spacing.lg,
     },
     contentWrapper: {
       width: '100%',

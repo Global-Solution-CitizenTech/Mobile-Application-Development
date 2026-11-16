@@ -2,22 +2,22 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '@/components/Avatar';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { Usuario } from '@/types/auth';
-import { formatCep, formatTelefone } from '@/utils/formatters';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ProfileUserCardProps } from '@/types/ui';
+import { formatCep, formatTelefone, isMeaningfulBairro } from '@/utils/formatters';
 import { getCargoLabel } from '@/utils/permissions';
-
-interface ProfileUserCardProps {
-  usuario: Usuario;
-}
+import { shadows } from '@/utils/shadow';
 
 export const ProfileUserCard = ({ usuario }: ProfileUserCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
   const endereco = usuario.endereco;
-  const localizacaoTexto = [endereco?.bairro, endereco?.cidade].filter(Boolean).join(' • ');
+  const bairro = isMeaningfulBairro(endereco?.bairro) ? endereco?.bairro?.trim() : undefined;
+  const cidade = endereco?.cidade?.trim() || undefined;
+  const localizacaoTexto = [bairro, cidade].filter(Boolean).join(' • ');
 
   return (
     <View style={styles.card}>

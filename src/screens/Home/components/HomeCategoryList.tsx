@@ -1,15 +1,12 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getCategoryLabel, getCategoryVisuals } from '@/theme/semanticConfig';
-import type { CategoriaResponse } from '@/types/categoria';
-
-interface HomeCategoryListProps {
-  categorias: readonly CategoriaResponse[];
-  onSelectCategoria: (categoriaNome: string) => void;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { HomeCategoryListProps } from '@/types/ui';
+import { shadows } from '@/utils/shadow';
 
 export const HomeCategoryList = ({ categorias, onSelectCategoria }: HomeCategoryListProps) => {
   const { theme } = useTheme();
@@ -24,7 +21,13 @@ export const HomeCategoryList = ({ categorias, onSelectCategoria }: HomeCategory
         {categorias.map((cat) => {
           const { iconName, color, bg } = getCategoryVisuals(cat.nome, theme);
           return (
-            <TouchableOpacity key={cat.id} style={styles.card} onPress={() => onSelectCategoria(cat.nome)} activeOpacity={0.8} hitSlop={6}>
+            <TouchableOpacity
+              key={cat.id}
+              style={styles.card}
+              onPress={() => onSelectCategoria(cat.nome)}
+              activeOpacity={0.8}
+              hitSlop={6}
+            >
               <View style={[styles.iconBox, { backgroundColor: bg }]}>
                 <Ionicons name={iconName} size={22} color={color} />
               </View>

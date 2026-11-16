@@ -5,23 +5,11 @@ import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { AiChatSession } from '@/types/ai';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ZelaBotHistoryModalProps } from '@/types/ui';
 import { formatDate } from '@/utils/formatters';
-
-interface ZelaBotHistoryModalProps {
-  visible: boolean;
-  onClose: () => void;
-  sessoes: AiChatSession[];
-  loading: boolean;
-  error?: string | null;
-  activeSessionId: string;
-  loadingSessionId: string | null;
-  onSelectSession: (sessionId: string) => void;
-  onDeleteSession: (sessionId: string) => void;
-  onNewChat: () => void;
-}
 
 export const ZelaBotHistoryModal = ({
   visible,
@@ -38,8 +26,26 @@ export const ZelaBotHistoryModal = ({
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
 
+  const footer = !loading && !error ? (
+    <Button
+      title="Nova Conversa Geral"
+      variant="outline"
+      leftIcon={<Ionicons name="add-circle-outline" size={18} color={theme.primary} />}
+      onPress={() => {
+        onNewChat();
+        onClose();
+      }}
+    />
+  ) : undefined;
+
   return (
-    <BaseModal visible={visible} title="Histórico de Conversas" subtitle="Consultas salvas no servidor ZelaBot AI" onClose={onClose}>
+    <BaseModal
+      visible={visible}
+      title="Histórico de Conversas"
+      subtitle="Consultas salvas no servidor ZelaBot AI"
+      onClose={onClose}
+      footer={footer}
+    >
       {loading ? (
         <LoadingSpinner message="Carregando conversas..." />
       ) : error ? (
@@ -95,18 +101,6 @@ export const ZelaBotHistoryModal = ({
           })}
         </View>
       )}
-
-      <View style={styles.footer}>
-        <Button
-          title="Iniciar Nova Conversa"
-          variant="outline"
-          leftIcon={<Ionicons name="add-circle-outline" size={18} color={theme.primary} />}
-          onPress={() => {
-            onNewChat();
-            onClose();
-          }}
-        />
-      </View>
     </BaseModal>
   );
 };
@@ -128,5 +122,4 @@ const createStyles = (theme: AppTheme) =>
     cardBody: { flex: 1, gap: 4 },
     cardTitle: { fontSize: fontSize.body, fontWeight: fontWeight.semibold, color: theme.text },
     cardMeta: { fontSize: fontSize.caption, color: theme.textSecondary },
-    footer: { marginTop: spacing.md },
   });

@@ -1,7 +1,10 @@
 import type { ComponentProps } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
+import type { Ionicons } from '@expo/vector-icons';
 
 export type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
+export type CategoryColorKey = 'warning' | 'info' | 'danger' | 'primary';
 
 export interface VisualBadgeConfig {
   label: string;
@@ -11,6 +14,16 @@ export interface VisualBadgeConfig {
   iconColor: string;
   iconName: IoniconName;
 }
+
+export interface ShadowOptions {
+  offsetY: number;
+  blur: number;
+  opacity: number;
+}
+
+export type NamedStyles<T> = {
+  [P in keyof T]: ViewStyle | TextStyle | ImageStyle;
+};
 
 export interface AppTheme {
   isDark: boolean;

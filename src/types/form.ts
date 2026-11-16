@@ -1,10 +1,11 @@
+import type { z } from 'zod';
 import type {
-  ChamadoCreateFormData,
-  ChamadoFormData,
-  LoginFormData,
-  ProfileEditFormData,
-  RegisterFormData,
-  StatusUpdateFormData,
+  ChamadoCreateSchema,
+  ChamadoFormSchema,
+  LoginSchema,
+  ProfileEditSchema,
+  RegisterSchema,
+  StatusUpdateSchema,
 } from '@/utils/schemas';
 
 export type FormErrors<T> = Partial<Record<keyof T, string>>;
@@ -19,11 +20,24 @@ export interface BoundFieldProps {
   error?: string;
 }
 
-export type {
-  LoginFormData,
-  RegisterFormData,
-  ProfileEditFormData,
-  ChamadoFormData,
-  ChamadoCreateFormData,
-  StatusUpdateFormData,
-};
+export type FieldBinder<T> = <K extends StringFieldKeys<T>>(name: K) => BoundFieldProps;
+
+export interface UseZodFormReturn<T extends Record<string, unknown>> {
+  values: T;
+  errors: FormErrors<T>;
+  setFieldValue: <K extends keyof T>(field: K, value: T[K]) => void;
+  field: FieldBinder<T>;
+  syncValues: (nextValues: T) => void;
+  reset: (nextValues?: T) => void;
+  validate: () => T | null;
+}
+
+export type LoginFormData = z.infer<typeof LoginSchema>;
+export type RegisterFormData = z.infer<typeof RegisterSchema>;
+export type ProfileEditFormData = z.infer<typeof ProfileEditSchema>;
+export type EditarPerfilFormData = ProfileEditFormData;
+export type ChamadoFormData = z.infer<typeof ChamadoFormSchema>;
+export type ChamadoCreateFormData = z.infer<typeof ChamadoCreateSchema>;
+export type NovoChamadoFormData = ChamadoCreateFormData;
+export type EditarChamadoFormData = ChamadoFormData;
+export type StatusUpdateFormData = z.infer<typeof StatusUpdateSchema>;

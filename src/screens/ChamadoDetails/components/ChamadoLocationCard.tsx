@@ -1,14 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
-import type { EnderecoResponse } from '@/types/endereco';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { ChamadoLocationCardProps } from '@/types/ui';
 import { formatCep } from '@/utils/formatters';
-
-interface ChamadoLocationCardProps {
-  endereco: EnderecoResponse;
-}
+import { shadows } from '@/utils/shadow';
 
 export const ChamadoLocationCard = ({ endereco }: ChamadoLocationCardProps) => {
   const { theme } = useTheme();
@@ -28,7 +26,9 @@ export const ChamadoLocationCard = ({ endereco }: ChamadoLocationCardProps) => {
         <Text style={styles.mainAddress}>{linhaRua || 'Endereço registrado'}</Text>
         {linhaRegiao ? <Text style={styles.sub}>{linhaRegiao}</Text> : null}
         <Text style={styles.sub}>CEP {formatCep(endereco.cep)}</Text>
-        {endereco.referencia ? <Text style={styles.ref}>Ponto de Referência: {endereco.referencia}</Text> : null}
+        {endereco.referencia ? (
+          <Text style={styles.ref}>Ponto de Referência: {endereco.referencia}</Text>
+        ) : null}
       </View>
     </View>
   );
@@ -50,5 +50,10 @@ const createStyles = (theme: AppTheme) =>
     body: { gap: 4 },
     mainAddress: { fontSize: fontSize.body, fontWeight: fontWeight.semibold, color: theme.text },
     sub: { fontSize: fontSize.bodySmall, color: theme.textSecondary },
-    ref: { fontSize: fontSize.caption, color: theme.primary, fontWeight: fontWeight.medium, marginTop: 2 },
+    ref: {
+      fontSize: fontSize.caption,
+      color: theme.primary,
+      fontWeight: fontWeight.medium,
+      marginTop: 2,
+    },
   });

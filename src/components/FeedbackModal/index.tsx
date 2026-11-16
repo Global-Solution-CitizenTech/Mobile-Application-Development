@@ -1,31 +1,13 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BaseModal } from '@/components/BaseModal';
 import { Button } from '@/components/Button';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { spacing, fontSize, fontWeight } from '@/theme';
-import type { AppTheme, IoniconName } from '@/theme/types';
+import { spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
 import type { FeedbackType } from '@/types/feedback';
-import type { ButtonVariant } from '@/types/ui';
-
-interface FeedbackModalProps {
-  visible: boolean;
-  type?: FeedbackType;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void;
-  onCancel?: () => void;
-  confirmLoading?: boolean;
-}
-
-interface FeedbackVisual {
-  icon: IoniconName;
-  color: string;
-  bg: string;
-  btnVariant: ButtonVariant;
-}
+import type { AppTheme } from '@/types/theme';
+import type { FeedbackModalProps, FeedbackVisual } from '@/types/ui';
 
 function getFeedbackVisual(type: FeedbackType, theme: AppTheme): FeedbackVisual {
   switch (type) {

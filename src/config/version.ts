@@ -1,18 +1,8 @@
 import Constants from 'expo-constants';
-import type { GitCommitMetadata, IntegranteGrupo } from '@/types/version';
+import { parseGitCommitMetadata } from '@/config/versionParser';
+import type { AppVersionInfo, GitCommitMetadata, IntegranteGrupo } from '@/types/version';
 
-const dynamicGitInfo = Constants.expoConfig?.extra?.gitCommit as Partial<GitCommitMetadata> | undefined;
-
-const FALLBACK_HASH = 'local-dev';
-const fallbackHash = dynamicGitInfo?.commitHash || FALLBACK_HASH;
-
-export const GIT_COMMIT_INFO: GitCommitMetadata = {
-  commitHash: fallbackHash,
-  shortCommitHash: dynamicGitInfo?.shortCommitHash || fallbackHash.slice(0, 7),
-  commitDate: dynamicGitInfo?.commitDate || '',
-  branch: dynamicGitInfo?.branch || 'main',
-  commitMessage: dynamicGitInfo?.commitMessage || 'Build local (metadados Git indisponíveis)',
-};
+export const GIT_COMMIT_INFO: GitCommitMetadata = parseGitCommitMetadata(Constants.expoConfig?.extra);
 
 export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
   {
@@ -57,7 +47,7 @@ export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
   },
 ];
 
-export const APP_VERSION_INFO = {
+export const APP_VERSION_INFO: AppVersionInfo = {
   appName: 'ZelaFix',
   tagline: 'Zeladoria Urbana Colaborativa & Cidades Sustentáveis (ODS 11)',
   version: Constants.expoConfig?.version ?? '1.0.0',

@@ -1,4 +1,10 @@
-import type { EnderecoFormInput, EnderecoRequest, EnderecoResponse } from '@/types/endereco';
+import type {
+  EnderecoFormInput,
+  EnderecoRequest,
+  EnderecoResponse,
+  LocalizacaoCapturada,
+} from '@/types/endereco';
+import type { EditarPerfilFormData, FieldBinder, FormErrors } from '@/types/form';
 
 export type CargoUsuario = 'CIDADAO' | 'GESTOR' | 'ADMIN';
 
@@ -47,4 +53,22 @@ export interface AuthContextData {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (data: UsuarioRequest) => Promise<Usuario>;
+}
+
+export interface UseEditarPerfilFormReturn {
+  hasUsuario: boolean;
+  values: EditarPerfilFormData;
+  errors: FormErrors<EditarPerfilFormData>;
+  setFieldValue: <K extends keyof EditarPerfilFormData>(
+    field: K,
+    value: EditarPerfilFormData[K]
+  ) => void;
+  field: FieldBinder<EditarPerfilFormData>;
+  submitting: boolean;
+  capturandoGps: boolean;
+  erroGps: string | null;
+  localizacaoPreview: LocalizacaoCapturada | null;
+  localizacaoResumo: string | null;
+  onUsarGps: () => Promise<void>;
+  handleSave: (onConfirmed?: () => void) => void;
 }

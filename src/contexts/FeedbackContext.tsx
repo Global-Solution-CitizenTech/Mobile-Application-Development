@@ -1,4 +1,4 @@
-import { createContext, use, useState } from 'react';
+import { createContext, use, useCallback, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import type { FeedbackContextData, FeedbackOptions } from '@/types/feedback';
@@ -6,33 +6,46 @@ import type { FeedbackContextData, FeedbackOptions } from '@/types/feedback';
 const FeedbackContext = createContext<FeedbackContextData | null>(null);
 
 export function FeedbackProvider({ children }: { children: ReactNode }) {
-  const [modal, setModal] = useState<FeedbackOptions | null>(null);
+  const [queue, setQueue] = useState<FeedbackOptions[]>([]);
+  const lastConfirmedRef = useRef<FeedbackOptions | null>(null);
+  const currentModal = queue[0] ?? null;
 
-  const showFeedback = (options: FeedbackOptions) => setModal(options);
+  const showFeedback = useCallback((options: FeedbackOptions) => {
+    setQueue((prev) => [...prev, { ...options }]);
+  }, []);
 
-  const showError = (title: string, message: string) => {
-    setModal({ type: 'error', title, message });
-  };
+  const showError = useCallback((title: string, message: string) => {
+    setQueue((prev) => [...prev, { type: 'error', title, message }]);
+  }, []);
 
-  const showSuccess = (title: string, message: string, onConfirm?: () => void) => {
-    setModal({ type: 'success', title, message, onConfirm });
-  };
+  const showSuccess = useCallback((title: string, message: string, onConfirm?: () => void) => {
+    setQueue((prev) => [...prev, { type: 'success', title, message, onConfirm }]);
+  }, []);
 
-  const handleConfirm = () => {
-    const onConfirm = modal?.onConfirm;
-    setModal(null);
+  const handleConfirm = useCallback(() => {
+    if (!currentModal || lastConfirmedRef.current === currentModal) {
+      return;
+    }
+    lastConfirmedRef.current = currentModal;
+    const onConfirm = currentModal.onConfirm;
+    setQueue((prev) => (prev[0] === currentModal ? prev.slice(1) : prev));
     onConfirm?.();
-  };
+  }, [currentModal]);
+
+  const value = useMemo<FeedbackContextData>(
+    () => ({ showFeedback, showError, showSuccess }),
+    [showFeedback, showError, showSuccess]
+  );
 
   return (
-    <FeedbackContext.Provider value={{ showFeedback, showError, showSuccess }}>
+    <FeedbackContext.Provider value={value}>
       {children}
       <FeedbackModal
-        visible={Boolean(modal)}
-        type={modal?.type}
-        title={modal?.title ?? ''}
-        message={modal?.message ?? ''}
-        confirmText={modal?.confirmText}
+        visible={Boolean(currentModal)}
+        type={currentModal?.type}
+        title={currentModal?.title ?? ''}
+        message={currentModal?.message ?? ''}
+        confirmText={currentModal?.confirmText}
         onConfirm={handleConfirm}
       />
     </FeedbackContext.Provider>

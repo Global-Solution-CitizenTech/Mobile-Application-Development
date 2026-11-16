@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { ChamadoResponse, FotoUpload } from '../src/types/chamado.ts';
-import { buildApiAssetUrl, buildEnderecoRequest, mapChamadoResponse, toChamadoCreateRequest, toChamadoRequest } from '../src/utils/chamadoMappers.ts';
+import type { ChamadoResponse, FotoUpload, ReactNativeFormFile, ReactNativeMultipartFormData } from '../src/types/chamado.ts';
+import {
+  appendMultipartFile,
+  buildApiAssetUrl,
+  buildEnderecoRequest,
+  mapChamadoResponse,
+  toChamadoCreateRequest,
+  toChamadoRequest,
+  toReactNativeFormFile,
+} from '../src/utils/chamadoMappers.ts';
 
 describe('chamadoMappers', () => {
   describe('buildApiAssetUrl', () => {
@@ -135,7 +143,7 @@ describe('chamadoMappers', () => {
         apoiadoPorMim: false,
         historico: [],
         dtAbertura: '2026-11-14T11:00:00Z',
-        foto: null as unknown as string,
+        foto: null,
         usuarioId: 7,
         usuarioNome: 'Enzo Okuizumi',
         endereco: {
@@ -207,6 +215,48 @@ describe('chamadoMappers', () => {
           }),
         /Categoria desconhecida: 99999/
       );
+    });
+  });
+
+  describe('multipart file helpers', () => {
+    it('normalizes FotoUpload into a React Native FormData file object', () => {
+      const normalized = toReactNativeFormFile({
+        uri: ' file:///tmp/foto.jpg ',
+        name: ' foto.jpg ',
+        type: ' image/jpeg ',
+      });
+
+      assert.deepEqual(normalized, {
+        uri: 'file:///tmp/foto.jpg',
+        name: 'foto.jpg',
+        type: 'image/jpeg',
+      });
+    });
+
+    it('appends normalized multipart file without caller casts', () => {
+      const appended: { field: string; value: string | ReactNativeFormFile }[] = [];
+      const mockFormData: ReactNativeMultipartFormData = {
+        append(field, value) {
+          appended.push({ field, value });
+        },
+      };
+
+      appendMultipartFile(mockFormData, 'foto', {
+        uri: 'file:///tmp/ocorrencia.png',
+        name: 'ocorrencia.png',
+        type: 'image/png',
+      });
+
+      assert.deepEqual(appended, [
+        {
+          field: 'foto',
+          value: {
+            uri: 'file:///tmp/ocorrencia.png',
+            name: 'ocorrencia.png',
+            type: 'image/png',
+          },
+        },
+      ]);
     });
   });
 });

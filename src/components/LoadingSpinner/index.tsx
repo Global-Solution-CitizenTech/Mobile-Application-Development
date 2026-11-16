@@ -1,16 +1,9 @@
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { spacing, fontSize, fontWeight } from '@/theme';
-
-interface LoadingSpinnerProps {
-  message?: string;
-  size?: 'small' | 'large';
-  color?: string;
-  fullScreen?: boolean;
-  style?: StyleProp<ViewStyle>;
-}
+import { spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
+import type { LoadingSpinnerProps } from '@/types/ui';
 
 export const LoadingSpinner = ({
   message,

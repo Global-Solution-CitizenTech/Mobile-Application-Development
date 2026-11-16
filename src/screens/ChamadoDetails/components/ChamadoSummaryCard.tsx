@@ -4,23 +4,45 @@ import { Ionicons } from '@expo/vector-icons';
 import { CategoryBadge } from '@/components/CategoryBadge';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { borderRadius, fontSize, fontWeight, shadows, spacing } from '@/theme';
 import { getOrgaoLabel, getPriorityVisuals } from '@/theme/semanticConfig';
-import type { Chamado } from '@/types/chamado';
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { HistoricoChamado } from '@/types/chamado';
+import type { AppTheme } from '@/types/theme';
+import type { ChamadoSummaryCardProps } from '@/types/ui';
 import { formatDate } from '@/utils/formatters';
 import { isStatusFinal } from '@/utils/permissions';
+import { shadows } from '@/utils/shadow';
 
-interface ChamadoSummaryCardProps {
-  chamado: Chamado;
-  onAskAi: () => void;
+function parseHistoricoTimestamp(rawDate: string): number {
+  const trimmed = rawDate.trim();
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(trimmed)
+    ? `${trimmed.replace(' ', 'T')}Z`
+    : trimmed;
+  const time = new Date(normalized).getTime();
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+}
+
+function getLatestHistoricoEntry(historico: readonly HistoricoChamado[]): HistoricoChamado | null {
+  let latest: HistoricoChamado | null = null;
+  let latestTime = Number.NEGATIVE_INFINITY;
+
+  for (const entry of historico) {
+    const entryTime = parseHistoricoTimestamp(entry.data);
+    if (!latest || entryTime > latestTime || (entryTime === latestTime && entry.id > latest.id)) {
+      latest = entry;
+      latestTime = entryTime;
+    }
+  }
+
+  return latest;
 }
 
 export const ChamadoSummaryCard = ({ chamado, onAskAi }: ChamadoSummaryCardProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const [failedFotoUrl, setFailedFotoUrl] = useState<string | null>(null);
-  const parecer = chamado.historico[0];
+  const parecer = getLatestHistoricoEntry(chamado.historico);
   const parecerVisivel =
     parecer?.observacao && isStatusFinal(chamado.status) ? parecer : null;
   const showPhoto = Boolean(chamado.fotoUrl && failedFotoUrl !== chamado.fotoUrl);
@@ -58,7 +80,9 @@ export const ChamadoSummaryCard = ({ chamado, onAskAi }: ChamadoSummaryCardProps
         <View style={styles.triageMetaRow}>
           <View style={[styles.priorityPill, { backgroundColor: priority.bg }]}>
             <Ionicons name="flag-outline" size={12} color={priority.color} />
-            <Text style={[styles.priorityText, { color: priority.color }]}>Prioridade {priority.label}</Text>
+            <Text style={[styles.priorityText, { color: priority.color }]}>
+              Prioridade {priority.label}
+            </Text>
           </View>
           <View style={styles.orgaoRow}>
             <Ionicons name="business-outline" size={14} color={theme.primary} />
@@ -96,8 +120,18 @@ const createStyles = (theme: AppTheme) =>
       gap: spacing.md,
       ...shadows.sm,
     },
-    badgesRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.xs },
-    photo: { width: '100%', height: 210, borderRadius: borderRadius.card, backgroundColor: theme.cardSubtle },
+    badgesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      gap: spacing.xs,
+    },
+    photo: {
+      width: '100%',
+      height: 210,
+      borderRadius: borderRadius.card,
+      backgroundColor: theme.cardSubtle,
+    },
     photoPlaceholder: {
       height: 110,
       borderRadius: borderRadius.card,
@@ -124,7 +158,12 @@ const createStyles = (theme: AppTheme) =>
     },
     priorityText: { fontSize: fontSize.tiny + 1, fontWeight: fontWeight.bold },
     orgaoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    orgaoText: { flex: 1, fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.text },
+    orgaoText: {
+      flex: 1,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.semibold,
+      color: theme.text,
+    },
     parecerBox: {
       padding: spacing.sm + 4,
       borderRadius: borderRadius.lg,
@@ -146,5 +185,10 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.primaryBorder,
     },
-    aiButtonText: { flex: 1, fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.primary },
+    aiButtonText: {
+      flex: 1,
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.bold,
+      color: theme.primary,
+    },
   });

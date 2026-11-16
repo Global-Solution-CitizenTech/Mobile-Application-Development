@@ -1,20 +1,12 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { TextInputInstance } from 'react-native';
+import { EnderecoFormFields } from '@/components/EnderecoFormFields';
 import { Input } from '@/components/Input';
-import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
-import type { AppTheme } from '@/theme/types';
-import type { BoundFieldProps, ChamadoFormData, StringFieldKeys } from '@/types/form';
-import { maskCepInput } from '@/utils/formatters';
-
-interface ChamadoFormFieldsProps {
-  field: <K extends StringFieldKeys<ChamadoFormData>>(name: K) => BoundFieldProps;
-  hideDetails?: boolean;
-  onUsarGps?: () => void;
-  capturandoGps?: boolean;
-  erroGps?: string | null;
-  localizacaoResumo?: string | null;
-}
+import { useThemedStyles } from '@/contexts/ThemeContext';
+import { spacing } from '@/theme/spacing';
+import type { AppTheme } from '@/types/theme';
+import type { ChamadoFormFieldsProps } from '@/types/ui';
 
 export const ChamadoFormFields = ({
   field,
@@ -24,8 +16,8 @@ export const ChamadoFormFields = ({
   erroGps,
   localizacaoResumo,
 }: ChamadoFormFieldsProps) => {
-  const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const descricaoRef = useRef<TextInputInstance>(null);
 
   return (
     <View style={styles.container}>
@@ -35,10 +27,14 @@ export const ChamadoFormFields = ({
             label="Título da Ocorrência *"
             placeholder="Ex: Buraco fundo na faixa direita"
             maxLength={100}
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => descricaoRef.current?.focus()}
             {...field('titulo')}
           />
 
           <Input
+            ref={descricaoRef}
             label="Descrição Detalhada *"
             placeholder="Descreva o problema, riscos próximos e há quanto tempo ocorre..."
             multiline
@@ -50,81 +46,25 @@ export const ChamadoFormFields = ({
         </>
       )}
 
-      {onUsarGps && (
-        <View style={styles.gpsSection}>
-          <TouchableOpacity style={styles.gpsButton} onPress={onUsarGps} disabled={capturandoGps} activeOpacity={0.8}>
-            {capturandoGps ? (
-              <ActivityIndicator size="small" color={theme.primary} />
-            ) : (
-              <Ionicons name="navigate-outline" size={18} color={theme.primary} />
-            )}
-            <Text style={styles.gpsText}>
-              {capturandoGps ? 'Obtendo endereço via GPS...' : 'Preencher Endereço pelo GPS'}
-            </Text>
-          </TouchableOpacity>
-          {localizacaoResumo ? <Text style={styles.gpsSuccess}>{localizacaoResumo}</Text> : null}
-          {erroGps ? <Text style={styles.gpsError}>{erroGps}</Text> : null}
-        </View>
-      )}
-
-      <View style={styles.row}>
-        <View style={styles.flexCep}>
-          <Input
-            label="CEP *"
-            placeholder="00000-000"
-            keyboardType="number-pad"
-            mask={maskCepInput}
-            maxLength={9}
-            {...field('cep')}
-          />
-        </View>
-        <View style={styles.flexNum}>
-          <Input
-            label="Número *"
-            placeholder="Ex: 1100 ou S/N"
-            maxLength={100}
-            {...field('numero')}
-          />
-        </View>
-      </View>
-
-      <Input
-        label="Rua / Logradouro (Opcional)"
-        placeholder="Av. Paulista"
-        maxLength={100}
-        {...field('rua')}
-      />
-
-      <Input
-        label="Ponto de Referência *"
-        placeholder="Ex: Em frente à entrada do metrô"
-        maxLength={50}
-        {...field('referencia')}
+      <EnderecoFormFields
+        field={field}
+        onUsarGps={onUsarGps}
+        capturandoGps={capturandoGps}
+        erroGps={erroGps}
+        localizacaoResumo={localizacaoResumo}
       />
     </View>
   );
 };
 
-const createStyles = (theme: AppTheme) =>
+const createStyles = (_theme: AppTheme) =>
   StyleSheet.create({
-    container: { gap: spacing.xs },
-    textArea: { minHeight: 96, textAlignVertical: 'top', paddingTop: spacing.sm },
-    gpsSection: { marginBottom: spacing.sm, gap: spacing.xs },
-    gpsButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: spacing.sm,
-      paddingVertical: spacing.sm + 4,
-      borderRadius: borderRadius.md,
-      borderWidth: 1,
-      borderColor: theme.primary,
-      backgroundColor: theme.primaryLight,
+    container: {
+      gap: spacing.xs,
     },
-    gpsText: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.primary },
-    gpsSuccess: { fontSize: fontSize.caption, color: theme.primary, fontWeight: fontWeight.medium },
-    gpsError: { fontSize: fontSize.caption, color: theme.danger },
-    row: { flexDirection: 'row', gap: spacing.sm },
-    flexCep: { flex: 1.2 },
-    flexNum: { flex: 1 },
+    textArea: {
+      minHeight: 96,
+      textAlignVertical: 'top',
+      paddingTop: spacing.sm,
+    },
   });

@@ -1,20 +1,57 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { formatTimelineObservation, getCategoryLabel, getOrgaoLabel, getPriorityVisuals } from '../src/theme/semanticConfig.ts';
-import type { AppTheme } from '../src/theme/types.ts';
+import type { AppTheme } from '../src/types/theme.ts';
 import { formatDate, formatMessageTime, getInitials } from '../src/utils/formatters.ts';
 import { canSupportChamado, isStatusFinal } from '../src/utils/permissions.ts';
 
-const MOCK_THEME = {
-  dangerText: '#danger',
-  dangerBg: '#dangerBg',
-  warningText: '#warning',
-  warningBg: '#warningBg',
-  infoText: '#info',
-  infoBg: '#infoBg',
-  primary: '#primary',
-  primaryLight: '#primaryLight',
-} as AppTheme;
+function makeMockTheme(): AppTheme {
+  return {
+    isDark: false,
+    background: '#background',
+    surface: '#surface',
+    card: '#card',
+    cardSubtle: '#cardSubtle',
+    inputBg: '#inputBg',
+    text: '#text',
+    textSecondary: '#textSecondary',
+    textMuted: '#textMuted',
+    inverseText: '#inverseText',
+    border: '#border',
+    cardBorder: '#cardBorder',
+    divider: '#divider',
+    overlay: '#overlay',
+    primary: '#primary',
+    primaryLight: '#primaryLight',
+    primaryBorder: '#primaryBorder',
+    primaryDark: '#primaryDark',
+    danger: '#danger',
+    dangerBg: '#dangerBg',
+    dangerText: '#danger',
+    dangerBorder: '#dangerBorder',
+    warning: '#warning',
+    warningBg: '#warningBg',
+    warningText: '#warning',
+    warningBorder: '#warningBorder',
+    info: '#info',
+    infoBg: '#infoBg',
+    infoText: '#info',
+    infoBorder: '#infoBorder',
+    success: '#success',
+    successBg: '#successBg',
+    successText: '#successText',
+    pillBg: '#pillBg',
+    pillActiveBg: '#pillActiveBg',
+    pillActiveText: '#pillActiveText',
+    tabBarBg: '#tabBarBg',
+    tabBarBorder: '#tabBarBorder',
+    tabBarActive: '#tabBarActive',
+    tabBarInactive: '#tabBarInactive',
+    secondaryButtonBg: '#secondaryButtonBg',
+  };
+}
+
+const MOCK_THEME = makeMockTheme();
 
 describe('core utils', () => {
   it('extracts initials safely for empty, single-word and multi-word names', () => {

@@ -1,10 +1,9 @@
-import { createContext, use, useEffect, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Appearance } from 'react-native';
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '@/theme/colors';
-import type { AppTheme, ThemeContextData } from '@/theme/types';
+import type { AppTheme, NamedStyles, ThemeContextData } from '@/types/theme';
 
 const lightTheme: AppTheme = {
   isDark: false,
@@ -100,13 +99,14 @@ const ThemeContext = createContext<ThemeContextData | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState(() => Appearance.getColorScheme() === 'dark');
+  const manualToggleRef = useRef(false);
 
   useEffect(() => {
     let active = true;
     async function carregarTemaSalvo() {
       try {
         const salvo = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-        if (!active) return;
+        if (!active || manualToggleRef.current) return;
         if (salvo === 'dark' || salvo === 'light') {
           setIsDark(salvo === 'dark');
         }
@@ -120,19 +120,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const toggleTheme = () => {
-    const nextDark = !isDark;
-    setIsDark(nextDark);
-    void AsyncStorage.setItem(THEME_STORAGE_KEY, nextDark ? 'dark' : 'light').catch(() => undefined);
-  };
+  const toggleTheme = useCallback(() => {
+    manualToggleRef.current = true;
+    setIsDark((prev) => {
+      const nextDark = !prev;
+      void AsyncStorage.setItem(THEME_STORAGE_KEY, nextDark ? 'dark' : 'light').catch(() => undefined);
+      return nextDark;
+    });
+  }, []);
 
   const theme = isDark ? darkTheme : lightTheme;
-
-  return (
-    <ThemeContext.Provider value={{ isDark, theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo<ThemeContextData>(
+    () => ({ isDark, theme, toggleTheme }),
+    [isDark, theme, toggleTheme]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextData {
@@ -143,9 +146,7 @@ export function useTheme(): ThemeContextData {
   return context;
 }
 
-type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
-
 export function useThemedStyles<T extends NamedStyles<T>>(factory: (theme: AppTheme) => T): T {
   const { theme } = useTheme();
-  return factory(theme);
+  return useMemo(() => factory(theme), [theme, factory]);
 }

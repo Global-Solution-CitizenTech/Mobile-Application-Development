@@ -1,11 +1,11 @@
-import { Image, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import type { AppTheme } from '@/theme/types';
-import { AuthNavigator } from '@/navigation/AuthNavigator';
 import { AppNavigator } from '@/navigation/AppNavigator';
-import { fontSize, fontWeight } from '@/theme';
+import { AuthNavigator } from '@/navigation/AuthNavigator';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { AppTheme } from '@/types/theme';
 
 export const NavigationRouter = () => {
   const { isAuthenticated, isLoading } = useAuth();

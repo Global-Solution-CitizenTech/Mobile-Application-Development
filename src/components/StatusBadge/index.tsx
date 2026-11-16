@@ -1,14 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/contexts/ThemeContext';
-import { borderRadius, fontSize, fontWeight, spacing } from '@/theme';
 import { getStatusVisuals } from '@/theme/semanticConfig';
-import type { StatusChamado } from '@/types/categoria';
-
-interface StatusBadgeProps {
-  status: StatusChamado;
-  compact?: boolean;
-}
+import { borderRadius, spacing } from '@/theme/spacing';
+import { fontSize, fontWeight } from '@/theme/typography';
+import type { StatusBadgeProps } from '@/types/ui';
 
 export const StatusBadge = ({ status, compact = false }: StatusBadgeProps) => {
   const { theme } = useTheme();

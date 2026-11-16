@@ -1,12 +1,12 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@/contexts/ThemeContext';
 import { TabNavigator } from '@/navigation/TabNavigator';
-import type { AppStackParamList } from '@/navigation/types';
 import { ChamadoDetailsScreen } from '@/screens/ChamadoDetails/ChamadoDetailsScreen';
 import { EditarChamadoScreen } from '@/screens/EditarChamado/EditarChamadoScreen';
 import { EditarPerfilScreen } from '@/screens/EditarPerfil/EditarPerfilScreen';
 import { NovoChamadoScreen } from '@/screens/NovoChamado/NovoChamadoScreen';
 import { SobreAppScreen } from '@/screens/SobreApp/SobreAppScreen';
+import type { AppStackParamList } from '@/types/navigation';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
