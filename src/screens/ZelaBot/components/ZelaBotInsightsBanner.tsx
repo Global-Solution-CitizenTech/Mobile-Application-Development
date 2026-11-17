@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { getPriorityVisuals } from '@/theme/semanticConfig';
+import { formatEnumTokensInText, getPriorityVisuals } from '@/theme/semanticConfig';
 import { borderRadius, spacing } from '@/theme/spacing';
 import { fontSize, fontWeight } from '@/theme/typography';
 import type { AppTheme } from '@/types/theme';
@@ -40,12 +40,12 @@ export const ZelaBotInsightsBanner = ({
             return (
               <View key={`${idx}-${item.categoria}-${item.titulo}`} style={styles.itemCard}>
                 <View style={styles.itemTop}>
-                  <Text style={styles.itemTitle}>{item.titulo}</Text>
+                  <Text style={styles.itemTitle}>{formatEnumTokensInText(item.titulo)}</Text>
                   <View style={[styles.badge, { backgroundColor: visuals.bg }]}>
                     <Text style={[styles.badgeText, { color: visuals.color }]}>{visuals.label.toUpperCase()}</Text>
                   </View>
                 </View>
-                <Text style={styles.itemDesc}>{item.descricao}</Text>
+                <Text style={styles.itemDesc}>{formatEnumTokensInText(item.descricao)}</Text>
               </View>
             );
           })}

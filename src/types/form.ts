@@ -18,9 +18,15 @@ export interface BoundFieldProps {
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
+  editable: boolean;
 }
 
 export type FieldBinder<T> = <K extends StringFieldKeys<T>>(name: K) => BoundFieldProps;
+
+export interface UseZodFormOptions {
+  /** Trava todos os campos vinculados via `field()` (ex.: enquanto o envio está em andamento). */
+  disabled?: boolean;
+}
 
 export interface UseZodFormReturn<T extends Record<string, unknown>> {
   values: T;

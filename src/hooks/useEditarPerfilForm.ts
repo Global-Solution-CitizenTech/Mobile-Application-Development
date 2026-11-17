@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { Keyboard } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedback } from '@/contexts/FeedbackContext';
@@ -29,7 +30,13 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
   const { showError, showSuccess } = useFeedback();
   const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao } = useLocalizacao();
 
-  const form = useZodForm(ProfileEditSchema, toProfileFormValues(usuario));
+  const saveMutation = useMutation({
+    mutationFn: (payload: UsuarioRequest) => updateProfile(payload),
+  });
+
+  const form = useZodForm(ProfileEditSchema, toProfileFormValues(usuario), {
+    disabled: saveMutation.isPending,
+  });
   const { syncValues, setFieldValue: baseSetFieldValue } = form;
 
   const mountedRef = useRef(true);
@@ -71,6 +78,7 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
   );
 
   const onUsarGps = useCallback(async () => {
+    if (submittingRef.current || saveMutation.isPending) return;
     const applyEpoch = gpsApplyEpochRef.current;
     const loc = await capturarLocalizacao();
     if (!loc || !mountedRef.current || applyEpoch !== gpsApplyEpochRef.current) return;
@@ -79,11 +87,7 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
     if (loc.rua) setFieldValue('rua', loc.rua);
     if (loc.numero) setFieldValue('numero', loc.numero);
     if (loc.referencia) setFieldValue('referencia', loc.referencia);
-  }, [capturarLocalizacao, setFieldValue]);
-
-  const saveMutation = useMutation({
-    mutationFn: (payload: UsuarioRequest) => updateProfile(payload),
-  });
+  }, [capturarLocalizacao, saveMutation.isPending, setFieldValue]);
 
   const handleSave = useCallback(
     (onConfirmed?: () => void) => {
@@ -93,6 +97,7 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
       if (!parsed) return;
 
       submittingRef.current = true;
+      Keyboard.dismiss();
       saveMutation.mutate(buildUsuarioRequest(parsed), {
         onSuccess: (updatedUsuario) => {
           submittingRef.current = false;

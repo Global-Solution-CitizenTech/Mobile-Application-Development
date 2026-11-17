@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +13,7 @@ import { ZelaBotHistoryModal } from '@/screens/ZelaBot/components/ZelaBotHistory
 import { ZelaBotInputBar } from '@/screens/ZelaBot/components/ZelaBotInputBar';
 import { ZelaBotInsightsBanner } from '@/screens/ZelaBot/components/ZelaBotInsightsBanner';
 import { ZelaBotMessageBubble } from '@/screens/ZelaBot/components/ZelaBotMessageBubble';
+import { getCategoryLabel } from '@/theme/semanticConfig';
 import { borderRadius, spacing } from '@/theme/spacing';
 import { fontSize, fontWeight } from '@/theme/typography';
 import type { AiMessage } from '@/types/ai';
@@ -41,7 +42,7 @@ function buildZelaBotContextOptions(chamados: readonly Chamado[]): SelectPickerO
       value: String(chamado.idChamado),
       label: `#${chamado.idChamado} · ${chamado.titulo}`,
       subtitle: [
-        chamado.categoriaNome,
+        getCategoryLabel(chamado.categoriaNome),
         isMeaningfulBairro(chamado.endereco.bairro) ? chamado.endereco.bairro : undefined,
         chamado.endereco.cidade,
       ]
@@ -58,6 +59,7 @@ export const ZelaBotScreen = () => {
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList<AiMessage>>(null);
   const [contextModalVisible, setContextModalVisible] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const rawChamadoId = route.params?.chamadoId;
   const initialChamadoId =
@@ -66,6 +68,17 @@ export const ZelaBotScreen = () => {
       : undefined;
 
   const bot = useZelaBot(initialChamadoId);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const prevMessageCountRef = useRef(0);
   const prevSessionIdRef = useRef(bot.sessionId);
@@ -83,6 +96,14 @@ export const ZelaBotScreen = () => {
     prevSessionIdRef.current = bot.sessionId;
   }, [bot.messages.length, bot.sessionId]);
 
+  useEffect(() => {
+    if (!keyboardVisible || bot.messages.length === 0) return;
+    const timer = setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [bot.messages.length, keyboardVisible]);
+
   const contextOptions = useMemo(
     () => buildZelaBotContextOptions(bot.chamadosDisponiveis),
     [bot.chamadosDisponiveis]
@@ -95,7 +116,8 @@ export const ZelaBotScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'android' ? StatusBar.currentHeight ?? 0 : 0}
     >
       <Header
         title="ZelaBot IA"
@@ -177,7 +199,7 @@ export const ZelaBotScreen = () => {
             <Text style={styles.heroTitle}>Como posso ajudar sua cidade hoje?</Text>
             <Text style={styles.heroDesc}>
               {bot.selectedChamado
-                ? `Analisando a ocorrência #${bot.selectedChamado.idChamado} (${bot.selectedChamado.categoriaNome}). Tire dúvidas sobre prazos e órgãos responsáveis.`
+                ? `Analisando a ocorrência #${bot.selectedChamado.idChamado} (${getCategoryLabel(bot.selectedChamado.categoriaNome)}). Tire dúvidas sobre prazos e órgãos responsáveis.`
                 : 'Pergunte sobre prazos municipais, legislação de zeladoria urbana, encaminhamento ou toque em "Contexto selecionado" acima para vincular um chamado.'}
             </Text>
           </View>
@@ -198,6 +220,7 @@ export const ZelaBotScreen = () => {
         onSend={bot.enviarPergunta}
         sugestoes={bot.sugestoesRapidas}
         disabled={bot.isSending}
+        keyboardVisible={keyboardVisible}
       />
 
       <SelectPickerModal

@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { formatTimelineObservation, getCategoryLabel, getOrgaoLabel, getPriorityVisuals } from '../src/theme/semanticConfig.ts';
+import {
+  formatEnumTokensInText,
+  formatTimelineObservation,
+  getCategoryLabel,
+  getOrgaoLabel,
+  getPriorityVisuals,
+} from '../src/theme/semanticConfig.ts';
 import type { AppTheme } from '../src/types/theme.ts';
 import { formatDate, formatMessageTime, getInitials } from '../src/utils/formatters.ts';
 import { canSupportChamado, isStatusFinal } from '../src/utils/permissions.ts';
@@ -106,5 +112,20 @@ describe('core utils', () => {
 
     const openingObs = 'Chamado registrado pelo cidadão Enzo Okuizumi via ZelaFix Mobile.';
     assert.equal(formatTimelineObservation(openingObs), openingObs);
+  });
+
+  it('formats inline enum tokens in free-form AI insights and responses', () => {
+    assert.equal(
+      formatEnumTokensInText("Destaque para 'LIMPEZA_URBANA' (1 registro(s))"),
+      "Destaque para 'Limpeza Urbana' (1 registro(s))"
+    );
+    assert.equal(
+      formatEnumTokensInText('Chamado #1 (EM_ANALISE): VIAS_E_PAVIMENTACAO — CET_TRANSITO'),
+      'Chamado #1 (Em Análise): Vias e Pavimentação — Companhia de Engenharia de Tráfego (CET)'
+    );
+    assert.equal(
+      formatEnumTokensInText('Órgão: ILUMINACAO_PUBLICA'),
+      'Órgão: Departamento de Iluminação Pública (Ilume)'
+    );
   });
 });

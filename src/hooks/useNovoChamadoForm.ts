@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Keyboard } from 'react-native';
 import { useFeedback } from '@/contexts/FeedbackContext';
 import { formatLocalizacaoResumo, useLocalizacao } from '@/hooks/useLocalizacao';
 import { bindFieldHelpers } from '@/hooks/useZodForm';
@@ -66,7 +67,7 @@ export function useNovoChamadoForm(): UseNovoChamadoFormReturn {
     [clearFieldError]
   );
 
-  const field = bindFieldHelpers(values, errors, setStringField);
+  const field = bindFieldHelpers(values, errors, setStringField, isCreating);
 
   const resetForm = useCallback(() => {
     gpsApplyEpochRef.current += 1;
@@ -76,6 +77,7 @@ export function useNovoChamadoForm(): UseNovoChamadoFormReturn {
   }, [limparLocalizacao]);
 
   const handleUsarGps = useCallback(async () => {
+    if (submittingRef.current || isCreating) return;
     const applyEpoch = gpsApplyEpochRef.current;
     const loc = await capturarLocalizacao();
     if (!loc || !mountedRef.current || applyEpoch !== gpsApplyEpochRef.current) return;
@@ -84,7 +86,7 @@ export function useNovoChamadoForm(): UseNovoChamadoFormReturn {
     if (loc.rua) setFieldValue('rua', loc.rua);
     if (loc.numero) setFieldValue('numero', loc.numero);
     if (loc.referencia) setFieldValue('referencia', loc.referencia);
-  }, [capturarLocalizacao, setFieldValue]);
+  }, [capturarLocalizacao, isCreating, setFieldValue]);
 
   const submit = useCallback(
     (onSuccess: (chamado: Chamado) => void) => {
@@ -98,6 +100,7 @@ export function useNovoChamadoForm(): UseNovoChamadoFormReturn {
 
       setErrors({});
       submittingRef.current = true;
+      Keyboard.dismiss();
       criarChamado(toChamadoCreateRequest(result.data), {
         onSuccess: (created) => {
           submittingRef.current = false;

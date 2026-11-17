@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { Keyboard } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedback } from '@/contexts/FeedbackContext';
@@ -26,10 +27,24 @@ const INITIAL_REGISTER: RegisterFormData = {
 export function useRegisterForm() {
   const { signUp } = useAuth();
   const { showError } = useFeedback();
-  const form = useZodForm(RegisterSchema, INITIAL_REGISTER);
-  const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao } = useLocalizacao();
   const mountedRef = useRef(true);
   const submittingRef = useRef(false);
+
+  const registerMutation = useMutation({
+    mutationFn: (payload: UsuarioRequest) => signUp(payload),
+    onError: (error) => {
+      showError(
+        'Não foi possível cadastrar',
+        getApiErrorMessage(error, 'Não foi possível concluir o cadastro.')
+      );
+    },
+    onSettled: () => {
+      submittingRef.current = false;
+    },
+  });
+
+  const form = useZodForm(RegisterSchema, INITIAL_REGISTER, { disabled: registerMutation.isPending });
+  const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao } = useLocalizacao();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -47,24 +62,12 @@ export function useRegisterForm() {
     if (loc.referencia) form.setFieldValue('referencia', loc.referencia);
   }, [capturarLocalizacao, form]);
 
-  const registerMutation = useMutation({
-    mutationFn: (payload: UsuarioRequest) => signUp(payload),
-    onError: (error) => {
-      showError(
-        'Não foi possível cadastrar',
-        getApiErrorMessage(error, 'Não foi possível concluir o cadastro.')
-      );
-    },
-    onSettled: () => {
-      submittingRef.current = false;
-    },
-  });
-
   const handleRegister = useCallback(() => {
     if (submittingRef.current || registerMutation.isPending) return;
     const parsed = form.validate();
     if (!parsed) return;
     submittingRef.current = true;
+    Keyboard.dismiss();
     registerMutation.mutate(buildUsuarioRequest(parsed));
   }, [form, registerMutation]);
 

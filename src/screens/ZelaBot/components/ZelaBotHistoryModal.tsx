@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
+import { formatEnumTokensInText } from '@/theme/semanticConfig';
 import { borderRadius, spacing } from '@/theme/spacing';
 import { fontSize, fontWeight } from '@/theme/typography';
 import type { AppTheme } from '@/types/theme';
@@ -75,7 +76,7 @@ export const ZelaBotHistoryModal = ({
               >
                 <View style={styles.cardBody}>
                   <Text style={styles.cardTitle} numberOfLines={2}>
-                    {item.titulo || 'Consulta de zeladoria'}
+                    {formatEnumTokensInText(item.titulo) || 'Consulta de zeladoria'}
                   </Text>
                   <Text style={styles.cardMeta}>
                     {item.totalMensagens} mensagens {item.lastActivity ? `• ${formatDate(item.lastActivity)}` : ''}

@@ -52,8 +52,9 @@ export const StatusChangeModal = ({
             return (
               <TouchableOpacity
                 key={opt.value}
-                style={[styles.chip, active && styles.chipActive]}
+                style={[styles.chip, active && styles.chipActive, submitting && styles.chipDisabled]}
                 onPress={() => setFieldValue('status', opt.value)}
+                disabled={submitting}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>
@@ -68,6 +69,7 @@ export const StatusChangeModal = ({
           placeholder="Descreva a vistoria, encaminhamento ou motivo da decisão..."
           value={values.observacao}
           onChangeText={(text) => setFieldValue('observacao', text)}
+          editable={!submitting}
           multiline
           numberOfLines={3}
           maxLength={255}
@@ -109,6 +111,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.border,
     },
     chipActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+    chipDisabled: { opacity: 0.6 },
     chipText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
     chipTextActive: { color: theme.inverseText },
     errorText: { fontSize: fontSize.caption, color: theme.danger, fontWeight: fontWeight.medium },

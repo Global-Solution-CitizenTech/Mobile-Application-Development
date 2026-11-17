@@ -111,3 +111,29 @@ export function formatTimelineObservation(obs?: string | null): string {
     .replace(/(Categoria:\s*)([A-Z_]+)/gi, (_, prefix, c) => `${prefix}${getCategoryLabel(c)}`)
     .replace(/(Órgão:\s*)([A-Z_]+)/gi, (_, prefix, o) => `${prefix}${getOrgaoLabel(o)}`);
 }
+
+// Em texto livre (ex.: respostas e alertas da IA) o mesmo token pode ser categoria ou órgão
+// (ILUMINACAO_PUBLICA). Sem prefixo explícito vence a categoria; a ordem de inserção garante isso.
+const ENUM_TOKEN_LABELS: ReadonlyMap<string, string> = new Map<string, string>([
+  ...Object.entries(ORGAO_LABELS),
+  ...Object.entries(STATUS_LABELS),
+  ...Object.keys(CATEGORY_META).map((key): [string, string] => [key, getCategoryLabel(key)]),
+]);
+
+const ENUM_TOKEN_PATTERN = new RegExp(
+  `\\b(${[...ENUM_TOKEN_LABELS.keys()].sort((a, b) => b.length - a.length).join('|')})\\b`,
+  'g'
+);
+
+const URGENCY_PREFIX_PATTERN = /\b(Urgência|Urgencia|Gravidade):(\s*)(URGENTE|ALTA|MEDIA|MÉDIA|BAIXA)\b/g;
+
+export function formatEnumTokensInText(text?: string | null): string {
+  if (!text) return '';
+  return formatTimelineObservation(text)
+    .replace(
+      URGENCY_PREFIX_PATTERN,
+      (_, prefix: string, space: string, value: string) =>
+        `${prefix}:${space}${getPriorityLabel(value)}`
+    )
+    .replace(ENUM_TOKEN_PATTERN, (token) => ENUM_TOKEN_LABELS.get(token) ?? token);
+}

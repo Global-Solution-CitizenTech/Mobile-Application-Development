@@ -39,10 +39,12 @@ export const NovoChamadoScreen = ({ navigation }: AppStackScreenProps<'NovoChama
           foto={form.values.foto}
           onChangeFoto={(foto) => form.setFieldValue('foto', foto)}
           error={form.errors.foto}
+          disabled={form.submitting}
         />
 
         <EnderecoFormFields
           field={form.field}
+          disabled={form.submitting}
           onUsarGps={() => {
             void form.handleUsarGps();
           }}

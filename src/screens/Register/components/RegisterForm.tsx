@@ -85,6 +85,7 @@ export const RegisterForm = ({
 
       <EnderecoFormFields
         field={field}
+        disabled={submitting}
         onUsarGps={onUsarGps}
         capturandoGps={capturandoGps}
         erroGps={erroGps}

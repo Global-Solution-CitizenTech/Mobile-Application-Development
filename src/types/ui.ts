@@ -120,6 +120,7 @@ export interface KeyboardScreenLayoutProps {
 
 export interface EnderecoFormFieldsProps {
   field: (name: StringFieldKeys<EnderecoFormInput>) => BoundFieldProps;
+  disabled?: boolean;
   onUsarGps?: () => void;
   capturandoGps?: boolean;
   erroGps?: string | null;
@@ -134,6 +135,7 @@ export interface EnderecoFormFieldsProps {
 
 export interface ChamadoFormFieldsProps {
   field: <K extends StringFieldKeys<ChamadoFormData>>(name: K) => BoundFieldProps;
+  disabled?: boolean;
   hideDetails?: boolean;
   onUsarGps?: () => void;
   capturandoGps?: boolean;
@@ -158,6 +160,7 @@ export interface CategoryGridSelectorProps {
   selectedCategoriaId: number;
   onSelectCategoriaId: (id: number) => void;
   error?: string;
+  disabled?: boolean;
 }
 
 export interface EmptyStateProps {
@@ -248,6 +251,7 @@ export interface PhotoEvidencePickerProps {
   foto?: FotoUpload;
   onChangeFoto: (foto?: FotoUpload) => void;
   error?: string;
+  disabled?: boolean;
 }
 
 export interface AiTriageBannerProps {
@@ -452,6 +456,15 @@ export interface ZelaBotInputBarProps {
   onSend: (customText?: string) => void;
   sugestoes: string[];
   disabled: boolean;
+  keyboardVisible: boolean;
+}
+
+export interface MarkdownTextProps {
+  content: string;
+  /** Tipografia reduzida para textos secundários (ex.: próximos passos do ZelaBot). */
+  compact?: boolean;
+  textColor?: string;
+  accentColor?: string;
 }
 
 export interface ZelaBotInsightsBannerProps {

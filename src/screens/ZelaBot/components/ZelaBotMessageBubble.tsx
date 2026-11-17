@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { MarkdownText } from '@/components/MarkdownText';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
-import { getPriorityVisuals } from '@/theme/semanticConfig';
+import { formatEnumTokensInText, getPriorityVisuals } from '@/theme/semanticConfig';
 import { borderRadius, spacing } from '@/theme/spacing';
 import { fontSize, fontWeight } from '@/theme/typography';
 import type { AppTheme } from '@/types/theme';
@@ -40,17 +41,28 @@ export const ZelaBotMessageBubble = ({ message }: ZelaBotMessageBubbleProps) => 
           </View>
         )}
 
-        <Text style={[styles.text, isUser ? styles.textUser : styles.textAi, isError && styles.textError]}>
-          {message.text}
-        </Text>
+        {isUser || isError ? (
+          <Text style={[styles.text, isUser ? styles.textUser : styles.textAi, isError && styles.textError]}>
+            {isError ? formatEnumTokensInText(message.text) : message.text}
+          </Text>
+        ) : (
+          <MarkdownText content={formatEnumTokensInText(message.text)} />
+        )}
 
         {!isUser && message.acoesRecomendadas && message.acoesRecomendadas.length > 0 && (
           <View style={styles.actionsBox}>
             <Text style={styles.actionsTitle}>Próximos passos recomendados:</Text>
             {message.acoesRecomendadas.slice(0, 3).map((acao, idx) => (
-              <Text key={`${idx}-${acao}`} style={styles.actionItem}>
-                • {acao}
-              </Text>
+              <View key={`${idx}-${acao}`} style={styles.actionRow}>
+                <Text style={styles.actionBullet}>•</Text>
+                <View style={styles.actionContent}>
+                  <MarkdownText
+                    content={formatEnumTokensInText(acao)}
+                    compact
+                    textColor={theme.textSecondary}
+                  />
+                </View>
+              </View>
             ))}
           </View>
         )}
@@ -113,7 +125,9 @@ const createStyles = (theme: AppTheme) =>
       gap: 3,
     },
     actionsTitle: { fontSize: fontSize.caption, fontWeight: fontWeight.bold, color: theme.text },
-    actionItem: { fontSize: fontSize.caption, color: theme.textSecondary, lineHeight: 17 },
+    actionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
+    actionBullet: { fontSize: fontSize.caption, color: theme.primary, fontWeight: fontWeight.bold, lineHeight: 17 },
+    actionContent: { flex: 1 },
     sourcesBox: { marginTop: spacing.xs + 2 },
     sourcesLabel: { fontSize: fontSize.tiny, color: theme.textMuted, fontStyle: 'italic' },
     time: { fontSize: fontSize.tiny, marginTop: spacing.xs, alignSelf: 'flex-end' },

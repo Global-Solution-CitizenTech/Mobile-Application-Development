@@ -102,6 +102,7 @@ export const EditarPerfilScreen = ({ navigation }: AppStackScreenProps<'EditarPe
 
         <EnderecoFormFields
           field={form.field}
+          disabled={form.submitting}
           onUsarGps={() => void form.onUsarGps()}
           capturandoGps={form.capturandoGps}
           erroGps={form.erroGps}

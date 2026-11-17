@@ -26,6 +26,7 @@ function assignRef(
 
 export function EnderecoFormFields({
   field,
+  disabled = false,
   onUsarGps,
   capturandoGps = false,
   erroGps,
@@ -49,9 +50,9 @@ export function EnderecoFormFields({
       {onUsarGps ? (
         <View style={styles.gpsSection}>
           <TouchableOpacity
-            style={styles.gpsButton}
+            style={[styles.gpsButton, disabled && styles.gpsButtonDisabled]}
             onPress={onUsarGps}
-            disabled={capturandoGps}
+            disabled={capturandoGps || disabled}
             activeOpacity={0.8}
           >
             {capturandoGps ? (
@@ -149,6 +150,9 @@ const createStyles = (theme: AppTheme) =>
       borderWidth: 1,
       borderColor: theme.primary,
       backgroundColor: theme.primaryLight,
+    },
+    gpsButtonDisabled: {
+      opacity: 0.6,
     },
     gpsText: {
       fontSize: fontSize.bodySmall,

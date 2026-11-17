@@ -59,7 +59,7 @@ Mobile-Application-Development/
 ├── app.config.js                     # Injeção dinâmica do Git Commit Hash via child_process
 ├── app.json                          # Configuração Expo SDK 58 (expo-splash-screen, expo-font, expo-image-picker, expo-location)
 ├── eslint.config.js                  # ESLint v9 Flat Config com eslint-config-expo
-├── tests/                            # Suíte de testes unitários Node (--experimental-strip-types, 74 testes)
+├── tests/                            # Suíte de testes unitários Node (--experimental-strip-types, 78 testes)
 └── src/
     ├── components/                   # Componentes modulares (Pasta + index.tsx + Temas Claro/Escuro)
     │   ├── AuthHeader/index.tsx      # Cabeçalho institucional para Login e Cadastro
@@ -78,6 +78,7 @@ Mobile-Application-Development/
     │   ├── KeyboardScreenLayout/index.tsx # Layout padrão com Header, KeyboardAvoidingView e SafeAreaInsets
     │   ├── ListSeparator/index.tsx
     │   ├── LoadingSpinner/index.tsx
+    │   ├── MarkdownText/index.tsx    # Renderizador Markdown nativo (títulos, listas, callouts e tabelas)
     │   ├── PickerTriggerButton/index.tsx
     │   ├── SelectPickerModal/index.tsx # Seletor modal genérico com FlatList para filtros e opções
     │   ├── StatCard/index.tsx
@@ -153,6 +154,7 @@ Mobile-Application-Development/
     │   ├── feedback.ts               # Contratos de fila de modais de feedback
     │   ├── filters.ts                # Tipos de filtros, modais e ordenação
     │   ├── form.ts                   # Tipos de formulários Zod e binding de campos
+    │   ├── markdown.ts               # Contratos de blocos e segmentos Markdown
     │   ├── navigation.ts             # Tipagens estritas do React Navigation
     │   ├── theme.ts                  # Contratos de tema, sombras e estilos
     │   ├── ui.ts                     # Props de componentes e subcomponentes de tela
@@ -161,6 +163,7 @@ Mobile-Application-Development/
         ├── apiError.ts               # Normalizador de erros HTTP / Spring Boot
         ├── chamadoMappers.ts         # Normalizadores, URLs de mídia e builder multipart/payload Java
         ├── formatters.ts             # Formatadores de data, CEP, telefone e bairro
+        ├── markdown.ts               # Parser de Markdown (tabelas, listas, blocos de código e inline)
         ├── permissions.ts            # Regras puras Cidadão vs. Gestor Público (zero ADMIN no mobile)
         ├── schemas.ts                # Schemas Zod v4 e extração de erros
         └── shadow.ts                 # Utilitário multiplataforma de sombras (Web boxShadow / Native)

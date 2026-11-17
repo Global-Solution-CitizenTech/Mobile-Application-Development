@@ -61,10 +61,12 @@ export const EditarChamadoScreen = ({ navigation, route }: AppStackScreenProps<'
               selectedCategoriaId={form.values.categoriaId}
               onSelectCategoriaId={(catId) => form.setFieldValue('categoriaId', catId)}
               error={form.errors.categoriaId}
+              disabled={form.submitting}
             />
 
             <ChamadoFormFields
               field={form.field}
+              disabled={form.submitting}
               onUsarGps={() => {
                 void form.handleUsarGps();
               }}

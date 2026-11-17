@@ -12,6 +12,7 @@ export const CategoryGridSelector = ({
   selectedCategoriaId,
   onSelectCategoriaId,
   error,
+  disabled = false,
 }: CategoryGridSelectorProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -26,8 +27,9 @@ export const CategoryGridSelector = ({
           return (
             <TouchableOpacity
               key={cat.id}
-              style={[styles.tile, selected && styles.tileSelected]}
+              style={[styles.tile, selected && styles.tileSelected, disabled && styles.tileDisabled]}
               onPress={() => onSelectCategoriaId(cat.id)}
+              disabled={disabled}
               activeOpacity={0.8}
             >
               <View style={[styles.iconBox, { backgroundColor: selected ? theme.primary : bg }]}>
@@ -62,6 +64,7 @@ const createStyles = (theme: AppTheme) =>
       borderColor: theme.border,
     },
     tileSelected: { borderColor: theme.primary, backgroundColor: theme.primaryLight },
+    tileDisabled: { opacity: 0.6 },
     iconBox: { width: 32, height: 32, borderRadius: borderRadius.sm, alignItems: 'center', justifyContent: 'center' },
     tileText: { flex: 1, fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.text },
     tileTextSelected: { color: theme.primary, fontWeight: fontWeight.bold },

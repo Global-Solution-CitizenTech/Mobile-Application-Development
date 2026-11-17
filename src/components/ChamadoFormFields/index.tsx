@@ -10,6 +10,7 @@ import type { ChamadoFormFieldsProps } from '@/types/ui';
 
 export const ChamadoFormFields = ({
   field,
+  disabled = false,
   hideDetails = false,
   onUsarGps,
   capturandoGps,
@@ -48,6 +49,7 @@ export const ChamadoFormFields = ({
 
       <EnderecoFormFields
         field={field}
+        disabled={disabled}
         onUsarGps={onUsarGps}
         capturandoGps={capturandoGps}
         erroGps={erroGps}

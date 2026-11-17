@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { Keyboard } from 'react-native';
 import { useFeedback } from '@/contexts/FeedbackContext';
 import { useChamadoMutations } from '@/hooks/useChamadoMutations';
 import { useChamadoDetail } from '@/hooks/useChamados';
@@ -42,7 +43,7 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
   const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao, limparLocalizacao } =
     useLocalizacao();
 
-  const form = useZodForm(ChamadoFormSchema, INITIAL_EDITAR_CHAMADO);
+  const form = useZodForm(ChamadoFormSchema, INITIAL_EDITAR_CHAMADO, { disabled: isUpdating });
   const { syncValues, setFieldValue: baseSetFieldValue } = form;
 
   const mountedRef = useRef(true);
@@ -90,6 +91,7 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
   );
 
   const handleUsarGps = useCallback(async () => {
+    if (submittingRef.current || isUpdating) return;
     const applyEpoch = gpsApplyEpochRef.current;
     const loc = await capturarLocalizacao();
     if (!loc || !mountedRef.current || applyEpoch !== gpsApplyEpochRef.current) return;
@@ -98,7 +100,7 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
     if (loc.rua) setFieldValue('rua', loc.rua);
     if (loc.numero) setFieldValue('numero', loc.numero);
     if (loc.referencia) setFieldValue('referencia', loc.referencia);
-  }, [capturarLocalizacao, setFieldValue]);
+  }, [capturarLocalizacao, isUpdating, setFieldValue]);
 
   const submit = useCallback(
     (onSuccess: (updated: Chamado) => void) => {
@@ -108,6 +110,7 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
       if (!parsed) return;
 
       submittingRef.current = true;
+      Keyboard.dismiss();
       atualizarChamado(chamadoId, toChamadoRequest(parsed), {
         onSuccess: (updated) => {
           submittingRef.current = false;

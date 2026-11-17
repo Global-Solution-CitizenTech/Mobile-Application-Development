@@ -14,6 +14,7 @@ export const ZelaBotInputBar = ({
   onSend,
   sugestoes,
   disabled,
+  keyboardVisible,
 }: ZelaBotInputBarProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -34,6 +35,7 @@ export const ZelaBotInputBar = ({
         {
           paddingLeft: Math.max(insets.left, spacing.md),
           paddingRight: Math.max(insets.right, spacing.md),
+          paddingBottom: keyboardVisible ? spacing.sm + 4 : spacing.sm + 4,
         },
       ]}
     >

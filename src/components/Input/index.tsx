@@ -22,6 +22,7 @@ export const Input = ({
   onChangeText,
   onFocus,
   onBlur,
+  editable = true,
   style,
   ...rest
 }: InputProps) => {
@@ -31,6 +32,7 @@ export const Input = ({
   const [isFocused, setIsFocused] = useState(false);
 
   const isSecured = isPassword ? !showPassword : secureTextEntry;
+  const isDisabled = editable === false;
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -39,8 +41,9 @@ export const Input = ({
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputFocused,
+          isFocused && !isDisabled && styles.inputFocused,
           !!error && styles.inputError,
+          isDisabled && styles.inputDisabled,
           inputContainerStyle,
         ]}
       >
@@ -51,6 +54,7 @@ export const Input = ({
           style={[styles.textInput, style]}
           placeholderTextColor={theme.textMuted}
           secureTextEntry={isSecured}
+          editable={editable}
           onChangeText={onChangeText ? (text) => onChangeText(mask ? mask(text) : text) : undefined}
           onFocus={(e) => {
             setIsFocused(true);
@@ -118,6 +122,9 @@ const createStyles = (theme: AppTheme) =>
     inputError: {
       borderColor: theme.danger,
       backgroundColor: theme.dangerBg,
+    },
+    inputDisabled: {
+      opacity: 0.6,
     },
     leftIcon: {
       marginRight: spacing.xs + 2,

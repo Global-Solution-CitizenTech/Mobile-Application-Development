@@ -7,7 +7,12 @@ import { fontSize, fontWeight } from '@/theme/typography';
 import type { AppTheme } from '@/types/theme';
 import type { PhotoEvidencePickerProps } from '@/types/ui';
 
-export const PhotoEvidencePicker = ({ foto, onChangeFoto, error }: PhotoEvidencePickerProps) => {
+export const PhotoEvidencePicker = ({
+  foto,
+  onChangeFoto,
+  error,
+  disabled = false,
+}: PhotoEvidencePickerProps) => {
   const { theme } = useTheme();
   const styles = useThemedStyles(createStyles);
   const { processing, pickFromCamera, pickFromLibrary, removeFoto } = useImageEvidencePicker({
@@ -16,15 +21,21 @@ export const PhotoEvidencePicker = ({ foto, onChangeFoto, error }: PhotoEvidence
 
   const previewSource = foto?.uri ?? null;
   const hasError = Boolean(error);
+  const isLocked = disabled || processing !== null;
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Foto de Evidência *</Text>
 
       {previewSource ? (
-        <View style={styles.previewWrap}>
+        <View style={[styles.previewWrap, disabled && styles.disabledWrap]}>
           <Image source={{ uri: previewSource }} style={styles.previewImage} resizeMode="cover" />
-          <TouchableOpacity style={styles.removeBtn} onPress={removeFoto} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.removeBtn}
+            onPress={removeFoto}
+            disabled={disabled}
+            activeOpacity={0.8}
+          >
             <Ionicons name="trash-outline" size={16} color={theme.inverseText} />
             <Text style={styles.removeText}>Remover Foto</Text>
           </TouchableOpacity>
@@ -32,11 +43,11 @@ export const PhotoEvidencePicker = ({ foto, onChangeFoto, error }: PhotoEvidence
       ) : (
         <View style={styles.buttonsRow}>
           <TouchableOpacity
-            style={[styles.pickBtn, hasError && styles.pickBtnError]}
+            style={[styles.pickBtn, hasError && styles.pickBtnError, isLocked && styles.disabledWrap]}
             onPress={() => {
               void pickFromCamera();
             }}
-            disabled={processing !== null}
+            disabled={isLocked}
             activeOpacity={0.8}
           >
             {processing === 'camera' ? (
@@ -48,11 +59,11 @@ export const PhotoEvidencePicker = ({ foto, onChangeFoto, error }: PhotoEvidence
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.pickBtn, hasError && styles.pickBtnError]}
+            style={[styles.pickBtn, hasError && styles.pickBtnError, isLocked && styles.disabledWrap]}
             onPress={() => {
               void pickFromLibrary();
             }}
-            disabled={processing !== null}
+            disabled={isLocked}
             activeOpacity={0.8}
           >
             {processing === 'library' ? (
@@ -106,4 +117,5 @@ const createStyles = (theme: AppTheme) =>
       paddingVertical: spacing.sm + 2,
     },
     removeText: { fontSize: fontSize.bodySmall, fontWeight: fontWeight.bold, color: theme.inverseText },
+    disabledWrap: { opacity: 0.6 },
   });

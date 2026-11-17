@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react';
+import { Keyboard } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeedback } from '@/contexts/FeedbackContext';
@@ -16,7 +17,6 @@ const INITIAL_LOGIN: LoginFormData = {
 export function useLoginForm() {
   const { signIn } = useAuth();
   const { showError } = useFeedback();
-  const form = useZodForm(LoginSchema, INITIAL_LOGIN);
   const submittingRef = useRef(false);
 
   const loginMutation = useMutation({
@@ -29,11 +29,14 @@ export function useLoginForm() {
     },
   });
 
+  const form = useZodForm(LoginSchema, INITIAL_LOGIN, { disabled: loginMutation.isPending });
+
   const handleLogin = useCallback(() => {
     if (submittingRef.current || loginMutation.isPending) return;
     const parsed = form.validate();
     if (!parsed) return;
     submittingRef.current = true;
+    Keyboard.dismiss();
     loginMutation.mutate(parsed);
   }, [form, loginMutation]);
 
