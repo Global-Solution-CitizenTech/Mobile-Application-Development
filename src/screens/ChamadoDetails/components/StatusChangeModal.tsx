@@ -43,6 +43,18 @@ export const StatusChangeModal = ({
       subtitle="Selecione a nova situação e informe um parecer técnico"
       onClose={onClose}
       dismissable={!submitting}
+      footer={
+        <View style={styles.actions}>
+          <Button
+            title="Cancelar"
+            variant="outline"
+            onPress={onClose}
+            style={styles.btn}
+            disabled={submitting}
+          />
+          <Button title="Confirmar" onPress={handleConfirm} loading={submitting} style={styles.btn} />
+        </View>
+      }
     >
       <View style={styles.form}>
         <Text style={styles.label}>Novo Status *</Text>
@@ -74,19 +86,9 @@ export const StatusChangeModal = ({
           numberOfLines={3}
           maxLength={255}
           style={styles.textArea}
+          containerStyle={styles.inputContainer}
           error={errors.observacao}
         />
-
-        <View style={styles.actions}>
-          <Button
-            title="Cancelar"
-            variant="outline"
-            onPress={onClose}
-            style={styles.btn}
-            disabled={submitting}
-          />
-          <Button title="Confirmar" onPress={handleConfirm} loading={submitting} style={styles.btn} />
-        </View>
       </View>
     </BaseModal>
   );
@@ -115,7 +117,8 @@ const createStyles = (theme: AppTheme) =>
     chipText: { fontSize: fontSize.caption, fontWeight: fontWeight.semibold, color: theme.textSecondary },
     chipTextActive: { color: theme.inverseText },
     errorText: { fontSize: fontSize.caption, color: theme.danger, fontWeight: fontWeight.medium },
+    inputContainer: { marginBottom: 0 },
     textArea: { minHeight: 84, textAlignVertical: 'top', paddingTop: spacing.sm },
-    actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+    actions: { flexDirection: 'row', gap: spacing.sm },
     btn: { flex: 1 },
   });

@@ -42,7 +42,7 @@ export const BaseModal = ({
         />
 
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.keyboardContainer}
           pointerEvents="box-none"
         >
@@ -106,9 +106,7 @@ const createStyles = (theme: AppTheme) =>
       padding: spacing.lg,
     },
     keyboardContainer: {
-      flex: 1,
       width: '100%',
-      justifyContent: 'center',
       alignItems: 'center',
     },
     card: {
