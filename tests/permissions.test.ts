@@ -99,15 +99,16 @@ describe('permissions', () => {
   });
 
   describe('canEditChamado', () => {
-    it('allows author and gestor to edit', () => {
-      assert.equal(canEditChamado(CIDADAO_AUTOR, CHAMADO_DO_ENZO), true);
+    it('allows only gestor to edit', () => {
       assert.equal(canEditChamado(GESTOR_USER, CHAMADO_DO_ENZO), true);
     });
 
-    it('blocks other citizens and unauthenticated requests', () => {
+    it('blocks citizens (including author), admins, and missing data', () => {
+      assert.equal(canEditChamado(CIDADAO_AUTOR, CHAMADO_DO_ENZO), false);
       assert.equal(canEditChamado(CIDADAO_OUTRO, CHAMADO_DO_ENZO), false);
+      assert.equal(canEditChamado(ADMIN_USER, CHAMADO_DO_ENZO), false);
       assert.equal(canEditChamado(null, CHAMADO_DO_ENZO), false);
-      assert.equal(canEditChamado(CIDADAO_AUTOR, null), false);
+      assert.equal(canEditChamado(GESTOR_USER, null), false);
     });
   });
 
@@ -120,15 +121,16 @@ describe('permissions', () => {
   });
 
   describe('canDeleteChamado', () => {
-    it('allows author and gestor to delete', () => {
-      assert.equal(canDeleteChamado(CIDADAO_AUTOR, CHAMADO_DO_ENZO), true);
+    it('allows only gestor to delete', () => {
       assert.equal(canDeleteChamado(GESTOR_USER, CHAMADO_DO_ENZO), true);
     });
 
-    it('blocks unauthorized citizens and missing data', () => {
+    it('blocks citizens (including author), admins, and missing data', () => {
+      assert.equal(canDeleteChamado(CIDADAO_AUTOR, CHAMADO_DO_ENZO), false);
       assert.equal(canDeleteChamado(CIDADAO_OUTRO, CHAMADO_DO_ENZO), false);
+      assert.equal(canDeleteChamado(ADMIN_USER, CHAMADO_DO_ENZO), false);
       assert.equal(canDeleteChamado(null, CHAMADO_DO_ENZO), false);
-      assert.equal(canDeleteChamado(CIDADAO_AUTOR, null), false);
+      assert.equal(canDeleteChamado(GESTOR_USER, null), false);
     });
   });
 

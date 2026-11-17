@@ -6,11 +6,6 @@ function isGestor(usuario?: Usuario | null): boolean {
   return usuario?.cargo === 'GESTOR';
 }
 
-function isAutorOuGestor(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
-  if (!usuario || !chamado || !canAccessMobileApp(usuario)) return false;
-  return chamado.usuarioId === usuario.id || isGestor(usuario);
-}
-
 export function canAccessMobileApp(usuario?: Usuario | null): boolean {
   return usuario?.cargo === 'CIDADAO' || usuario?.cargo === 'GESTOR';
 }
@@ -20,7 +15,7 @@ export function getCargoLabel(cargo?: CargoUsuario): string {
 }
 
 export function canEditChamado(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
-  return isAutorOuGestor(usuario, chamado);
+  return Boolean(chamado) && isGestor(usuario);
 }
 
 export function canChangeChamadoStatus(usuario?: Usuario | null): boolean {
@@ -28,7 +23,7 @@ export function canChangeChamadoStatus(usuario?: Usuario | null): boolean {
 }
 
 export function canDeleteChamado(usuario?: Usuario | null, chamado?: Chamado | null): boolean {
-  return isAutorOuGestor(usuario, chamado);
+  return Boolean(chamado) && isGestor(usuario);
 }
 
 export function isStatusFinal(status: StatusChamado): boolean {
