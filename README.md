@@ -16,11 +16,11 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 | Nome Completo | RM | Função Principal | GitHub | LinkedIn |
 | :--- | :---: | :--- | :---: | :---: |
-| **Enzo Okuizumi** | `561432` | Mobile Developer & Arquiteto React Native | [@EnzoOkuizumiFiap](https://github.com/EnzoOkuizumiFiap) | [LinkedIn](https://www.linkedin.com/in/enzo-okuizumi-b60292256/) |
-| **Gustavo Okada** | `563428` | Backend Developer & API Integration | [@Gdev3356](https://github.com/Gdev3356) | [LinkedIn](https://www.linkedin.com/in/gustavo-okada-53a3b8359/) |
+| **Enzo Okuizumi Miranda de Souza** | `561432` | Mobile Developer & Arquiteto React Native | [@EnzoOkuizumiFiap](https://github.com/EnzoOkuizumiFiap) | [LinkedIn](https://www.linkedin.com/in/enzo-okuizumi-b60292256/) |
+| **Gustavo Keiji Okada** | `563428` | Backend Developer & API Integration | [@Gdev3356](https://github.com/Gdev3356) | [LinkedIn](https://www.linkedin.com/in/gustavo-okada-53a3b8359/) |
 | **Lucas Barros Gouveia** | `566422` | Fullstack Developer & Database Architect | [@LuzBGouveia](https://github.com/LuzBGouveia) | [LinkedIn](https://www.linkedin.com/in/lucas-barros-gouveia-09b147355/) |
 | **Luna de Carvalho Guimarães** | `562290` | UI/UX Designer & Mobile Frontend Specialist | [@lunaguima](https://github.com/lunaguima) | [LinkedIn](https://www.linkedin.com/in/luna-guimar%C3%A3es-b0ba82309/) |
-| **Milton Marcelino** | `564836` | DevOps & Quality Assurance (QA) | [@MiltonMarcelino](https://github.com/MiltonMarcelino) | [LinkedIn](https://www.linkedin.com/in/milton-marcelino-250298142) |
+| **Milton Jakson de Sousa Marcelino** | `564836` | DevOps & Quality Assurance (QA) | [@MiltonMarcelino](https://github.com/MiltonMarcelino) | [LinkedIn](https://www.linkedin.com/in/milton-marcelino-250298142) |
 
 ---
 
@@ -207,15 +207,52 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `GET` | `/chamados/{id}` | Detalhes completos do protocolo, classificação IA e histórico |
 | `GET` | `/chamados/{id}/foto` | Recupera a evidência fotográfica armazenada no Oracle BLOB |
 | `POST` | `/chamados` | Cria chamado via `multipart/form-data` (`cep`, `numero`, `referencia`, `rua`, `foto`) aguardando a triagem IA via `DeferredResult` (`201 Created` se válida ou erro se recusada) |
-| `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente |
-| `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`PENDENTE`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) |
+| `PUT` | `/chamados/{id}` | Atualiza dados de um chamado existente (`GESTOR`) |
+| `PATCH` | `/chamados/{id}/status` | Atualiza etapa do protocolo (`PENDENTE`, `EM_ANALISE`, `EM_EXECUCAO`, `CONCLUIDO`, `REJEITADO`) (`GESTOR`) |
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
-| `DELETE` | `/chamados/{id}` | Remove chamado pelo ID |
+| `DELETE` | `/chamados/{id}` | Remove chamado pelo ID (`GESTOR`) |
 | `GET` | `/actuator/health` | Probe de saúde e aquecimento preventivo no Azure App Service |
 
 ---
 
-## 6. Como Executar o Projeto
+## 6. Credenciais de Teste (Cidadão e Gestor Público)
+
+O banco de dados Oracle conectado à API em produção (`https://app-zelafix.azurewebsites.net`) já possui contas de demonstração para homologação de todos os fluxos de autenticação e CRUD por perfil:
+
+| Papel | Nome | E-mail | Senha | Permissões no App Mobile |
+| :--- | :--- | :--- | :--- | :--- |
+| **Cidadão** | Enzo Okuizumi | `enzo.okuizumi@gmail.com` | `123mudar` | Criar ocorrências com foto + GPS (`POST /chamados`), consultar Radar e Meus Chamados (`GET`), apoiar relatos (`POST /chamados/{id}/apoiar`), editar próprio perfil (`PUT /usuarios/me`) e usar o ZelaBot IA. |
+| **Gestor Público** | Eng. Roberto Santos | `roberto.gestor@subprefeitura.sp.gov.br` | `Senha#123` | Todas as permissões do cidadão + **Editar Ocorrência** (`PUT /chamados/{id}`), **Atualizar Status com parecer técnico** (`PATCH /chamados/{id}/status`) e **Excluir Ocorrência** (`DELETE /chamados/{id}`). |
+| **Gestor Público** | Coordenador Lucas Mendes | `lucas.zeladoria@subprefeitura.sp.gov.br` | `Senha#123` | Acompanhar triagens, editar ocorrências, atualizar status operacional e excluir registros. |
+
+> **Nota de Segurança (`src/utils/permissions.ts`):** Contas com perfil `ADMIN` são bloqueadas no aplicativo móvel (`canAccessMobileApp`), mantendo estrita separação entre operação em campo (`CIDADAO` / `GESTOR`) e administração de sistema.
+
+---
+
+## 7. Publicação do App (EAS Build) & Auditoria de Commit Hash
+
+- **Distribuição via Expo EAS Build:** O aplicativo Android standalone (`br.com.fiap.zelafix`, **versionCode 13**) foi compilado e publicado no **Expo EAS Build** (Build `f1c2d185-0f8a-4665-bd15-6b1d8882c0be`), com link direto para download do `.apk`.
+- **Commit Hash de Referência (Tela "Sobre o App"):**
+  - **Hash Completo:** `77492e1ca065bf3a65efeb98e45e409556156fbb`
+  - **ID Curto:** `77492e1`
+  - **Auditoria em Runtime:** O arquivo `app.config.js` extrai os metadados Git (`commitHash`, `shortCommitHash`, `branch`, `commitDate` e `commitMessage`) em tempo de build, validados por `src/config/versionParser.ts` e exibidos na tela **`SobreAppScreen`** (`src/screens/SobreApp/SobreAppScreen.tsx`) com opção de compartilhamento nativo.
+
+---
+
+## 8. Declaração de Uso de Inteligência Artificial Generativa
+
+Em cumprimento às diretrizes institucionais da Global Solution FIAP:
+
+- **Modelos Utilizados no Desenvolvimento:** **Gemini 3.8 Flash**, **Gemini 4 Hydrogen** e **Claude Sonnet 5.5** (Anthropic).
+- **Finalidade e Escopo de Uso:**
+  1. *Arquitetura de Estado e Tipagem:* Apoio na estruturação dos tipos estritos TypeScript, schemas declarativos Zod v4 (`src/utils/schemas.ts`) e invalidação otimista de cache no TanStack React Query v5 (`src/lib/chamadoCache.ts`).
+  2. *Testes Automatizados:* Apoio na escrita da suíte de 78 testes unitários (`tests/*.test.ts`) cobrindo normalização de erros HTTP, formatadores, parser Markdown, permissões e metadados de versão.
+  3. *Revisão Documental:* Conferência de aderência entre os requisitos avaliativos do edital e a documentação técnica deste `README.md`.
+- **Responsabilidade Humana:** Todas as telas, fluxos de navegação, regras de permissão (`Cidadão` vs. `Gestor Público`), integração com o backend Java Spring Boot no Azure e com o microsserviço FastAPI RAG foram projetados, implementados, revisados e testados pelos integrantes do grupo.
+
+---
+
+## 9. Como Executar o Projeto
 
 ```bash
 # 1. Acesse a pasta do projeto Mobile
