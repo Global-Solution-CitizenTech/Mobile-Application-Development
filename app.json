@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ZelaFix",
-    "slug": "zelafix",
+    "slug": "enzookuizumi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -54,12 +54,12 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "f330483f-855a-411e-a5eb-c544d5070ed5"
+        "projectId": "0343be50-386b-4241-be1e-89fd749cd4ae"
       }
     },
     "experiments": {
       "reactCompiler": true
     },
-    "owner": "enzookuizumis-team"
+    "owner": "enzookuizumi06s-team"
   }
 }
