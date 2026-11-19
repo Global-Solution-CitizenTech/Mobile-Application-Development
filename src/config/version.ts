@@ -6,7 +6,7 @@ export const GIT_COMMIT_INFO: GitCommitMetadata = parseGitCommitMetadata(Constan
 
 export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
   {
-    nome: 'Enzo Okuizumi',
+    nome: 'Enzo Okuizumi Miranda de Souza',
     rm: '561432',
     turma: '2TDSPG',
     funcao: 'Mobile Developer & Arquiteto React Native',
@@ -14,7 +14,7 @@ export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
     linkedin: 'https://www.linkedin.com/in/enzo-okuizumi-b60292256/',
   },
   {
-    nome: 'Gustavo Okada',
+    nome: 'Gustavo Keiji Okada',
     rm: '563428',
     turma: '2TDSPG',
     funcao: 'Backend Developer & API Integration',
@@ -38,7 +38,7 @@ export const INTEGRANTES_EQUIPE: IntegranteGrupo[] = [
     linkedin: 'https://www.linkedin.com/in/luna-guimar%C3%A3es-b0ba82309/',
   },
   {
-    nome: 'Milton Marcelino',
+    nome: 'Milton Jakson de Sousa Marcelino',
     rm: '564836',
     turma: '2TDSPG',
     funcao: 'DevOps & Quality Assurance (QA)',

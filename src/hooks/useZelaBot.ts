@@ -9,6 +9,7 @@ import { aiService, createAiMessageId } from '@/services/aiService';
 import type { AiChatSession, AiInsightItem, AiMessage } from '@/types/ai';
 import type { Chamado } from '@/types/chamado';
 import { getApiErrorMessage } from '@/utils/apiError';
+import { isMeaningfulBairro } from '@/utils/formatters';
 
 function gerarSessionId(): string {
   return `zf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -115,7 +116,13 @@ export function useZelaBot(initialChamadoId?: number) {
       ? detailQuery.chamado
       : recentChamadosQuery.chamados.find((c) => c.idChamado === selectedChamadoId) ?? null;
 
-  const bairroAtivo = selectedChamado?.endereco?.bairro || usuario?.endereco?.bairro || undefined;
+  const chamadoBairro = selectedChamado?.endereco?.bairro?.trim();
+  const usuarioBairro = usuario?.endereco?.bairro?.trim();
+  const bairroAtivo = isMeaningfulBairro(chamadoBairro)
+    ? chamadoBairro
+    : isMeaningfulBairro(usuarioBairro)
+      ? usuarioBairro
+      : undefined;
 
   const insightsQuery = useQuery({
     queryKey: queryKeys.ai.insights(bairroAtivo),

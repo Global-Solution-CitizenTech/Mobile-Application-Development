@@ -41,7 +41,7 @@ export function createThrottledPing(
 
 export const api: AxiosInstance = create({
   baseURL: env.apiUrl,
-  timeout: 65000, // 65s para cobrir o timeout assíncrono do Spring Boot (60s) e cold starts
+  timeout: 95000, // 95s para cobrir o timeout assíncrono do Spring Boot (90s em TriagemPendenteStore) e cold starts
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

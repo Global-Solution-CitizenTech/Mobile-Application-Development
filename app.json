@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "br.com.fiap.zelafix",
-      "versionCode": 13,
+      "versionCode": 14,
       "backgroundColor": "#F8FAFC",
       "adaptiveIcon": {
         "backgroundColor": "#064E3B",

@@ -34,16 +34,15 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
     mutationFn: (payload: UsuarioRequest) => updateProfile(payload),
   });
 
+  const mountedRef = useRef(true);
+  const submittingRef = useRef(false);
+  const lastSyncedUsuarioRef = useRef<Usuario | null>(usuario);
+  const gpsApplyEpochRef = useRef(0);
+
   const form = useZodForm(ProfileEditSchema, toProfileFormValues(usuario), {
     disabled: saveMutation.isPending,
   });
-  const { syncValues, setFieldValue: baseSetFieldValue } = form;
-
-  const mountedRef = useRef(true);
-  const submittingRef = useRef(false);
-  const isDirtyRef = useRef(false);
-  const lastSyncedUsuarioRef = useRef<Usuario | null>(usuario);
-  const gpsApplyEpochRef = useRef(0);
+  const { syncValues, setFieldValue, isDirty } = form;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -55,27 +54,17 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
   useEffect(() => {
     if (!usuario) {
       lastSyncedUsuarioRef.current = null;
-      isDirtyRef.current = false;
       gpsApplyEpochRef.current += 1;
       syncValues(toProfileFormValues(null));
       return;
     }
 
     if (lastSyncedUsuarioRef.current === usuario) return;
-    if (isDirtyRef.current && lastSyncedUsuarioRef.current !== null) return;
+    if (isDirty && lastSyncedUsuarioRef.current !== null) return;
 
     lastSyncedUsuarioRef.current = usuario;
-    isDirtyRef.current = false;
     syncValues(toProfileFormValues(usuario));
-  }, [syncValues, usuario]);
-
-  const setFieldValue = useCallback(
-    <K extends keyof EditarPerfilFormData>(fieldName: K, value: EditarPerfilFormData[K]) => {
-      isDirtyRef.current = true;
-      baseSetFieldValue(fieldName, value);
-    },
-    [baseSetFieldValue]
-  );
+  }, [isDirty, syncValues, usuario]);
 
   const onUsarGps = useCallback(async () => {
     if (submittingRef.current || saveMutation.isPending) return;
@@ -101,7 +90,6 @@ export function useEditarPerfilForm(): UseEditarPerfilFormReturn {
       saveMutation.mutate(buildUsuarioRequest(parsed), {
         onSuccess: (updatedUsuario) => {
           submittingRef.current = false;
-          isDirtyRef.current = false;
           lastSyncedUsuarioRef.current = updatedUsuario;
           if (!mountedRef.current) return;
           syncValues(toProfileFormValues(updatedUsuario));

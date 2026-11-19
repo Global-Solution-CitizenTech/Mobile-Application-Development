@@ -43,15 +43,14 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
   const { capturandoGps, erroGps, ultimaLocalizacao, capturarLocalizacao, limparLocalizacao } =
     useLocalizacao();
 
-  const form = useZodForm(ChamadoFormSchema, INITIAL_EDITAR_CHAMADO, { disabled: isUpdating });
-  const { syncValues, setFieldValue: baseSetFieldValue } = form;
-
   const mountedRef = useRef(true);
   const submittingRef = useRef(false);
-  const isDirtyRef = useRef(false);
   const lastChamadoIdRef = useRef<number>(chamadoId);
   const lastSyncedChamadoRef = useRef<Chamado | null>(null);
   const gpsApplyEpochRef = useRef(0);
+
+  const form = useZodForm(ChamadoFormSchema, INITIAL_EDITAR_CHAMADO, { disabled: isUpdating });
+  const { syncValues, setFieldValue, isDirty } = form;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -64,7 +63,6 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
     if (lastChamadoIdRef.current !== chamadoId) {
       lastChamadoIdRef.current = chamadoId;
       lastSyncedChamadoRef.current = null;
-      isDirtyRef.current = false;
       gpsApplyEpochRef.current += 1;
       syncValues(INITIAL_EDITAR_CHAMADO);
       limparLocalizacao();
@@ -75,20 +73,11 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
   useEffect(() => {
     if (!hasValidId || !chamado || chamado.idChamado !== chamadoId) return;
     if (lastSyncedChamadoRef.current === chamado) return;
-    if (isDirtyRef.current && lastSyncedChamadoRef.current !== null) return;
+    if (isDirty && lastSyncedChamadoRef.current !== null) return;
 
     lastSyncedChamadoRef.current = chamado;
-    isDirtyRef.current = false;
     syncValues(mapChamadoToForm(chamado));
-  }, [chamado, chamadoId, hasValidId, syncValues]);
-
-  const setFieldValue = useCallback(
-    <K extends keyof EditarChamadoFormData>(fieldName: K, value: EditarChamadoFormData[K]) => {
-      isDirtyRef.current = true;
-      baseSetFieldValue(fieldName, value);
-    },
-    [baseSetFieldValue]
-  );
+  }, [chamado, chamadoId, hasValidId, isDirty, syncValues]);
 
   const handleUsarGps = useCallback(async () => {
     if (submittingRef.current || isUpdating) return;
@@ -114,9 +103,9 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
       atualizarChamado(chamadoId, toChamadoRequest(parsed), {
         onSuccess: (updated) => {
           submittingRef.current = false;
-          isDirtyRef.current = false;
           lastSyncedChamadoRef.current = updated;
           if (!mountedRef.current) return;
+          syncValues(mapChamadoToForm(updated));
           onSuccess(updated);
         },
         onError: (err) => {
@@ -126,7 +115,7 @@ export function useEditarChamadoForm(chamadoId: number): UseEditarChamadoFormRet
         },
       });
     },
-    [atualizarChamado, chamadoId, form, hasValidId, isUpdating, showError]
+    [atualizarChamado, chamadoId, form, hasValidId, isUpdating, showError, syncValues]
   );
 
   return {

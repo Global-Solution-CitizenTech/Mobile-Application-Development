@@ -34,6 +34,7 @@ export function useZodForm<T extends Record<string, unknown>>(
 ): UseZodFormReturn<T> {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<FormErrors<T>>({});
+  const [isDirty, setIsDirty] = useState(false);
   const initialValuesRef = useRef(initialValues);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function useZodForm<T extends Record<string, unknown>>(
 
   const setFieldValue = useCallback(
     <K extends keyof T>(field: K, value: T[K]) => {
+      setIsDirty(true);
       setValues((prev) => ({ ...prev, [field]: value }));
       clearFieldError(field);
     },
@@ -59,6 +61,7 @@ export function useZodForm<T extends Record<string, unknown>>(
 
   const setStringField = useCallback(
     <K extends StringFieldKeys<T>>(field: K, value: string) => {
+      setIsDirty(true);
       setValues((prev) => Object.assign({}, prev, { [field]: value }));
       clearFieldError(field);
     },
@@ -66,12 +69,14 @@ export function useZodForm<T extends Record<string, unknown>>(
   );
 
   const reset = useCallback((nextValues?: T) => {
+    setIsDirty(false);
     setValues(nextValues ?? initialValuesRef.current);
     setErrors({});
   }, []);
 
   const syncValues = useCallback((nextValues: T) => {
     initialValuesRef.current = nextValues;
+    setIsDirty(false);
     setValues(nextValues);
     setErrors({});
   }, []);
@@ -92,6 +97,7 @@ export function useZodForm<T extends Record<string, unknown>>(
   return {
     values,
     errors,
+    isDirty,
     setFieldValue,
     field,
     reset,

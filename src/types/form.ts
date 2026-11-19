@@ -31,6 +31,7 @@ export interface UseZodFormOptions {
 export interface UseZodFormReturn<T extends Record<string, unknown>> {
   values: T;
   errors: FormErrors<T>;
+  isDirty: boolean;
   setFieldValue: <K extends keyof T>(field: K, value: T[K]) => void;
   field: FieldBinder<T>;
   syncValues: (nextValues: T) => void;

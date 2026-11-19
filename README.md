@@ -42,12 +42,12 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 ---
 
-## 3. Arquitetura de Engenharia Mobile (Padrão Sprint 4 + TanStack Query + Zod)
+## 3. Arquitetura de Engenharia Mobile (Modularização por Domínio + TanStack Query v5 + Zod v4)
 
 O projeto foi arquitetado seguindo os mais altos padrões de Engenharia Mobile em React Native + TypeScript, estruturando componentes e telas em módulos desacoplados e preparando toda a camada de rede para integração imediata com o **Backend Java (Spring Boot)**:
 
 - **Gerenciamento de Estado Assíncrono (`@tanstack/react-query` v5):** Cache inteligente, *lifecycle* nativo (`AppState` + `expo-network`), atualização otimista no apoio comunitário (`apoiarChamado`), *pull-to-refresh* e mutações invalidadas automaticamente via `queryKeys`.
-- **Segurança & Persistência (`expo-secure-store` + `@react-native-async-storage/async-storage`):** Tokens JWT armazenados de forma criptografada no Keychain/Keystore nativo via `SecureStore` (com fallback Web transparente) e preferências de tema reativas.
+- **Segurança & Persistência (`expo-secure-store` + `@react-native-async-storage/async-storage`):** Tokens JWT armazenados de forma criptografada no Keychain/Keystore nativo via `SecureStore` e preferências de tema/sessão reativas com validação Zod.
 - **Validação de Formulários com Schemas (`zod` v4 + `useZodForm`):** Hook genérico memoizado integrado a schemas declarativos (`LoginSchema`, `RegisterSchema`, `ProfileEditSchema`, `ChamadoFormSchema`, `StatusUpdateSchema`) com extração automática de erros por campo.
 - **Extração Dinâmica do Commit Hash (`app.config.js` + `expo-constants`):** O hash completo e curto do commit Git, branch e data são injetados automaticamente em tempo de build (`src/config/versionParser.ts`) e exibidos na tela **Sobre o App**.
 - **Camada HTTP Integrada ao Azure App Service (`src/services/`):** Suporte nativo ao formato paginado `Page<T>` do **Spring Data JPA**, interceptors `Bearer JWT` do **Spring Security**, normalização de erros do `@RestControllerAdvice` / Bean Validation (`src/utils/apiError.ts`) e *warmup* throttled em `/actuator/health` em `https://app-zelafix.azurewebsites.net`.
@@ -137,7 +137,7 @@ Mobile-Application-Development/
     │   ├── aiService.ts              # Integração com o microsserviço ZelaBot IA (FastAPI + RAG)
     │   ├── api.ts                    # Axios + Interceptor JWT + Deduplicação 401 + Warmup Azure
     │   ├── authService.ts            # Contratos REST /login e /usuarios/* (Spring Security)
-    │   ├── chamadoService.ts         # Contratos REST /chamados/* e /categorias (Spring Data JPA Page<T>)
+    │   ├── chamadoService.ts         # Contratos REST /chamados/* (Spring Data JPA Page<T>)
     │   └── storageService.ts         # Persistência segura (SecureStore JWT + AsyncStorage usuário/tema)
     ├── theme/
     │   ├── colors.ts                 # Paletas Light e Dark
@@ -166,7 +166,7 @@ Mobile-Application-Development/
         ├── markdown.ts               # Parser de Markdown (tabelas, listas, blocos de código e inline)
         ├── permissions.ts            # Regras puras Cidadão vs. Gestor Público (zero ADMIN no mobile)
         ├── schemas.ts                # Schemas Zod v4 e extração de erros
-        └── shadow.ts                 # Utilitário multiplataforma de sombras (Web boxShadow / Native)
+        └── shadow.ts                 # Utilitário nativo de sombras (iOS shadow* e Android elevation)
 ```
 
 ---
@@ -200,8 +200,7 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `POST` | `/login` | Autentica o cidadão e retorna `{ token, user }` (JWT Bearer) |
 | `POST` | `/usuarios` | Registra novo cidadão com validação Bean Validation e endereço ViaCEP |
 | `GET` | `/usuarios/me` | Obtém dados cadastrais e endereço do usuário autenticado |
-| `PUT` | `/usuarios/me` | Atualiza dados cadastrais e senha do cidadão |
-| `GET` | `/categorias` | Lista o catálogo oficial de categorias de zeladoria |
+| `PUT` | `/usuarios/me` | Atualiza dados cadastrais e senha do cidadão (retorna `X-Novo-Token`) |
 | `GET` | `/chamados` | Lista chamados paginados (`Page<ChamadoResponse>`) com filtros |
 | `GET` | `/chamados/estatisticas` | Retorna métricas agregadas do painel executivo |
 | `GET` | `/chamados/{id}` | Detalhes completos do protocolo, classificação IA e histórico |
@@ -212,6 +211,21 @@ A camada `src/services/` está conectada ao backend Java Spring Boot em `https:/
 | `POST` | `/chamados/{id}/apoiar` | Registra/remove apoio comunitário (`+1`) via fila RabbitMQ |
 | `DELETE` | `/chamados/{id}` | Remove chamado pelo ID (`GESTOR`) |
 | `GET` | `/actuator/health` | Probe de saúde e aquecimento preventivo no Azure App Service |
+
+> **Catálogo de Categorias:** As 6 categorias oficiais (`ILUMINACAO_PUBLICA`, `VIAS_E_PAVIMENTACAO`, `DRENAGEM_E_ESGOTO`, `LIMPEZA_URBANA`, `ARVORES_E_PARQUES`, `SINALIZACAO_E_TRANSITO`) são tipadas em `src/theme/semanticConfig.ts` em paridade 1:1 com o enum `CategoriaEnum` e a migration Flyway `V2` do backend Java.
+
+### Microsserviço de IA — ZelaBot (`src/services/aiService.ts`)
+
+Conectado ao microsserviço FastAPI + ChromaDB RAG em `https://disruptive-architectures-iot-iob-ia-mpl5.onrender.com`:
+
+| Método | Endpoint FastAPI | Descrição |
+| :---: | :--- | :--- |
+| `GET` | `/health` | Warmup e verificação de saúde do microsserviço de IA |
+| `POST` | `/ai/chat` | Conversa multi-turno com RAG normativo e contexto opcional do chamado |
+| `POST` | `/ai/insights` | Gera alertas preventivos por bairro (`?bairro=...`) |
+| `GET` | `/ai/sessions` | Lista sessões de conversa persistidas em SQLite |
+| `GET` | `/ai/history` | Carrega mensagens anteriores de uma sessão (`?session_id=...`) |
+| `DELETE` | `/ai/sessions/{session_id}` | Remove permanentemente uma sessão do histórico |
 
 ---
 
