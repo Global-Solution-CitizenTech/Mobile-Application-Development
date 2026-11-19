@@ -28,8 +28,8 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 | Recurso | URL |
 | :--- | :--- |
-| 📥 **Download direto do APK (Android Standalone)** | [**Baixar zelafix.apk (Build Oficial versionCode 13)**](https://expo.dev/artifacts/eas/xkqIruhd5mVE-kVvlzhiFprCvaOKyd2YCNo5A6UNC-c.apk) |
-| 🏗️ **Painel de Compilação do EAS Build** | [Dashboard Expo EAS — Build `f1c2d185` (versionCode 13)](https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/f1c2d185-0f8a-4665-bd15-6b1d8882c0be) |
+| 📥 **Download direto do APK (Android Standalone)** | [**Baixar zelafix.apk (Build Oficial versionCode 14)**](https://expo.dev/artifacts/eas/tAr1dhKfReeHzG0A2MHOEHml5dvbgLnQsfy6LZa33p8.apk) |
+| 🏗️ **Painel de Compilação do EAS Build** | [Dashboard Expo EAS — Build `8c21e8d0` (versionCode 14)](https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/8c21e8d0-94ad-47a6-beea-e6a8b13322fb) |
 | 💻 **Repositório GitHub Mobile** | [Global-Solution-CitizenTech/Mobile-Application-Development](https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development) |
 | ☕ **Backend Java (Spring Boot)** | [Global-Solution-CitizenTech/Java-Advanced](https://github.com/Global-Solution-CitizenTech/Java-Advanced) |
 | 🤖 **Microsserviço IA (FastAPI)** | [Global-Solution-CitizenTech/Disruptive-Architectures-IoT-IoB-IA](https://github.com/Global-Solution-CitizenTech/Disruptive-Architectures-IoT-IoB-IA) |
@@ -245,10 +245,10 @@ O banco de dados Oracle conectado à API em produção (`https://app-zelafix.azu
 
 ## 7. Publicação do App (EAS Build) & Auditoria de Commit Hash
 
-- **Distribuição via Expo EAS Build:** O aplicativo Android standalone (`br.com.fiap.zelafix`, **versionCode 13**) foi compilado e publicado no **Expo EAS Build** (Build `f1c2d185-0f8a-4665-bd15-6b1d8882c0be`), com link direto para download do `.apk`.
+- **Distribuição via Expo EAS Build:** O aplicativo Android standalone (`br.com.fiap.zelafix`, **versionCode 14**) foi compilado e publicado no **Expo EAS Build** (Build `8c21e8d0-94ad-47a6-beea-e6a8b13322fb`), com link direto para download do `.apk`.
 - **Commit Hash de Referência (Tela "Sobre o App"):**
-  - **Hash Completo:** `77492e1ca065bf3a65efeb98e45e409556156fbb`
-  - **ID Curto:** `77492e1`
+  - **Hash Completo:** `0ffba5baa45249e32838e613e1ee131ad4f2039a`
+  - **ID Curto:** `0ffba5b`
   - **Auditoria em Runtime:** O arquivo `app.config.js` extrai os metadados Git (`commitHash`, `shortCommitHash`, `branch`, `commitDate` e `commitMessage`) em tempo de build, validados por `src/config/versionParser.ts` e exibidos na tela **`SobreAppScreen`** (`src/screens/SobreApp/SobreAppScreen.tsx`) com opção de compartilhamento nativo.
 
 ---
