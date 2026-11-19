@@ -23,6 +23,9 @@ bb2fb7ed172747f182138fb84b0793cdaeacc8d7 (ID Curto: bb2fb7e)
 VÍDEO DE DEMONSTRAÇÃO:
 https://www.youtube.com/watch?v=IlLD1UlcAU0
 
+VÍDEO DE DEMONSTRAÇÃO BACKUP DRIVE:
+https://drive.google.com/file/d/10pMIAJJPlQPGYIeNDaEqQOHT-lywpcP5/view?usp=sharing
+
 PUBLICAÇÃO DO APP (EAS BUILD):
 - App: ZelaFix Mobile (Android APK - versionCode 15)
 - Download direto: https://expo.dev/artifacts/eas/qDalYhiUME0zZv3YLUlQBZRoHXPOrSEbIXqVAT1G5G8.apk
