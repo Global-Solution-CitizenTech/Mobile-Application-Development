@@ -1,14 +1,20 @@
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '@/contexts/ThemeContext';
 import { borderRadius, spacing } from '@/theme/spacing';
 import { fontSize, fontWeight } from '@/theme/typography';
-import type { AppTheme } from '@/types/theme';
+import type { AppTheme, ThemeMode } from '@/types/theme';
 import type { ProfileMenuCardProps } from '@/types/ui';
 
+const THEME_OPTIONS: readonly { mode: ThemeMode; label: string }[] = [
+  { mode: 'system', label: 'Sistema' },
+  { mode: 'light', label: 'Claro' },
+  { mode: 'dark', label: 'Escuro' },
+];
+
 export const ProfileMenuCard = ({
-  isDark,
-  onToggleTheme,
+  themeMode,
+  onSelectThemeMode,
   onPressEditarPerfil,
   onPressZelaBot,
   onPressSobreApp,
@@ -28,12 +34,30 @@ export const ProfileMenuCard = ({
 
       <View style={styles.divider} />
 
-      <View style={styles.menuRow}>
+      <View style={styles.themeRow}>
         <View style={styles.menuLeft}>
-          <Ionicons name={isDark ? 'moon' : 'sunny-outline'} size={20} color={theme.primary} />
-          <Text style={styles.menuText}>Modo Escuro</Text>
+          <Ionicons name="contrast-outline" size={20} color={theme.primary} />
+          <Text style={styles.menuText}>Aparência</Text>
         </View>
-        <Switch value={isDark} onValueChange={onToggleTheme} trackColor={{ true: theme.primary }} />
+        <View style={styles.themeSegment}>
+          {THEME_OPTIONS.map((opt) => {
+            const active = themeMode === opt.mode;
+            return (
+              <TouchableOpacity
+                key={opt.mode}
+                style={[styles.themeChip, active && styles.themeChipActive]}
+                onPress={() => onSelectThemeMode(opt.mode)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.themeChipText, active && styles.themeChipTextActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       <View style={styles.divider} />
@@ -84,6 +108,35 @@ const createStyles = (theme: AppTheme) =>
       fontSize: fontSize.body,
       fontWeight: fontWeight.semibold,
       color: theme.text,
+    },
+    themeRow: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md + 2,
+      gap: spacing.sm,
+    },
+    themeSegment: {
+      flexDirection: 'row',
+      backgroundColor: theme.pillBg,
+      borderRadius: borderRadius.md,
+      padding: 3,
+      gap: 4,
+    },
+    themeChip: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: spacing.xs + 2,
+      borderRadius: borderRadius.sm,
+    },
+    themeChipActive: {
+      backgroundColor: theme.primary,
+    },
+    themeChipText: {
+      fontSize: fontSize.caption,
+      fontWeight: fontWeight.semibold,
+      color: theme.textSecondary,
+    },
+    themeChipTextActive: {
+      color: theme.inverseText,
     },
     divider: {
       height: 1,

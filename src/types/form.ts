@@ -41,10 +41,8 @@ export interface UseZodFormReturn<T extends Record<string, unknown>> {
 
 export type LoginFormData = z.infer<typeof LoginSchema>;
 export type RegisterFormData = z.infer<typeof RegisterSchema>;
-export type ProfileEditFormData = z.infer<typeof ProfileEditSchema>;
-export type EditarPerfilFormData = ProfileEditFormData;
+export type EditarPerfilFormData = z.infer<typeof ProfileEditSchema>;
 export type ChamadoFormData = z.infer<typeof ChamadoFormSchema>;
 export type ChamadoCreateFormData = z.infer<typeof ChamadoCreateSchema>;
-export type NovoChamadoFormData = ChamadoCreateFormData;
 export type EditarChamadoFormData = ChamadoFormData;
 export type StatusUpdateFormData = z.infer<typeof StatusUpdateSchema>;

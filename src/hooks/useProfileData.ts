@@ -7,7 +7,7 @@ import { getApiErrorMessage, normalizeHttpError } from '@/utils/apiError';
 
 export function useProfileData() {
   const { usuario, signOut, refreshProfile } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { themeMode, setThemeMode } = useTheme();
   const { showError } = useFeedback();
 
   const summary = useUserChamadosSummary();
@@ -75,8 +75,8 @@ export function useProfileData() {
     },
     statsLoading: summary.isLoading,
     error: refreshError ?? summary.error,
-    isDark,
-    toggleTheme,
+    themeMode,
+    setThemeMode,
     logoutModalVisible,
     setLogoutModalVisible,
     refreshing: refreshingProfile || summary.isRefetching,

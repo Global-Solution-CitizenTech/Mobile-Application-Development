@@ -12,7 +12,7 @@ function isValidChamadoId(id?: number): id is number {
   return typeof id === 'number' && Number.isInteger(id) && id > 0;
 }
 
-export const chamadoQueries = {
+const chamadoQueries = {
   list: (filtros: FiltroChamados, usuarioId?: number | null) =>
     queryOptions({
       queryKey: queryKeys.chamados.list(filtros, usuarioId),

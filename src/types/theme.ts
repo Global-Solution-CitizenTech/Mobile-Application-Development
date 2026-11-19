@@ -69,8 +69,11 @@ export interface AppTheme {
   secondaryButtonBg: string;
 }
 
+export type ThemeMode = 'system' | 'light' | 'dark';
+
 export interface ThemeContextData {
+  themeMode: ThemeMode;
   isDark: boolean;
   theme: AppTheme;
-  toggleTheme: () => void;
+  setThemeMode: (mode: ThemeMode) => void;
 }

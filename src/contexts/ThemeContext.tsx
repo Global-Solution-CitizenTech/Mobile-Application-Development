@@ -1,9 +1,9 @@
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Appearance } from 'react-native';
+import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '@/theme/colors';
-import type { AppTheme, NamedStyles, ThemeContextData } from '@/types/theme';
+import type { AppTheme, NamedStyles, ThemeContextData, ThemeMode } from '@/types/theme';
 
 const lightTheme: AppTheme = {
   isDark: false,
@@ -98,7 +98,8 @@ const THEME_STORAGE_KEY = '@zelafix:theme_mode';
 const ThemeContext = createContext<ThemeContextData | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(() => Appearance.getColorScheme() === 'dark');
+  const systemScheme = useColorScheme();
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
   const manualToggleRef = useRef(false);
 
   useEffect(() => {
@@ -107,8 +108,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       try {
         const salvo = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (!active || manualToggleRef.current) return;
-        if (salvo === 'dark' || salvo === 'light') {
-          setIsDark(salvo === 'dark');
+        if (salvo === 'system' || salvo === 'dark' || salvo === 'light') {
+          setThemeModeState(salvo);
         }
       } catch {
         // Preferência local indisponível: mantém o tema do sistema.
@@ -120,19 +121,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const toggleTheme = useCallback(() => {
+  const setThemeMode = useCallback((mode: ThemeMode) => {
     manualToggleRef.current = true;
-    setIsDark((prev) => {
-      const nextDark = !prev;
-      void AsyncStorage.setItem(THEME_STORAGE_KEY, nextDark ? 'dark' : 'light').catch(() => undefined);
-      return nextDark;
-    });
+    setThemeModeState(mode);
+    void AsyncStorage.setItem(THEME_STORAGE_KEY, mode).catch(() => undefined);
   }, []);
 
+  const isDark = themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const value = useMemo<ThemeContextData>(
-    () => ({ isDark, theme, toggleTheme }),
-    [isDark, theme, toggleTheme]
+    () => ({ themeMode, isDark, theme, setThemeMode }),
+    [themeMode, isDark, theme, setThemeMode]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

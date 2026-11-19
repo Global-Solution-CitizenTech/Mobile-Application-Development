@@ -33,7 +33,7 @@ import type {
   StatusUpdateFormData,
   StringFieldKeys,
 } from '@/types/form';
-import type { IoniconName } from '@/types/theme';
+import type { IoniconName, ThemeMode } from '@/types/theme';
 import type { GitCommitMetadata, IntegranteGrupo } from '@/types/version';
 
 export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -417,8 +417,8 @@ export interface ProfileStatsCardProps {
 }
 
 export interface ProfileMenuCardProps {
-  isDark: boolean;
-  onToggleTheme: () => void;
+  themeMode: ThemeMode;
+  onSelectThemeMode: (mode: ThemeMode) => void;
   onPressEditarPerfil: () => void;
   onPressZelaBot: () => void;
   onPressSobreApp: () => void;

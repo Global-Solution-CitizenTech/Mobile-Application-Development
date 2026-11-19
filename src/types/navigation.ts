@@ -25,8 +25,6 @@ export type AppStackParamList = {
   SobreApp: undefined;
 };
 
-export type RootStackParamList = AuthStackParamList & AppStackParamList;
-
 export type AuthStackScreenProps<RouteName extends keyof AuthStackParamList> =
   NativeStackScreenProps<AuthStackParamList, RouteName>;
 
@@ -49,6 +47,5 @@ export type AppTabRouteProp<TabName extends keyof AppTabParamList> = RouteProp<A
 
 export type HomeTabNavigationProp = AppTabNavigationProp<'HomeTab'>;
 export type RadarBairroTabNavigationProp = AppTabNavigationProp<'RadarBairroTab'>;
-export type ZelaBotTabNavigationProp = AppTabNavigationProp<'ZelaBotTab'>;
 export type MeusChamadosTabNavigationProp = AppTabNavigationProp<'MeusChamadosTab'>;
 export type ProfileTabNavigationProp = AppTabNavigationProp<'ProfileTab'>;

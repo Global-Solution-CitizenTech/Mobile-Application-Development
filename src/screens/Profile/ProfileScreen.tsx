@@ -26,8 +26,8 @@ export const ProfileScreen = () => {
     usuario,
     userStats,
     statsLoading,
-    isDark,
-    toggleTheme,
+    themeMode,
+    setThemeMode,
     logoutModalVisible,
     setLogoutModalVisible,
     refreshing,
@@ -91,8 +91,8 @@ export const ProfileScreen = () => {
       />
 
       <ProfileMenuCard
-        isDark={isDark}
-        onToggleTheme={toggleTheme}
+        themeMode={themeMode}
+        onSelectThemeMode={setThemeMode}
         onPressEditarPerfil={() => navigation.navigate('EditarPerfil')}
         onPressZelaBot={() => navigation.navigate('ZelaBotTab')}
         onPressSobreApp={() => navigation.navigate('SobreApp')}

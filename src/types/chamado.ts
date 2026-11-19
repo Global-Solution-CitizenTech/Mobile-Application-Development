@@ -4,7 +4,6 @@ import type { CategoriaResponse, StatusChamado } from '@/types/categoria';
 import type { EnderecoRequest, EnderecoResponse, LocalizacaoCapturada } from '@/types/endereco';
 import type {
   ChamadoCreateFormData,
-  ChamadoFormData,
   EditarChamadoFormData,
   FieldBinder,
   FormErrors,
@@ -85,15 +84,9 @@ export interface EstatisticasChamados {
   totalApoios: number;
 }
 
-export type ChamadoFormState = ChamadoFormData & { foto?: FotoUpload };
-
 export type NovoChamadoFormState = Omit<ChamadoCreateFormData, 'foto'> & {
   foto?: FotoUpload;
 };
-
-export type UseChamadoFormOptions =
-  | { mode: 'create' }
-  | { mode: 'edit'; chamadoId: number };
 
 export interface UseNovoChamadoFormReturn {
   values: NovoChamadoFormState;
