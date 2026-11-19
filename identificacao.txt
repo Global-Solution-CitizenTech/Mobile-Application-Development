@@ -18,13 +18,13 @@ REPOSITÓRIO GITHUB:
 https://github.com/Global-Solution-CitizenTech/Mobile-Application-Development
 
 COMMIT HASH DE REFERÊNCIA (AUDITORIA):
-0ffba5baa45249e32838e613e1ee131ad4f2039a (ID Curto: 0ffba5b)
+bb2fb7ed172747f182138fb84b0793cdaeacc8d7 (ID Curto: bb2fb7e)
 
 VÍDEO DE DEMONSTRAÇÃO:
 [INSERIR O LINK DO VÍDEO DO YOUTUBE AQUI APÓS GRAVAÇÃO]
 
 PUBLICAÇÃO DO APP (EAS BUILD):
-- App: ZelaFix Mobile (Android APK - versionCode 14)
-- Download direto: https://expo.dev/artifacts/eas/tAr1dhKfReeHzG0A2MHOEHml5dvbgLnQsfy6LZa33p8.apk
-- Painel do build: https://expo.dev/accounts/enzookuizumis-team/projects/zelafix/builds/8c21e8d0-94ad-47a6-beea-e6a8b13322fb
+- App: ZelaFix Mobile (Android APK - versionCode 15)
+- Download direto: https://expo.dev/artifacts/eas/qDalYhiUME0zZv3YLUlQBZRoHXPOrSEbIXqVAT1G5G8.apk
+- Painel do build: https://expo.dev/accounts/enzookuizumi06s-team/projects/enzookuizumi/builds/049b2b97-5a17-488f-9491-4d1fe72ac735
 ================================================================================
