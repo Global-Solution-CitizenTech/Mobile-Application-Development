@@ -21,7 +21,7 @@ COMMIT HASH DE REFERÊNCIA (AUDITORIA):
 bb2fb7ed172747f182138fb84b0793cdaeacc8d7 (ID Curto: bb2fb7e)
 
 VÍDEO DE DEMONSTRAÇÃO:
-[INSERIR O LINK DO VÍDEO DO YOUTUBE AQUI APÓS GRAVAÇÃO]
+https://www.youtube.com/watch?v=IlLD1UlcAU0
 
 PUBLICAÇÃO DO APP (EAS BUILD):
 - App: ZelaFix Mobile (Android APK - versionCode 15)

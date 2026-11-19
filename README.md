@@ -38,7 +38,7 @@ O **ZelaFix Mobile** é um aplicativo desenvolvido em **React Native (Expo SDK 5
 
 ## 🔗 Vídeo de Demonstração (Global Solution 2)
 
-*(Link do YouTube será inserido após gravação)*
+[Video Mobile - ZelaFix Global Solution](https://www.youtube.com/watch?v=IlLD1UlcAU0)
 
 ---
 
